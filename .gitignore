@@ -119,3 +119,6 @@ InvenTree/web/static
 
 # performance test results
 .codspeed/
+
+#added by narayan zade
+**/venv/
