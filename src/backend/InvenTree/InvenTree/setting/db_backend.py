@@ -14,9 +14,9 @@ def _get_conn_max_age() -> int | None:
     """Return the configured CONN_MAX_AGE value.
 
     Accepts an integer number of seconds, or 'None' for unlimited persistence.
-    Defaults to 0 (close the connection after each request).
+    Defaults to 300 (keep connections alive for 5 minutes).
     """
-    value = get_setting('INVENTREE_DB_CONN_MAX_AGE', 'database.conn_max_age', 0)
+    value = get_setting('INVENTREE_DB_CONN_MAX_AGE', 'database.conn_max_age', 300)
     if value is None or str(value).strip().lower() == 'none':
         return None
     return int(value)
@@ -61,7 +61,9 @@ def get_db_backend():
         # so stale connections are detected before use rather than causing request failures.
         'CONN_MAX_AGE': _get_conn_max_age(),
         'CONN_HEALTH_CHECKS': get_boolean_setting(
-            'INVENTREE_DB_CONN_HEALTH_CHECKS', 'database.conn_health_checks', False
+            'INVENTREE_DB_CONN_HEALTH_CHECKS',
+            'database.conn_health_checks',
+            default_value=True,
         ),
     }
 
