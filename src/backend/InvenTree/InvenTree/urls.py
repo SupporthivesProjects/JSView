@@ -43,6 +43,7 @@ from .api import (
 from .config import get_setting
 from .magic_login import GetSimpleLoginView
 from .views import auth_request
+from django.contrib import admin
 
 # Set admin header from config or use default
 admin.site.site_header = get_setting(
