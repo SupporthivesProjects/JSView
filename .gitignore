@@ -119,4 +119,4 @@ InvenTree/web/static
 
 # performance test results
 .codspeed/
-venv
+src/backend/venv
