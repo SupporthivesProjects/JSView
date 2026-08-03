@@ -15,7 +15,7 @@ export function setApiDefaults() {
   const { getHost } = useLocalState.getState();
 
   api.defaults.baseURL = getHost();
-  api.defaults.timeout = 5000;
+  api.defaults.timeout = 30000;
 
   api.defaults.withCredentials = true;
   api.defaults.withXSRFToken = true;
