@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>InvenTree Login Test</title>
+<style>
+  body { font-family: sans-serif; max-width: 500px; margin: 40px auto; }
+  input { display: block; width: 100%; margin: 8px 0; padding: 8px; }
+  button { padding: 8px 16px; }
+  pre { background: #f0f0f0; padding: 12px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<h2>InvenTree Login Test</h2>
+
+<label>Username</label>
+<input id="username" value="ketan">
+
+<label>Password</label>
+<input id="password" type="text" value="12345678">
+
+<button onclick="doLogin()">Log In</button>
+
+<h3>Result</h3>
+<pre id="output">(nothing yet)</pre>
+
+<script>
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
+async function doLogin() {
+  const output = document.getElementById('output');
+  output.textContent = 'Fetching CSRF cookie first...';
+
+  try {
+    // Step 1: hit the session endpoint so Django sets the csrftoken cookie
+    await fetch('http://localhost:8000/api/auth/v1/auth/session', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    const csrftoken = getCookie('csrftoken');
+
+    output.textContent = 'CSRF cookie obtained: ' + (csrftoken || '(still none - see below)') + '\nSending login request...';
+
+    const response = await fetch('http://localhost:8000/api/auth/v1/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRFToken': csrftoken || ''
+      },
+      body: JSON.stringify({
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      })
+    });
+
+    const text = await response.text();
+
+    output.textContent =
+      'Status: ' + response.status + ' ' + response.statusText + '\n\n' +
+      'CSRF cookie sent: ' + (csrftoken || '(none found)') + '\n\n' +
+      'Body:\n' + text;
+
+  } catch (err) {
+    output.textContent = 'Request failed entirely: ' + err;
+  }
+}
+</script>
+
+</body>
+</html>
