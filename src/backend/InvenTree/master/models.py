@@ -43,15 +43,28 @@ class MetalPurity(MasterFieldsMixin):
         verbose_name_plural = _('Metal Purities')
         ordering = ['metal_type', 'name']
         constraints = [
-            models.UniqueConstraint(fields=['metal_type', 'name'], name='unique_metal_type_purity_name')
+            models.UniqueConstraint(
+                fields=['metal_type', 'name'],
+                name='unique_metal_type_purity_name'
+            )
         ]
 
     def __str__(self):
         return f'{self.metal_type.name} - {self.name}'
 
-    metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='purities', verbose_name=_('Metal Type'))
+    metal_type = models.ForeignKey(
+        MetalType,
+        on_delete=models.CASCADE,
+        related_name='purities',
+        verbose_name=_('Metal Type')
+    )
     name = models.CharField(max_length=50, verbose_name=_('Name'))
-    fineness = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Fineness (%)'))
+    fineness = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name=_('Fineness (%)')
+    )
 
 
 class Setting(MasterFieldsMixin):
@@ -93,9 +106,27 @@ class LabourSetting(MasterFieldsMixin):
         return self.name
 
     name = models.CharField(max_length=100, verbose_name=_('Name'))
-    setting = models.ForeignKey(Setting, on_delete=models.SET_NULL, related_name='labour_settings', null=True, blank=True, verbose_name=_('Setting'))
-    charge_type = models.CharField(max_length=20, choices=CHARGE_TYPE_CHOICES, default=CHARGE_TYPE_FIXED, verbose_name=_('Charge Type'))
-    rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Rate'))
+    setting = models.ForeignKey(
+        Setting,
+        on_delete=models.SET_NULL,
+        related_name='labour_settings',
+        null=True,
+        blank=True,
+        verbose_name=_('Setting')
+    )
+    charge_type = models.CharField(
+        max_length=20,
+        choices=CHARGE_TYPE_CHOICES,
+        default=CHARGE_TYPE_FIXED,
+        verbose_name=_('Charge Type')
+    )
+    rate = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        default=Decimal('0'),
+        validators=[MinValueValidator(0)],
+        verbose_name=_('Rate')
+    )
 
 
 class MetalRate(MasterFieldsMixin):
@@ -106,16 +137,34 @@ class MetalRate(MasterFieldsMixin):
         verbose_name_plural = _('Metal Rates')
         ordering = ['-date', 'metal_type']
         constraints = [
-            models.UniqueConstraint(fields=['metal_type', 'purity', 'date'], name='unique_metal_rate_per_day')
+            models.UniqueConstraint(
+                fields=['metal_type', 'purity', 'date'],
+                name='unique_metal_rate_per_day'
+            )
         ]
 
     def __str__(self):
         return f'{self.metal_type.name} ({self.purity.name}) @ {self.date}'
 
-    metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='rates', verbose_name=_('Metal Type'))
-    purity = models.ForeignKey(MetalPurity, on_delete=models.CASCADE, related_name='rates', verbose_name=_('Metal Purity'))
+    metal_type = models.ForeignKey(
+        MetalType,
+        on_delete=models.CASCADE,
+        related_name='rates',
+        verbose_name=_('Metal Type')
+    )
+    purity = models.ForeignKey(
+        MetalPurity,
+        on_delete=models.CASCADE,
+        related_name='rates',
+        verbose_name=_('Metal Purity')
+    )
     date = models.DateField(verbose_name=_('Date'))
-    rate = models.DecimalField(max_digits=15, decimal_places=4, validators=[MinValueValidator(0)], verbose_name=_('Rate'))
+    rate = models.DecimalField(
+        max_digits=15,
+        decimal_places=4,
+        validators=[MinValueValidator(0)],
+        verbose_name=_('Rate')
+    )
 
 
 class FindingType(MasterFieldsMixin):
@@ -160,7 +209,13 @@ class Duty(MasterFieldsMixin):
         return f'{self.name} ({self.percentage}%)'
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
-    percentage = models.DecimalField(max_digits=6, decimal_places=3, default=Decimal('0'), validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Percentage'))
+    percentage = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        default=Decimal('0'),
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name=_('Percentage')
+    )
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
 
 
@@ -192,7 +247,14 @@ class ACExecutive(MasterFieldsMixin):
 
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     code = models.CharField(max_length=50, blank=True, verbose_name=_('Code'))
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ac_executive_profiles', verbose_name=_('User'))
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ac_executive_profiles',
+        verbose_name=_('User')
+    )
     email = models.EmailField(blank=True, verbose_name=_('Email'))
     phone = models.CharField(max_length=50, blank=True, verbose_name=_('Phone'))
 
@@ -231,8 +293,25 @@ class CourierService(MasterFieldsMixin):
     tracking_url = models.URLField(max_length=500, blank=True, verbose_name=_('Tracking URL'))
 
 
+class POMailTemplate(MasterFieldsMixin):
+    """Email template used for sending Purchase Orders."""
+
+    class Meta:
+        verbose_name = _('P.O. Mail Template')
+        verbose_name_plural = _('P.O. Mail Templates')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
+    subject = models.CharField(max_length=250, verbose_name=_('Subject'))
+    body = models.TextField(verbose_name=_('Body'))
+
+
+
 class POMail(MasterFieldsMixin):
-    """Saved mail config/recipient for sending Purchase Orders."""
+    """Saved mail configuration / recipient for sending Purchase Orders."""
 
     class Meta:
         verbose_name = _('P.O. Mail')
@@ -244,5 +323,6 @@ class POMail(MasterFieldsMixin):
 
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     vendor = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='po_mail_entries', null=True, blank=True, limit_choices_to={'is_supplier': True}, verbose_name=_('Vendor'))
+    template = models.ForeignKey(POMailTemplate, on_delete=models.SET_NULL, related_name='po_mails', null=True, blank=True, verbose_name=_('Template'))
     email = models.EmailField(verbose_name=_('Email'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
