@@ -32,7 +32,7 @@ class MetalPuritySerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = MetalPurity
-        fields = ['pk', 'metal_type', 'name', 'fineness', 'active']
+        fields = ['pk', 'metal_type', 'name', 'purity', 'karat', 'active']
 
 
 class SettingSerializer(InvenTreeModelSerializer):
@@ -48,7 +48,7 @@ class LabourSettingSerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = LabourSetting
-        fields = ['pk', 'name', 'setting', 'charge_type', 'rate', 'active']
+        fields = ['pk', 'name', 'code', 'cfpon', 'loss', 'vendor', 'active']
 
 
 class MetalRateSerializer(InvenTreeModelSerializer):
@@ -56,7 +56,7 @@ class MetalRateSerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = MetalRate
-        fields = ['pk', 'metal_type', 'purity', 'date', 'rate', 'active']
+        fields = ['pk', 'metal_type', 'rate_date', 'rate', 'active']
 
 
 class FindingTypeSerializer(InvenTreeModelSerializer):
@@ -80,7 +80,7 @@ class DutySerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = Duty
-        fields = ['pk', 'name', 'percentage', 'description', 'active']
+        fields = ['pk', 'name', 'duty_percent', 'markup_percent', 'description', 'active']
 
 
 class StampSerializer(InvenTreeModelSerializer):
@@ -96,7 +96,7 @@ class ACExecutiveSerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = ACExecutive
-        fields = ['pk', 'name', 'code', 'user', 'email', 'phone', 'active']
+        fields = ['pk', 'name', 'code', 'email', 'phone', 'address', 'active']
 
 
 class TermsSerializer(InvenTreeModelSerializer):
@@ -120,4 +120,4 @@ class POMailSerializer(InvenTreeModelSerializer):
 
     class Meta:
         model = POMail
-        fields = ['pk', 'name', 'vendor', 'email', 'description', 'active']
+        fields = ['pk', 'purchase_order', 'format1_email', 'format2_email', 'format3_email', 'format4_email', 'active']

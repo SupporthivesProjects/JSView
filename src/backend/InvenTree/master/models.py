@@ -8,7 +8,18 @@ from django.utils.translation import gettext_lazy as _
 from company.models import Company
 
 
-class MetalType(models.Model):
+class MasterFieldsMixin(models.Model):
+    """Common fields for master tables."""
+
+    class Meta:
+        abstract = True
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Created At'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Updated At'))
+    active = models.BooleanField(default=True, verbose_name=_('Active'))
+
+
+class MetalType(MasterFieldsMixin):
     """Metal type (e.g. Gold, Silver, Platinum)."""
 
     class Meta:
@@ -19,12 +30,12 @@ class MetalType(models.Model):
     def __str__(self):
         return self.name
 
+    code = models.CharField(max_length=100, unique=True, verbose_name=_('Code'))
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class MetalPurity(models.Model):
+class MetalPurity(MasterFieldsMixin):
     """Purity / fineness grade for a MetalType."""
 
     class Meta:
@@ -41,10 +52,9 @@ class MetalPurity(models.Model):
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='purities', verbose_name=_('Metal Type'))
     name = models.CharField(max_length=50, verbose_name=_('Name'))
     fineness = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Fineness (%)'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class Setting(models.Model):
+class Setting(MasterFieldsMixin):
     """Stone-setting style (e.g. Prong, Bezel, Pave)."""
 
     class Meta:
@@ -57,10 +67,9 @@ class Setting(models.Model):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class LabourSetting(models.Model):
+class LabourSetting(MasterFieldsMixin):
     """Labour charge rule, optionally tied to a Setting."""
 
     CHARGE_TYPE_FIXED = 'fixed'
@@ -87,10 +96,9 @@ class LabourSetting(models.Model):
     setting = models.ForeignKey(Setting, on_delete=models.SET_NULL, related_name='labour_settings', null=True, blank=True, verbose_name=_('Setting'))
     charge_type = models.CharField(max_length=20, choices=CHARGE_TYPE_CHOICES, default=CHARGE_TYPE_FIXED, verbose_name=_('Charge Type'))
     rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Rate'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class MetalRate(models.Model):
+class MetalRate(MasterFieldsMixin):
     """Dated metal rate for a MetalType / MetalPurity."""
 
     class Meta:
@@ -108,10 +116,9 @@ class MetalRate(models.Model):
     purity = models.ForeignKey(MetalPurity, on_delete=models.CASCADE, related_name='rates', verbose_name=_('Metal Purity'))
     date = models.DateField(verbose_name=_('Date'))
     rate = models.DecimalField(max_digits=15, decimal_places=4, validators=[MinValueValidator(0)], verbose_name=_('Rate'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class FindingType(models.Model):
+class FindingType(MasterFieldsMixin):
     """Jewelry finding type (e.g. Clasp, Hook, Jump Ring)."""
 
     class Meta:
@@ -124,10 +131,9 @@ class FindingType(models.Model):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class FinishType(models.Model):
+class FinishType(MasterFieldsMixin):
     """Surface finish type (e.g. Matte, Glossy, Antique)."""
 
     class Meta:
@@ -140,10 +146,9 @@ class FinishType(models.Model):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class Duty(models.Model):
+class Duty(MasterFieldsMixin):
     """Import / export duty rate."""
 
     class Meta:
@@ -157,10 +162,9 @@ class Duty(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     percentage = models.DecimalField(max_digits=6, decimal_places=3, default=Decimal('0'), validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Percentage'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class Stamp(models.Model):
+class Stamp(MasterFieldsMixin):
     """Hallmark / stamp type (e.g. BIS Hallmark, 916)."""
 
     class Meta:
@@ -173,10 +177,9 @@ class Stamp(models.Model):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class ACExecutive(models.Model):
+class ACExecutive(MasterFieldsMixin):
     """Accounts executive responsible for customer/vendor accounts."""
 
     class Meta:
@@ -192,10 +195,9 @@ class ACExecutive(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ac_executive_profiles', verbose_name=_('User'))
     email = models.EmailField(blank=True, verbose_name=_('Email'))
     phone = models.CharField(max_length=50, blank=True, verbose_name=_('Phone'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class Terms(models.Model):
+class Terms(MasterFieldsMixin):
     """Payment terms (e.g. Net 30)."""
 
     class Meta:
@@ -209,10 +211,9 @@ class Terms(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'))
     days = models.PositiveIntegerField(default=0, verbose_name=_('Days'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class CourierService(models.Model):
+class CourierService(MasterFieldsMixin):
     """Courier / shipping service provider."""
 
     class Meta:
@@ -228,10 +229,9 @@ class CourierService(models.Model):
     phone = models.CharField(max_length=50, blank=True, verbose_name=_('Phone'))
     email = models.EmailField(blank=True, verbose_name=_('Email'))
     tracking_url = models.URLField(max_length=500, blank=True, verbose_name=_('Tracking URL'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
 
-class POMail(models.Model):
+class POMail(MasterFieldsMixin):
     """Saved mail config/recipient for sending Purchase Orders."""
 
     class Meta:
@@ -246,4 +246,3 @@ class POMail(models.Model):
     vendor = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='po_mail_entries', null=True, blank=True, limit_choices_to={'is_supplier': True}, verbose_name=_('Vendor'))
     email = models.EmailField(verbose_name=_('Email'))
     description = models.CharField(max_length=250, blank=True, verbose_name=_('Description'))
-    active = models.BooleanField(default=True, verbose_name=_('Active'))
