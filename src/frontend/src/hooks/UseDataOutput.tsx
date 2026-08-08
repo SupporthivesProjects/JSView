@@ -1,6 +1,6 @@
 import useMonitorDataOutput from '@lib/hooks/MonitorDataOutput';
-import { useApi } from '../contexts/ApiContext';
-import { useLocalState } from '../states/LocalState';
+import { useApi } from '@context/ApiContext';
+import { useLocalState } from '@store/LocalState';
 
 /**
  * Hook for monitoring a data output process running on the server

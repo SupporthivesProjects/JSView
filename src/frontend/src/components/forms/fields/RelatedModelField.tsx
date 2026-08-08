@@ -34,16 +34,16 @@ import { apiUrl } from '@lib/functions/Api';
 import type { ApiFormFieldType } from '@lib/types/Forms';
 import { IconPlus } from '@tabler/icons-react';
 import type { NavigateFunction } from 'react-router-dom';
-import { useApi } from '../../../contexts/ApiContext';
+import { useApi } from '@context/ApiContext';
 import { useCreateApiFormModal } from '../../../hooks/UseForm';
 import {
   useGlobalSettingsState,
   useUserSettingsState
-} from '../../../states/SettingsStates';
-import { vars } from '../../../theme';
-import { ScanButton } from '../../buttons/ScanButton';
-import Expand from '../../items/Expand';
-import { RenderInstance } from '../../render/Instance';
+} from '@store/SettingsStates';
+import { vars } from '../../../styles/theme';
+import { ScanButton } from '../../ui/buttons/ScanButton';
+import Expand from '../../ui/items/Expand';
+import { RenderInstance } from '../../shared/render/Instance';
 
 /**
  * Render a 'select' field for searching the database against a particular model type

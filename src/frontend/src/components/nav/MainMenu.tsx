@@ -19,11 +19,11 @@ import {
 } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { aboutInvenTree } from '../../defaults/links';
-import { doLogout } from '../../functions/auth';
-import * as classes from '../../main.css';
-import { useUserState } from '../../states/UserState';
-import { vars } from '../../theme';
+import { aboutInvenTree } from '@config/links';
+import { doLogout } from '@actions/auth';
+import * as classes from '../../styles/main.css';
+import { useUserState } from '@store/UserState';
+import { vars } from '../../styles/theme';
 
 export function MainMenu() {
   const navigate = useNavigate();

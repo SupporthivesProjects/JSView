@@ -29,14 +29,14 @@ import {
   formatCurrency,
   formatDate,
   formatDecimal
-} from '../../defaults/formatters';
+} from '@helpers/formatters';
 import {
   useGlobalSettingsState,
   useUserSettingsState
-} from '../../states/SettingsStates';
-import { Thumbnail } from '../images/Thumbnail';
-import { TableStatusRenderer } from '../render/StatusRenderer';
-import { RenderOwner } from '../render/User';
+} from '@store/SettingsStates';
+import { Thumbnail } from '../shared/images/Thumbnail';
+import { TableStatusRenderer } from '../shared/render/StatusRenderer';
+import { RenderOwner } from '../shared/render/User';
 import { ProjectCodeHoverCard, TableHoverCard } from './TableHoverCard';
 
 export type PartColumnProps = TableColumnProps & {

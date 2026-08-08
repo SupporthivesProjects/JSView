@@ -26,8 +26,8 @@ import {
 import { AddItemButton } from '@lib/components/AddItemButton';
 import { identifierString } from '@lib/functions/Conversion';
 import type { ApiFormFieldType } from '@lib/types/Forms';
-import { isEquivalent } from '../../../functions/comparison';
-import { InvenTreeIcon } from '../../../functions/icons';
+import { isEquivalent } from '@helpers/comparison';
+import { InvenTreeIcon } from '@helpers/icons';
 import { StandaloneField } from '../StandaloneField';
 
 export interface TableFieldRowProps {

@@ -7,11 +7,11 @@ import { t } from '@lingui/core/macro';
 import { Fragment, type ReactNode, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePluginUIFeature } from '../../hooks/UsePluginUIFeature';
-import { useUserSettingsState } from '../../states/SettingsStates';
-import PrimaryActionButton from '../buttons/PrimaryActionButton';
-import { ApiImage } from '../images/ApiImage';
-import { ApiIcon } from '../items/ApiIcon';
-import type { PrimaryActionUIFeature } from '../plugins/PluginUIFeatureTypes';
+import { useUserSettingsState } from '@store/SettingsStates';
+import PrimaryActionButton from '../ui/buttons/PrimaryActionButton';
+import { ApiImage } from '../shared/images/ApiImage';
+import { ApiIcon } from '../ui/items/ApiIcon';
+import type { PrimaryActionUIFeature } from '../shared/plugins/PluginUIFeatureTypes';
 import { type Breadcrumb, BreadcrumbList } from './BreadcrumbList';
 import PageTitle from './PageTitle';
 

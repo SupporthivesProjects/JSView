@@ -7,7 +7,7 @@ import {
   useMemo,
   useState
 } from 'react';
-import WizardDrawer from '../components/wizards/WizardDrawer';
+import WizardDrawer from '@components/shared/wizards/WizardDrawer';
 
 export interface WizardProps {
   title: string;

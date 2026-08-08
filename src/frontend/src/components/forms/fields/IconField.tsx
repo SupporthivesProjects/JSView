@@ -30,8 +30,8 @@ import { FixedSizeGrid as Grid } from 'react-window';
 
 import type { ApiFormFieldType } from '@lib/types/Forms';
 import { useShallow } from 'zustand/react/shallow';
-import { useIconState } from '../../../states/IconState';
-import { ApiIcon } from '../../items/ApiIcon';
+import { useIconState } from '@store/IconState';
+import { ApiIcon } from '../../ui/items/ApiIcon';
 
 function IconField({
   controller,

@@ -3,12 +3,12 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { getBaseUrl } from '@lib/functions/Navigation';
 import { useShallow } from 'zustand/react/shallow';
-import { api, queryClient } from '../App';
-import { ApiProvider } from '../contexts/ApiContext';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { defaultHostList } from '../defaults/defaultHostList';
-import { routes } from '../router';
-import { useLocalState } from '../states/LocalState';
+import { api, queryClient } from '@app-lib/api/client';
+import { ApiProvider } from '@context/ApiContext';
+import { ThemeContext } from '@context/ThemeContext';
+import { defaultHostList } from '@config/defaultHostList';
+import { routes } from '@routes/router';
+import { useLocalState } from '@store/LocalState';
 
 export default function DesktopAppView() {
   const [hostList] = useLocalState(useShallow((state) => [state.hostList]));

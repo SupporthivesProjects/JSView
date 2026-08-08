@@ -1,4 +1,4 @@
-import * as classes from '../../main.css';
+import * as classes from '../../styles/main.css';
 
 export function Footer() {
   return (

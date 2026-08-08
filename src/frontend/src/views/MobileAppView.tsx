@@ -2,10 +2,10 @@ import { Trans } from '@lingui/react/macro';
 import { Anchor, Center, Container, Stack, Text, Title } from '@mantine/core';
 
 import { useShallow } from 'zustand/react/shallow';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { docLinks } from '../defaults/links';
+import { ThemeContext } from '@context/ThemeContext';
+import { docLinks } from '@config/links';
 import { IS_DEV } from '../main';
-import { useLocalState } from '../states/LocalState';
+import { useLocalState } from '@store/LocalState';
 
 export default function MobileAppView() {
   const [setAllowMobile] = useLocalState(

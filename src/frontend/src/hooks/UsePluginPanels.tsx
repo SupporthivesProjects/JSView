@@ -6,15 +6,15 @@ import type { ModelType, PluginPanelKey } from '@lib/enums/ModelType';
 import { apiUrl } from '@lib/functions/Api';
 import type { PanelType } from '@lib/types/Panel';
 import type { InvenTreePluginContext } from '@lib/types/Plugins';
-import { api } from '../App';
-import { ApiIcon } from '../components/items/ApiIcon';
-import { useInvenTreeContext } from '../components/plugins/PluginContext';
-import PluginPanelContent from '../components/plugins/PluginPanel';
+import { api } from '@app-lib/api/client';
+import { ApiIcon } from '@components/ui/items/ApiIcon';
+import { useInvenTreeContext } from '@components/shared/plugins/PluginContext';
+import PluginPanelContent from '@components/shared/plugins/PluginPanel';
 import {
   type PluginUIFeature,
   PluginUIFeatureType
-} from '../components/plugins/PluginUIFeature';
-import { useGlobalSettingsState } from '../states/SettingsStates';
+} from '@components/shared/plugins/PluginUIFeature';
+import { useGlobalSettingsState } from '@store/SettingsStates';
 
 /**
  * Type definition for a plugin panel which extends the standard PanelType

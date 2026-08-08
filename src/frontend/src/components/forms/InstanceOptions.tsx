@@ -23,10 +23,10 @@ import {
 import { ActionButton } from '@lib/components/ActionButton';
 import type { HostList } from '@lib/types/Server';
 import { useShallow } from 'zustand/react/shallow';
-import { translateHostName } from '../../defaults/defaultHostList';
-import { Wrapper } from '../../pages/Auth/Layout';
-import { useLocalState } from '../../states/LocalState';
-import { useServerApiState } from '../../states/ServerApiState';
+import { translateHostName } from '@config/defaultHostList';
+import { Wrapper } from '../layouts/AuthLayout';
+import { useLocalState } from '@store/LocalState';
+import { useServerApiState } from '@store/ServerApiState';
 import { HostOptionsForm } from './HostOptionsForm';
 
 export function InstanceOptions({

@@ -4,10 +4,10 @@ import type { ModelType } from '@lib/enums/ModelType';
 import type { UserRoles } from '@lib/enums/Roles';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useUserState } from '../../states/UserState';
-import ClientError from '../errors/ClientError';
-import PermissionDenied from '../errors/PermissionDenied';
-import ServerError from '../errors/ServerError';
+import { useUserState } from '@store/UserState';
+import ClientError from '../shared/errors/ClientError';
+import PermissionDenied from '../shared/errors/PermissionDenied';
+import ServerError from '../shared/errors/ServerError';
 
 export default function InstanceDetail({
   query,
