@@ -5,11 +5,11 @@ import { useMemo, useState } from 'react';
 import type { SettingsStateProps } from '@lib/types/Settings';
 import { t } from '@lingui/core/macro';
 import { useShallow } from 'zustand/react/shallow';
-import { docLinks } from '../../defaults/links';
-import { useServerApiState } from '../../states/ServerApiState';
-import { useGlobalSettingsState } from '../../states/SettingsStates';
-import { useUserState } from '../../states/UserState';
-import type { ServerAPIProps } from '../../states/states';
+import { docLinks } from '@config/links';
+import { useServerApiState } from '@store/ServerApiState';
+import { useGlobalSettingsState } from '@store/SettingsStates';
+import { useUserState } from '@store/UserState';
+import type { ServerAPIProps } from '@store/states';
 
 interface AlertInfo {
   key: string;

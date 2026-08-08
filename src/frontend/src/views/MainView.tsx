@@ -3,8 +3,8 @@ import { useViewportSize } from '@mantine/hooks';
 import { type ComponentType, useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { setApiDefaults } from '../App';
-import { useLocalState } from '../states/LocalState';
+import { setApiDefaults } from '@app-lib/api/client';
+import { useLocalState } from '@store/LocalState';
 
 function checkMobile() {
   const { height, width } = useViewportSize();

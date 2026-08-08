@@ -21,17 +21,17 @@ import { showNotification } from '@mantine/notifications';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { api } from '../../App';
+import { api } from '@app-lib/api/client';
 import {
   doBasicLogin,
   doSimpleLogin,
   ensureCsrf,
   followRedirect
-} from '../../functions/auth';
-import { showLoginNotification } from '../../functions/notifications';
-import { useServerApiState } from '../../states/ServerApiState';
-import { useUserState } from '../../states/UserState';
-import { SsoButton } from '../buttons/SSOButton';
+} from '@actions/auth';
+import { showLoginNotification } from '@helpers/notifications';
+import { useServerApiState } from '@store/ServerApiState';
+import { useUserState } from '@store/UserState';
+import { SsoButton } from '../ui/buttons/SSOButton';
 import { errorCodeLink } from '../nav/Alerts';
 
 export function AuthenticationForm() {

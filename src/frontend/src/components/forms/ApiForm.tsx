@@ -40,9 +40,9 @@ import type {
   ApiFormFieldType,
   ApiFormProps
 } from '@lib/types/Forms';
-import { useApi } from '../../contexts/ApiContext';
-import { isEquivalent } from '../../functions/comparison';
-import { constructField, extractAvailableFields } from '../../functions/forms';
+import { useApi } from '@context/ApiContext';
+import { isEquivalent } from '@helpers/comparison';
+import { constructField, extractAvailableFields } from '@helpers/forms';
 import { KeepFormOpenSwitch } from './KeepFormOpenSwitch';
 import { ApiFormField } from './fields/ApiFormField';
 

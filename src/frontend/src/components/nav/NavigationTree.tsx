@@ -41,8 +41,8 @@ import {
   navigateToLink
 } from '@lib/functions/Navigation';
 import { t } from '@lingui/core/macro';
-import { useApi } from '../../contexts/ApiContext';
-import { ApiIcon } from '../items/ApiIcon';
+import { useApi } from '@context/ApiContext';
+import { ApiIcon } from '../ui/items/ApiIcon';
 
 /*
  * A generic navigation tree component.

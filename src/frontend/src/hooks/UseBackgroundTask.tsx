@@ -1,7 +1,7 @@
 import useMonitorBackgroundTask, {
   type MonitorBackgroundTaskProps
 } from '@lib/hooks/MonitorBackgroundTask';
-import { useApi } from '../contexts/ApiContext';
+import { useApi } from '@context/ApiContext';
 
 /**
  * Hook for monitoring the progress of a background task running on the server

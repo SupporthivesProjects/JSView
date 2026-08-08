@@ -8,12 +8,12 @@ import type { TableFilter, TableFilterChoice } from '@lib/types/Filters';
 import {
   type StatusLookup,
   useGlobalStatusState
-} from '../../states/GlobalStatusState';
-import { useGlobalSettingsState } from '../../states/SettingsStates';
+} from '@store/GlobalStatusState';
+import { useGlobalSettingsState } from '@store/SettingsStates';
 import type {
   StatusCodeInterface,
   StatusCodeListInterface
-} from '../render/StatusRenderer';
+} from '../shared/render/StatusRenderer';
 
 // Determine the appropriate display label for a given filter, based on its name and the list of available filters
 export function filterDisplayLabel(

@@ -3,8 +3,8 @@ import type { StockOperationProps } from '@lib/types/Forms';
 import type { UseModalReturn } from '@lib/types/Modals';
 import { t } from '@lingui/core/macro';
 import { type ReactNode, useMemo } from 'react';
-import type { ActionDropdownItem } from '../components/items/ActionDropdown';
-import { ActionDropdown } from '../components/items/ActionDropdown';
+import type { ActionDropdownItem } from '@components/ui/items/ActionDropdown';
+import { ActionDropdown } from '@components/ui/items/ActionDropdown';
 import {
   useAddStockItem,
   useAssignStockItem,
@@ -16,9 +16,9 @@ import {
   useRemoveStockItem,
   useReturnStockItem,
   useTransferStockItem
-} from '../forms/StockForms';
-import { InvenTreeIcon } from '../functions/icons';
-import { useUserState } from '../states/UserState';
+} from '@components/forms/StockForms';
+import { InvenTreeIcon } from '@helpers/icons';
+import { useUserState } from '@store/UserState';
 
 interface StockAdjustActionProps {
   formProps: StockOperationProps;

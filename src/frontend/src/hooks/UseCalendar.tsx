@@ -8,8 +8,8 @@ import type { DateValue } from '@mantine/dates';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { api } from '../App';
-import { showApiErrorMessage } from '../functions/notifications';
+import { api } from '@app-lib/api/client';
+import { showApiErrorMessage } from '@helpers/notifications';
 import useDataExport from './UseDataExport';
 
 /*

@@ -7,7 +7,7 @@ import { useCallback, useMemo } from 'react';
 
 import { resolveItem } from '@lib/functions/Conversion';
 import type { TableFilterChoice } from '@lib/types/Filters';
-import { useApi } from '../contexts/ApiContext';
+import { useApi } from '@context/ApiContext';
 
 type UseFilterProps = {
   url: string;

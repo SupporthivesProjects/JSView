@@ -6,13 +6,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StylishText } from '@lib/components/StylishText';
 import { ModelType } from '@lib/enums/ModelType';
 import { UserRoles } from '@lib/enums/Roles';
-import { AboutLinks } from '../../defaults/links';
+import { AboutLinks } from '@config/links';
 import useInstanceName from '../../hooks/UseInstanceName';
-import * as classes from '../../main.css';
-import { useGlobalSettingsState } from '../../states/SettingsStates';
-import { useUserState } from '../../states/UserState';
-import { InvenTreeLogo } from '../items/InvenTreeLogo';
-import { type MenuLinkItem, MenuLinks } from '../items/MenuLinks';
+import * as classes from '../../styles/main.css';
+import { useGlobalSettingsState } from '@store/SettingsStates';
+import { useUserState } from '@store/UserState';
+import { InvenTreeLogo } from '../ui/items/InvenTreeLogo';
+import { type MenuLinkItem, MenuLinks } from '../ui/items/MenuLinks';
 
 // TODO @matmair #1: implement plugin loading and menu item generation see #5269
 const plugins: MenuLinkItem[] = [];

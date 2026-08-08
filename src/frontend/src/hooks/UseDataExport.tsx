@@ -2,8 +2,8 @@ import type { ApiFormFieldSet } from '@lib/types/Forms';
 import { t } from '@lingui/core/macro';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { useApi } from '../contexts/ApiContext';
-import { extractAvailableFields } from '../functions/forms';
+import { useApi } from '@context/ApiContext';
+import { extractAvailableFields } from '@helpers/forms';
 import useDataOutput from './UseDataOutput';
 import { useCreateApiFormModal } from './UseForm';
 

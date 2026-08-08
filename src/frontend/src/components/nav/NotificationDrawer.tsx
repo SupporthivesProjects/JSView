@@ -32,8 +32,8 @@ import { apiUrl } from '@lib/functions/Api';
 import { getDetailUrl } from '@lib/functions/Navigation';
 import { getBaseUrl } from '@lib/functions/Navigation';
 import { navigateToLink } from '@lib/functions/Navigation';
-import { api } from '../../App';
-import { useUserState } from '../../states/UserState';
+import { api } from '@app-lib/api/client';
+import { useUserState } from '@store/UserState';
 
 /**
  * Render a single notification entry in the drawer

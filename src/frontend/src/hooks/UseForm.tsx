@@ -7,8 +7,8 @@ import type {
   ApiFormModalProps,
   BulkEditApiFormModalProps
 } from '@lib/types/Forms';
-import { OptionsApiForm } from '../components/forms/ApiForm';
-import { useModalState } from '../states/ModalState';
+import { OptionsApiForm } from '@components/forms/ApiForm';
+import { useModalState } from '@store/ModalState';
 import { useModal } from './UseModal';
 
 /**

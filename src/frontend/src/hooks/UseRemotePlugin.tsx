@@ -2,7 +2,7 @@ import type { InvenTreePluginContext } from '@lib/types/Plugins';
 import { t } from '@lingui/core/macro';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
-import { useLocalState } from '../states/LocalState';
+import { useLocalState } from '@store/LocalState';
 
 type LegacyPluginEntryFn = (
   container: HTMLDivElement,

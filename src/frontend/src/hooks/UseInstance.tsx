@@ -2,7 +2,7 @@ import { apiUrl } from '@lib/functions/Api';
 import type { UseInstanceResult, useInstanceProps } from '@lib/types/Rendering';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { useApi } from '../contexts/ApiContext';
+import { useApi } from '@context/ApiContext';
 
 /**
  * Custom hook for loading a single instance of an instance from the API

@@ -7,7 +7,7 @@ import type { FieldValues, UseControllerReturn } from 'react-hook-form';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { apiUrl } from '@lib/functions/Api';
 import type { ApiFormFieldType } from '@lib/types/Forms';
-import { api } from '../../../App';
+import { api } from '@app-lib/api/client';
 
 function TagsField({
   controller,

@@ -35,7 +35,7 @@ import type { InvenTreeTableProps } from '@lib/types/Tables';
 import { showNotification } from '@mantine/notifications';
 import useDataExport from '../../hooks/UseDataExport';
 import { useDeleteApiFormModal } from '../../hooks/UseForm';
-import { PrintingActions } from '../buttons/PrintingActions';
+import { PrintingActions } from '../ui/buttons/PrintingActions';
 import { FilterPreview, FilterSelectDrawer } from './FilterSelectDrawer';
 
 /**
