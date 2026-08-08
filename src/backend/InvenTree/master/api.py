@@ -2,8 +2,10 @@
 
 from django.urls import include, path
 
+from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
+from rest_framework.pagination import LimitOffsetPagination
 
 from . import serializers as master_serializers
 from .models import (
@@ -24,11 +26,19 @@ from .models import (
 )
 
 
-class MetalTypeList(ListCreateAPI):
+class MasterPagination(LimitOffsetPagination):
+    """Default pagination for master app list endpoints."""
+
+    default_limit = 10
+    max_limit = 100
+
+
+class MetalTypeList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating MetalType objects."""
 
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -42,11 +52,12 @@ class MetalTypeDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.MetalTypeSerializer
 
 
-class MetalPurityList(ListCreateAPI):
+class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating MetalPurity objects."""
 
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type']
     search_fields = ['name']
@@ -61,11 +72,12 @@ class MetalPurityDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.MetalPuritySerializer
 
 
-class SettingList(ListCreateAPI):
+class SettingList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating Setting objects."""
 
     queryset = Setting.objects.all()
     serializer_class = master_serializers.SettingSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -79,11 +91,12 @@ class SettingDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.SettingSerializer
 
 
-class LabourSettingList(ListCreateAPI):
+class LabourSettingList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating LabourSetting objects."""
 
     queryset = LabourSetting.objects.all()
     serializer_class = master_serializers.LabourSettingSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['setting', 'charge_type']
     search_fields = ['name']
@@ -98,11 +111,12 @@ class LabourSettingDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.LabourSettingSerializer
 
 
-class MetalRateList(ListCreateAPI):
+class MetalRateList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating MetalRate objects."""
 
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type', 'purity']
     ordering_fields = ['date', 'rate']
@@ -116,11 +130,12 @@ class MetalRateDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.MetalRateSerializer
 
 
-class FindingTypeList(ListCreateAPI):
+class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating FindingType objects."""
 
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -134,11 +149,12 @@ class FindingTypeDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.FindingTypeSerializer
 
 
-class FinishTypeList(ListCreateAPI):
+class FinishTypeList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating FinishType objects."""
 
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -152,11 +168,12 @@ class FinishTypeDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.FinishTypeSerializer
 
 
-class DutyList(ListCreateAPI):
+class DutyList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating Duty objects."""
 
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'percentage']
@@ -170,11 +187,12 @@ class DutyDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.DutySerializer
 
 
-class StampList(ListCreateAPI):
+class StampList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating Stamp objects."""
 
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -188,11 +206,12 @@ class StampDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.StampSerializer
 
 
-class ACExecutiveList(ListCreateAPI):
+class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating ACExecutive objects."""
 
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'code', 'email']
     ordering_fields = ['name', 'active']
@@ -206,11 +225,12 @@ class ACExecutiveDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.ACExecutiveSerializer
 
 
-class TermsList(ListCreateAPI):
+class TermsList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating Terms objects."""
 
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'days']
@@ -224,11 +244,12 @@ class TermsDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.TermsSerializer
 
 
-class CourierServiceList(ListCreateAPI):
+class CourierServiceList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating CourierService objects."""
 
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'contact_person']
     ordering_fields = ['name', 'active']
@@ -242,11 +263,12 @@ class CourierServiceDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.CourierServiceSerializer
 
 
-class POMailTemplateList(ListCreateAPI):
+class POMailTemplateList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating POMailTemplate objects."""
 
     queryset = POMailTemplate.objects.all()
     serializer_class = master_serializers.POMailTemplateSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'subject']
     ordering_fields = ['name', 'active']
@@ -260,11 +282,12 @@ class POMailTemplateDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.POMailTemplateSerializer
 
 
-class POMailList(ListCreateAPI):
+class POMailList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating POMail objects."""
 
     queryset = POMail.objects.all()
     serializer_class = master_serializers.POMailSerializer
+    pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['vendor', 'template']
     search_fields = ['name', 'email']
