@@ -131,7 +131,6 @@ class FinishType(MasterFieldsMixin):
 class Duty(MasterFieldsMixin):
     """Import / export duty rate."""
 
-    # metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='duties', verbose_name=_('Metal Type'), help_text=_('Metal type for which this duty applies.'), null=True, blank=True)
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='duties', verbose_name=_('Metal Type'), help_text=_('Metal type for which this duty applies.'))
     duty = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Duty'), help_text=_('Duty percentage applicable to the selected metal type.'))
     markup = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Markup'), help_text=_('Markup value applicable to the selected metal type.'))
@@ -146,7 +145,7 @@ class Duty(MasterFieldsMixin):
         ]
 
     def __str__(self):
-        # return f'{self.metal_type.name if self.metal_type else "No Metal Type"} - {self.duty}%'
+        
         return f'{self.metal_type.name} - {self.duty}%'
 
 
