@@ -8,13 +8,9 @@ from .models import (
     Duty,
     FindingType,
     FinishType,
-    LabourSetting,
     MetalPurity,
     MetalRate,
     MetalType,
-    POMail,
-    POMailTemplate,
-    Setting,
     Stamp,
     Terms,
 )
@@ -35,23 +31,8 @@ class MetalPuritySerializer(DataExportSerializerMixin, InvenTreeModelSerializer)
 
     class Meta:
         model = MetalPurity
-        fields = ['pk', 'metal_type', 'name', 'fineness', 'active', 'created_at', 'updated_at']
+        fields = ['pk', 'metal_type', 'name', 'purity', 'active', 'created_at', 'updated_at']
 
-
-class SettingSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the Setting model."""
-
-    class Meta:
-        model = Setting
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
-
-
-class LabourSettingSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the LabourSetting model."""
-
-    class Meta:
-        model = LabourSetting
-        fields = ['pk', 'name', 'setting', 'charge_type', 'rate', 'active', 'created_at', 'updated_at']
 
 
 class MetalRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -59,7 +40,7 @@ class MetalRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
 
     class Meta:
         model = MetalRate
-        fields = ['pk', 'metal_type', 'purity', 'date', 'rate', 'active', 'created_at', 'updated_at']
+        fields = ['pk', 'metal_type', 'date', 'rate', 'active', 'created_at', 'updated_at']
 
 
 class FindingTypeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -83,7 +64,7 @@ class DutySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
 
     class Meta:
         model = Duty
-        fields = ['pk', 'name', 'percentage', 'description', 'active', 'created_at', 'updated_at']
+        fields = ['pk', 'metal_type', 'duty', 'markup', 'description', 'active', 'created_at', 'updated_at']
 
 
 class StampSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -99,7 +80,7 @@ class ACExecutiveSerializer(DataExportSerializerMixin, InvenTreeModelSerializer)
 
     class Meta:
         model = ACExecutive
-        fields = ['pk', 'name', 'code', 'user', 'email', 'phone', 'active', 'created_at', 'updated_at']
+        fields = ['pk', 'name', 'code', 'email', 'phone', 'active', 'created_at', 'updated_at']
 
 
 class TermsSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -117,18 +98,3 @@ class CourierServiceSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
         model = CourierService
         fields = ['pk', 'name', 'contact_person', 'phone', 'email', 'tracking_url', 'active', 'created_at', 'updated_at']
 
-
-class POMailTemplateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the POMailTemplate model."""
-
-    class Meta:
-        model = POMailTemplate
-        fields = ['pk', 'name', 'subject', 'body', 'active', 'created_at', 'updated_at']
-
-
-class POMailSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the POMail model."""
-
-    class Meta:
-        model = POMail
-        fields = ['pk', 'name', 'vendor', 'template', 'email', 'description', 'active', 'created_at', 'updated_at']

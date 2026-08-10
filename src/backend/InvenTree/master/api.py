@@ -14,13 +14,9 @@ from .models import (
     Duty,
     FindingType,
     FinishType,
-    LabourSetting,
     MetalPurity,
     MetalRate,
     MetalType,
-    POMail,
-    POMailTemplate,
-    Setting,
     Stamp,
     Terms,
 )
@@ -61,7 +57,7 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type']
     search_fields = ['name']
-    ordering_fields = ['metal_type', 'name', 'fineness']
+    ordering_fields = ['metal_type', 'name', 'purity']
     ordering = 'name'
 
 
@@ -72,45 +68,6 @@ class MetalPurityDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.MetalPuritySerializer
 
 
-class SettingList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Setting objects."""
-
-    queryset = Setting.objects.all()
-    serializer_class = master_serializers.SettingSerializer
-    pagination_class = MasterPagination
-    filter_backends = SEARCH_ORDER_FILTER
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'active']
-    ordering = 'name'
-
-
-class SettingDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Setting object."""
-
-    queryset = Setting.objects.all()
-    serializer_class = master_serializers.SettingSerializer
-
-
-class LabourSettingList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating LabourSetting objects."""
-
-    queryset = LabourSetting.objects.all()
-    serializer_class = master_serializers.LabourSettingSerializer
-    pagination_class = MasterPagination
-    filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['setting', 'charge_type']
-    search_fields = ['name']
-    ordering_fields = ['name', 'rate']
-    ordering = 'name'
-
-
-class LabourSettingDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single LabourSetting object."""
-
-    queryset = LabourSetting.objects.all()
-    serializer_class = master_serializers.LabourSettingSerializer
-
-
 class MetalRateList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating MetalRate objects."""
 
@@ -118,7 +75,7 @@ class MetalRateList(DataExportViewMixin, ListCreateAPI):
     serializer_class = master_serializers.MetalRateSerializer
     pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['metal_type', 'purity']
+    filterset_fields = ['metal_type']
     ordering_fields = ['date', 'rate']
     ordering = '-date'
 
@@ -175,9 +132,11 @@ class DutyList(DataExportViewMixin, ListCreateAPI):
     serializer_class = master_serializers.DutySerializer
     pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'percentage']
-    ordering = 'name'
+    # search_fields = ['name', 'description']
+    search_fields = ['description']
+    # ordering_fields = ['name', 'percentage']
+    ordering_fields = ['metal_type', 'duty', 'markup']
+    ordering = 'metal_type'
 
 
 class DutyDetail(RetrieveUpdateDestroyAPI):
@@ -263,45 +222,6 @@ class CourierServiceDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.CourierServiceSerializer
 
 
-class POMailTemplateList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating POMailTemplate objects."""
-
-    queryset = POMailTemplate.objects.all()
-    serializer_class = master_serializers.POMailTemplateSerializer
-    pagination_class = MasterPagination
-    filter_backends = SEARCH_ORDER_FILTER
-    search_fields = ['name', 'subject']
-    ordering_fields = ['name', 'active']
-    ordering = 'name'
-
-
-class POMailTemplateDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single POMailTemplate object."""
-
-    queryset = POMailTemplate.objects.all()
-    serializer_class = master_serializers.POMailTemplateSerializer
-
-
-class POMailList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating POMail objects."""
-
-    queryset = POMail.objects.all()
-    serializer_class = master_serializers.POMailSerializer
-    pagination_class = MasterPagination
-    filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['vendor', 'template']
-    search_fields = ['name', 'email']
-    ordering_fields = ['name', 'active']
-    ordering = 'name'
-
-
-class POMailDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single POMail object."""
-
-    queryset = POMail.objects.all()
-    serializer_class = master_serializers.POMailSerializer
-
-
 master_api_urls = [
     path('metal-type/', include([
         path('<int:pk>/', MetalTypeDetail.as_view(), name='api-metal-type-detail'),
@@ -311,14 +231,7 @@ master_api_urls = [
         path('<int:pk>/', MetalPurityDetail.as_view(), name='api-metal-purity-detail'),
         path('', MetalPurityList.as_view(), name='api-metal-purity-list'),
     ])),
-    path('setting/', include([
-        path('<int:pk>/', SettingDetail.as_view(), name='api-setting-detail'),
-        path('', SettingList.as_view(), name='api-setting-list'),
-    ])),
-    path('labour-setting/', include([
-        path('<int:pk>/', LabourSettingDetail.as_view(), name='api-labour-setting-detail'),
-        path('', LabourSettingList.as_view(), name='api-labour-setting-list'),
-    ])),
+   
     path('metal-rate/', include([
         path('<int:pk>/', MetalRateDetail.as_view(), name='api-metal-rate-detail'),
         path('', MetalRateList.as_view(), name='api-metal-rate-list'),
@@ -351,12 +264,5 @@ master_api_urls = [
         path('<int:pk>/', CourierServiceDetail.as_view(), name='api-courier-service-detail'),
         path('', CourierServiceList.as_view(), name='api-courier-service-list'),
     ])),
-    path('po-mail-template/', include([
-        path('<int:pk>/', POMailTemplateDetail.as_view(), name='api-po-mail-template-detail'),
-        path('', POMailTemplateList.as_view(), name='api-po-mail-template-list'),
-    ])),
-    path('po-mail/', include([
-        path('<int:pk>/', POMailDetail.as_view(), name='api-po-mail-detail'),
-        path('', POMailList.as_view(), name='api-po-mail-list'),
-    ])),
+   
 ]
