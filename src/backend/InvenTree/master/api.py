@@ -40,8 +40,8 @@ class MetalTypeList(DataExportViewMixin, ListCreateAPI):
     serializer_class = master_serializers.MetalTypeSerializer
     pagination_class = MasterPagination
     filter_backends = SEARCH_ORDER_FILTER
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'active']
+    search_fields = ['code','name', 'description']
+    ordering_fields = ['code', 'name', 'active']
     ordering = 'name'
 
 
