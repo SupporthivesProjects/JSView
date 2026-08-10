@@ -33,6 +33,9 @@ class MetalType(MasterFieldsMixin):
         verbose_name = _('Metal Type')
         verbose_name_plural = _('Metal Types')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -54,6 +57,9 @@ class MetalPurity(MasterFieldsMixin):
                 fields=['metal_type', 'name'],
                 name='unique_metal_type_purity_name'
             )
+        ]
+        indexes = [
+            models.Index(fields=['active']),
         ]
 
     def __str__(self):
@@ -77,6 +83,10 @@ class MetalRate(MasterFieldsMixin):
                 name='unique_metal_rate_per_day'
             )
         ]
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return f'{self.metal_type.name} @ {self.date}'
@@ -92,6 +102,9 @@ class FindingType(MasterFieldsMixin):
         verbose_name = _('Finding Type')
         verbose_name_plural = _('Finding Types')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -107,6 +120,9 @@ class FinishType(MasterFieldsMixin):
         verbose_name = _('Finish Type')
         verbose_name_plural = _('Finish Types')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -125,6 +141,9 @@ class Duty(MasterFieldsMixin):
         verbose_name = _('Duty')
         verbose_name_plural = _('Duties')
         ordering = ['metal_type']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         # return f'{self.metal_type.name if self.metal_type else "No Metal Type"} - {self.duty}%'
@@ -142,6 +161,9 @@ class Stamp(MasterFieldsMixin):
         verbose_name = _('Stamp')
         verbose_name_plural = _('Stamps')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -159,6 +181,10 @@ class ACExecutive(MasterFieldsMixin):
         verbose_name = _('A/C Executive')
         verbose_name_plural = _('A/C Executives')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -175,6 +201,9 @@ class Terms(MasterFieldsMixin):
         verbose_name = _('Terms')
         verbose_name_plural = _('Terms')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
@@ -193,6 +222,9 @@ class CourierService(MasterFieldsMixin):
         verbose_name = _('Courier Service')
         verbose_name_plural = _('Courier Services')
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
 
     def __str__(self):
         return self.name
