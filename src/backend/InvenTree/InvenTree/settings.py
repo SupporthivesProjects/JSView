@@ -313,6 +313,11 @@ INSTALLED_APPS = [
     'common.apps.CommonConfig',
     'plugin.apps.PluginAppConfig',  # Plugin app runs before all apps that depend on the isPluginRegistryLoaded function
     'company.apps.CompanyConfig',
+
+
+
+    'master.apps.MasterConfig',
+
     'order.apps.OrderConfig',
     'part.apps.PartConfig',
     'report.apps.ReportConfig',
@@ -529,6 +534,7 @@ REST_FRAMEWORK = {
     'DEFAULT_METADATA_CLASS': 'InvenTree.metadata.InvenTreeMetadata',
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'TOKEN_MODEL': 'users.models.ApiToken',
+    
 }
 
 if DEBUG:
@@ -811,7 +817,7 @@ for i, host in enumerate(ALLOWED_HOSTS):
 CSRF_TRUSTED_ORIGINS = get_setting(
     'INVENTREE_TRUSTED_ORIGINS',
     config_key='trusted_origins',
-    default_value=[],
+    default_value=["*"],
     typecast=list,
 )
 
@@ -1188,3 +1194,4 @@ PRESIGNED_URL_EXPIRATION = 600
 
 # Taggit settings
 TAGGIT_CASE_INSENSITIVE = True
+APPEND_SLASH = False
