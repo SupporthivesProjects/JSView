@@ -10,6 +10,7 @@ import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
 import MetalTypeTable from "@components/tables/metal/MetalTypeTable";
+import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
 
 
 export default function MetalTypeIndex() {
@@ -22,6 +23,11 @@ export default function MetalTypeIndex() {
         label: t`Metal Types`,
         icon: <IconAtom2 />,
         content: <MetalTypeTable />,
+      },{
+        name: "metal-purity",
+        label: t`Metal Purity`,
+        icon: <IconAtom2 />,
+        content: <MetalPurityTable />,
       },
     ];
   }, []);

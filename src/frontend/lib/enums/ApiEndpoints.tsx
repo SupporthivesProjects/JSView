@@ -128,8 +128,10 @@ export enum ApiEndpoints {
   related_part_list = "part/related/",
   part_test_template_list = "part/test-template/",
 
-  //Metals API endpoints
+  // Metals API endpoints
   metal_type_list = "master/metal-type/",
+  metal_purity_list = "master/metal-purity/",
+  
 
   // Company API endpoints
   company_list = "company/",

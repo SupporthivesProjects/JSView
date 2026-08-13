@@ -34,6 +34,15 @@ export function metalTypeFields(): ApiFormFieldSet {
   };
 }
 
+export function metalPurityFields(): ApiFormFieldSet {
+  return {
+    code: {},
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
