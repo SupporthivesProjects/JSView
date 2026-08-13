@@ -4,17 +4,17 @@ import { useMemo } from 'react';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { apiUrl } from '@lib/functions/Api';
 import { identifierString } from '@lib/functions/Conversion';
-import { api } from '../App';
-import type { DashboardWidgetProps } from '../components/dashboard/DashboardWidget';
-import DashboardWidgetLibrary from '../components/dashboard/DashboardWidgetLibrary';
-import { useInvenTreeContext } from '../components/plugins/PluginContext';
+import { api } from '@app-lib/api/client';
+import type { DashboardWidgetProps } from '@components/shared/dashboard/DashboardWidget';
+import DashboardWidgetLibrary from '@components/shared/dashboard/DashboardWidgetLibrary';
+import { useInvenTreeContext } from '@components/shared/plugins/PluginContext';
 import {
   type PluginUIFeature,
   PluginUIFeatureType
-} from '../components/plugins/PluginUIFeature';
-import RemoteComponent from '../components/plugins/RemoteComponent';
-import { useGlobalSettingsState } from '../states/SettingsStates';
-import { useUserState } from '../states/UserState';
+} from '@components/shared/plugins/PluginUIFeature';
+import RemoteComponent from '@components/shared/plugins/RemoteComponent';
+import { useGlobalSettingsState } from '@store/SettingsStates';
+import { useUserState } from '@store/UserState';
 
 interface DashboardLibraryProps {
   items: DashboardWidgetProps[];

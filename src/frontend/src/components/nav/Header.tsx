@@ -23,21 +23,21 @@ import { getBaseUrl } from '@lib/functions/Navigation';
 import { navigateToLink } from '@lib/functions/Navigation';
 import { t } from '@lingui/core/macro';
 import { useShallow } from 'zustand/react/shallow';
-import { api } from '../../App';
-import type { NavigationUIFeature } from '../../components/plugins/PluginUIFeatureTypes';
-import { getNavTabs } from '../../defaults/links';
-import { generateUrl } from '../../functions/urls';
+import { api } from '@app-lib/api/client';
+import type { NavigationUIFeature } from '../shared/plugins/PluginUIFeatureTypes';
+import { getNavTabs } from '@config/links';
+import { generateUrl } from '@helpers/urls';
 import { usePluginUIFeature } from '../../hooks/UsePluginUIFeature';
-import * as classes from '../../main.css';
-import { useLocalState } from '../../states/LocalState';
-import { useServerApiState } from '../../states/ServerApiState';
+import * as classes from '../../styles/main.css';
+import { useLocalState } from '@store/LocalState';
+import { useServerApiState } from '@store/ServerApiState';
 import {
   useGlobalSettingsState,
   useUserSettingsState
-} from '../../states/SettingsStates';
-import { useUserState } from '../../states/UserState';
-import { ScanButton } from '../buttons/ScanButton';
-import { SpotlightButton } from '../buttons/SpotlightButton';
+} from '@store/SettingsStates';
+import { useUserState } from '@store/UserState';
+import { ScanButton } from '../ui/buttons/ScanButton';
+import { SpotlightButton } from '../ui/buttons/SpotlightButton';
 import { Alerts, errorCodeLink } from './Alerts';
 import { MainMenu } from './MainMenu';
 import { NavHoverMenu } from './NavHoverMenu';

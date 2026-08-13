@@ -46,11 +46,11 @@ import {
   navigateToLink
 } from '@lib/functions/Navigation';
 import { showNotification } from '@mantine/notifications';
-import { api } from '../../App';
-import { useUserSettingsState } from '../../states/SettingsStates';
-import { useUserState } from '../../states/UserState';
-import { RenderInstance } from '../render/Instance';
-import { getModelInfo } from '../render/ModelType';
+import { api } from '@app-lib/api/client';
+import { useUserSettingsState } from '@store/SettingsStates';
+import { useUserState } from '@store/UserState';
+import { RenderInstance } from '../shared/render/Instance';
+import { getModelInfo } from '../shared/render/ModelType';
 
 // Define type for handling individual search queries
 type SearchQuery = {

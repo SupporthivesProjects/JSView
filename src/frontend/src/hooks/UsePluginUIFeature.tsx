@@ -3,15 +3,15 @@ import { useMemo } from 'react';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { apiUrl } from '@lib/functions/Api';
-import { api } from '../App';
-import { useInvenTreeContext } from '../components/plugins/PluginContext';
-import { findExternalPluginFunction } from '../components/plugins/PluginSource';
+import { api } from '@app-lib/api/client';
+import { useInvenTreeContext } from '@components/shared/plugins/PluginContext';
+import { findExternalPluginFunction } from '@components/shared/plugins/PluginSource';
 import type {
   BaseUIFeature,
   PluginUIFeatureAPIResponse,
   PluginUIFuncWithoutInvenTreeContextType
-} from '../components/plugins/PluginUIFeatureTypes';
-import { useGlobalSettingsState } from '../states/SettingsStates';
+} from '@components/shared/plugins/PluginUIFeatureTypes';
+import { useGlobalSettingsState } from '@store/SettingsStates';
 
 export function usePluginUIFeature<UIFeatureT extends BaseUIFeature>({
   enabled = true,

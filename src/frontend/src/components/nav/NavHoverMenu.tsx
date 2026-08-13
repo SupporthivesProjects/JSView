@@ -1,6 +1,6 @@
 import { UnstyledButton } from '@mantine/core';
 
-import { InvenTreeLogo } from '../items/InvenTreeLogo';
+import { InvenTreeLogo } from '../ui/items/InvenTreeLogo';
 
 export function NavHoverMenu({
   openDrawer

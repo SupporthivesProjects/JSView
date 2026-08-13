@@ -67,7 +67,17 @@ export default defineConfig(({ command, mode }) => {
     },
     resolve: {
       alias: {
-        '@lib': '/lib'
+        '@lib': '/lib',
+        '@app-lib': '/src/lib',
+        '@routes': '/src/routes',
+        '@actions': '/src/actions',
+        '@containers': '/src/containers',
+        '@components': '/src/components',
+        '@context': '/src/context',
+        '@store': '/src/store',
+        '@config': '/src/config',
+        '@helpers': '/src/helpers',
+        '@assets': '/src/assets'
       }
     },
     server: {

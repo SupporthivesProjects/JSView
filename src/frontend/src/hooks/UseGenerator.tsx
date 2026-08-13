@@ -4,8 +4,8 @@ import { useCallback, useState } from 'react';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { apiUrl } from '@lib/functions/Api';
-import { api } from '../App';
-import { useModalState } from '../states/ModalState';
+import { api } from '@app-lib/api/client';
+import { useModalState } from '@store/ModalState';
 
 export type GeneratorProps = {
   endpoint: ApiEndpoints;
