@@ -70,7 +70,7 @@ class MetalRate(MasterFieldsMixin):
     """Dated metal rate for a MetalType / MetalPurity."""
 
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='rates', verbose_name=_('Metal Type'), help_text=_('Metal type for which this rate applies.'))
-    rate = models.DecimalField(max_digits=15, decimal_places=4, validators=[MinValueValidator(0)], verbose_name=_('Rate'), help_text=_('Metal rate applicable for the selected date.'))
+    rate = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(0)], verbose_name=_('Rate'), help_text=_('Metal rate applicable for the selected date.'))
     date = models.DateField(verbose_name=_('Date'), help_text=_('Date on which this metal rate is applicable.'))
 
     class Meta:
