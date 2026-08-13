@@ -11,7 +11,7 @@ import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
 import MetalTypeTable from "@components/tables/metal/MetalTypeTable";
 import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
-
+import MetalRateTable from "@components/tables/metal/MetalRateTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -23,11 +23,18 @@ export default function MetalTypeIndex() {
         label: t`Metal Types`,
         icon: <IconAtom2 />,
         content: <MetalTypeTable />,
-      },{
+      },
+      {
         name: "metal-purity",
         label: t`Metal Purity`,
         icon: <IconAtom2 />,
         content: <MetalPurityTable />,
+      },
+      {
+        name: "metal-rate",
+        label: t`Metal Rate`,
+        icon: <IconAtom2 />,
+        content: <MetalRateTable />,
       },
     ];
   }, []);

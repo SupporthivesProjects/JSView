@@ -52,10 +52,16 @@ export function metalPurityFields(): ApiFormFieldSet {
 
 export function metalRate(): ApiFormFieldSet {
   return {
-    code: {},
-    name: {},
-    description: {},
+    metal_type: {
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    rate: {},
     active: {},
+    date: {},
   };
 }
 

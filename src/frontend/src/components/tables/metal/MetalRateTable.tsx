@@ -16,7 +16,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DecimalColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { metalPurityFields } from "../../forms/CommonForms";
+import { metalRate } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -68,15 +68,16 @@ export default function MetalRateTable() {
           metalTypeNameByPk[record.metal_type] ?? record.metal_type,
       },
       {
-        accessor: "name",
+        accessor: "rate",
         sortable: true,
         switchable: false,
       },
-      DecimalColumn({
-        accessor: "purity",
-        title: t`Purity (%)`,
+      {
+        accessor: "date",
+        title: t`Date`,
         sortable: true,
-      }),
+        switchable: true,
+      },
       BooleanColumn({
         accessor: "active",
       }),
@@ -99,7 +100,7 @@ export default function MetalRateTable() {
   const newMetalRate = useCreateApiFormModal({
     url: ApiEndpoints.metal_rate,
     title: t`Add Metal Rate`,
-    fields: metalPurityFields(),
+    fields: metalRate(),
     table: table,
   });
 
@@ -112,7 +113,7 @@ export default function MetalRateTable() {
     url: ApiEndpoints.metal_rate,
     pk: selectedMetalRate,
     title: t`Edit Metal Rate`,
-    fields: metalPurityFields(),
+    fields: metalRate(),
     table: table,
   });
 
