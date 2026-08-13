@@ -36,9 +36,28 @@ export function metalTypeFields(): ApiFormFieldSet {
 
 export function metalPurityFields(): ApiFormFieldSet {
   return {
-    code: {},
+    metal_type: {
+      // The backend's OPTIONS metadata for this related field currently
+      // returns api_url: null, so the picker has nothing to search/select
+      // against and the field can never be filled in - point it at the
+      // Metal Type list endpoint directly instead (frontend-only override,
+      // no backend change).
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      // "metaltype" isn't registered in the shared model registry
+      // (lib/enums/ModelType.tsx, part of the untouched plugin-SDK
+      // package), so without a custom renderer each option would show a
+      // red "Unknown model" alert instead of its name. Written
+      // defensively since RelatedModelField's actual call site passes
+      // `{ instance }` as a props object rather than matching the
+      // library's own (instance) => ReactNode type declaration.
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
     name: {},
-    description: {},
+    purity: {},
     active: {},
   };
 }
