@@ -1,22 +1,23 @@
-import { t } from '@lingui/core/macro';
-import { Trans } from '@lingui/react/macro';
-import { openContextModal } from '@mantine/modals';
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
+import { openContextModal } from "@mantine/modals";
 
-import { StylishText } from '@lib/components/StylishText';
-import { UserRoles } from '@lib/enums/Roles';
-import type { SettingsStateProps } from '@lib/types/Settings';
-import type { UserStateProps } from '@lib/types/User';
+import { StylishText } from "@lib/components/StylishText";
+import { UserRoles } from "@lib/enums/Roles";
+import type { SettingsStateProps } from "@lib/types/Settings";
+import type { UserStateProps } from "@lib/types/User";
 import {
+  IconAtom2,
   IconBox,
   IconBuildingFactory2,
   IconDashboard,
   IconPackages,
   IconShoppingCart,
-  IconTruckDelivery
-} from '@tabler/icons-react';
-import type { ReactNode } from 'react';
-import type { MenuLinkItem } from '@components/ui/items/MenuLinks';
-import { useGlobalSettingsState } from '@store/SettingsStates';
+  IconTruckDelivery,
+} from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import type { MenuLinkItem } from "@components/ui/items/MenuLinks";
+import { useGlobalSettingsState } from "@store/SettingsStates";
 
 type NavTab = {
   name: string;
@@ -30,49 +31,55 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
 
   const navTabs: NavTab[] = [
     {
-      name: 'home',
+      name: "home",
       title: t`Dashboard`,
-      icon: <IconDashboard />
+      icon: <IconDashboard />,
     },
     {
-      name: 'part',
+      name: "part",
       title: t`Parts`,
       icon: <IconBox />,
       visible:
         user.hasViewRole(UserRoles.part) ||
-        user.hasViewRole(UserRoles.part_category)
+        user.hasViewRole(UserRoles.part_category),
     },
     {
-      name: 'stock',
+      name: "metal",
+      title: t`Metal Types`,
+      icon: <IconAtom2 />,
+      visible: user.hasViewRole(UserRoles.part),
+    },
+    {
+      name: "stock",
       title: t`Stock`,
       icon: <IconPackages />,
       visible:
         user.hasViewRole(UserRoles.stock) ||
         user.hasViewRole(UserRoles.stock_location) ||
-        (globalSettings.isSet('TRANSFERORDER_ENABLED') &&
-          user.hasViewRole(UserRoles.transfer_order))
+        (globalSettings.isSet("TRANSFERORDER_ENABLED") &&
+          user.hasViewRole(UserRoles.transfer_order)),
     },
     {
-      name: 'manufacturing',
+      name: "manufacturing",
       title: t`Manufacturing`,
       icon: <IconBuildingFactory2 />,
-      visible: user.hasViewRole(UserRoles.build)
+      visible: user.hasViewRole(UserRoles.build),
     },
     {
-      name: 'purchasing',
+      name: "purchasing",
       title: t`Purchasing`,
       icon: <IconShoppingCart />,
-      visible: user.hasViewRole(UserRoles.purchase_order)
+      visible: user.hasViewRole(UserRoles.purchase_order),
     },
     {
-      name: 'sales',
+      name: "sales",
       title: t`Sales`,
       icon: <IconTruckDelivery />,
       visible:
         user.hasViewRole(UserRoles.sales_order) ||
-        (globalSettings.isSet('RETURNORDER_ENABLED') &&
-          user.hasViewRole(UserRoles.return_order))
-    }
+        (globalSettings.isSet("RETURNORDER_ENABLED") &&
+          user.hasViewRole(UserRoles.return_order)),
+    },
   ];
 
   return navTabs.filter((tab) => {
@@ -81,133 +88,133 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
 }
 
 export const docLinks = {
-  docs: 'https://docs.inventree.org/',
-  app: 'https://docs.inventree.org/en/latest/app/',
-  getting_started: 'https://docs.inventree.org/en/latest/start/',
-  api: 'https://docs.inventree.org/en/latest/api/',
-  developer: 'https://docs.inventree.org/en/latest/develop/contributing/',
-  faq: 'https://docs.inventree.org/en/latest/faq/',
-  github: 'https://github.com/inventree/inventree',
-  bug: 'https://github.com/inventree/inventree/issues',
-  releases: 'https://github.com/inventree/inventree/releases',
-  errorcodes: 'https://docs.inventree.org/en/latest/sref/error-codes/'
+  docs: "https://docs.inventree.org/",
+  app: "https://docs.inventree.org/en/latest/app/",
+  getting_started: "https://docs.inventree.org/en/latest/start/",
+  api: "https://docs.inventree.org/en/latest/api/",
+  developer: "https://docs.inventree.org/en/latest/develop/contributing/",
+  faq: "https://docs.inventree.org/en/latest/faq/",
+  github: "https://github.com/inventree/inventree",
+  bug: "https://github.com/inventree/inventree/issues",
+  releases: "https://github.com/inventree/inventree/releases",
+  errorcodes: "https://docs.inventree.org/en/latest/sref/error-codes/",
 };
 
 export function DocumentationLinks(): MenuLinkItem[] {
   return [
     {
-      id: 'getting-started',
+      id: "getting-started",
       title: t`Getting Started`,
       link: docLinks.getting_started,
       external: true,
-      description: t`Getting started with InvenTree`
+      description: t`Getting started with InvenTree`,
     },
     {
-      id: 'api',
+      id: "api",
       title: t`API`,
       link: docLinks.api,
       external: true,
-      description: t`InvenTree API documentation`
+      description: t`InvenTree API documentation`,
     },
     {
-      id: 'developer',
+      id: "developer",
       title: t`Developer Manual`,
       link: docLinks.developer,
       external: true,
-      description: t`InvenTree developer manual`
+      description: t`InvenTree developer manual`,
     },
     {
-      id: 'faq',
+      id: "faq",
       title: t`FAQ`,
       link: docLinks.faq,
       external: true,
-      description: t`Frequently asked questions`
+      description: t`Frequently asked questions`,
     },
     {
-      id: 'github',
+      id: "github",
       title: t`GitHub Repository`,
       link: docLinks.github,
       external: true,
-      description: t`InvenTree source code on GitHub`
-    }
+      description: t`InvenTree source code on GitHub`,
+    },
   ];
 }
 
 export function serverInfo() {
   return openContextModal({
-    modal: 'info',
+    modal: "info",
     title: (
-      <StylishText size='xl'>
+      <StylishText size="xl">
         <Trans>System Information</Trans>
       </StylishText>
     ),
-    size: 'xl',
-    innerProps: {}
+    size: "xl",
+    innerProps: {},
   });
 }
 
 export function aboutInvenTree() {
   return openContextModal({
-    modal: 'about',
+    modal: "about",
     title: (
-      <StylishText size='xl'>
+      <StylishText size="xl">
         <Trans>About InvenTree</Trans>
       </StylishText>
     ),
-    size: 'xl',
-    innerProps: {}
+    size: "xl",
+    innerProps: {},
   });
 }
 
 export function licenseInfo() {
   return openContextModal({
-    modal: 'license',
+    modal: "license",
     title: (
-      <StylishText size='xl'>
+      <StylishText size="xl">
         <Trans>License Information</Trans>
       </StylishText>
     ),
-    size: 'xl',
-    innerProps: {}
+    size: "xl",
+    innerProps: {},
   });
 }
 
 export function AboutLinks(
   settings: SettingsStateProps,
-  user: UserStateProps
+  user: UserStateProps,
 ): MenuLinkItem[] {
   const base_items: MenuLinkItem[] = [
     {
-      id: 'documentation',
+      id: "documentation",
       title: t`Documentation`,
       description: t`InvenTree documentation`,
       link: docLinks.docs,
-      external: true
+      external: true,
     },
     {
-      id: 'instance',
+      id: "instance",
       title: t`System Information`,
       description: t`About this InvenTree instance`,
-      icon: 'info',
-      action: serverInfo
+      icon: "info",
+      action: serverInfo,
     },
     {
-      id: 'licenses',
+      id: "licenses",
       title: t`License Information`,
       description: t`Licenses for dependencies of the InvenTree software`,
-      icon: 'license',
-      action: licenseInfo
-    }
+      icon: "license",
+      action: licenseInfo,
+    },
   ];
 
   // Restrict the about link if that setting is set
-  if (user.isSuperuser() || !settings.isSet('INVENTREE_RESTRICT_ABOUT')) {
+  if (user.isSuperuser() || !settings.isSet("INVENTREE_RESTRICT_ABOUT")) {
     base_items.push({
-      id: 'about',
+      id: "about",
       title: t`About InvenTree`,
       description: t`About the InvenTree Project`,
-      icon: 'info',
-      action: aboutInvenTree
+      icon: "info",
+      action: aboutInvenTree,
     });
   }
   return base_items;

@@ -1,4 +1,4 @@
-import type { InvenTreeIconType, TablerIconType } from '@lib/types/Icons';
+import type { InvenTreeIconType, TablerIconType } from "@lib/types/Icons";
 import {
   IconArrowBack,
   IconArrowBigDownLineFilled,
@@ -114,11 +114,13 @@ import {
   IconVersions,
   IconWorld,
   IconWorldCode,
-  IconX
-} from '@tabler/icons-react';
-import type React from 'react';
+  IconX,
+  IconAtom2,
+} from "@tabler/icons-react";
+import type React from "react";
 
 const icons: InvenTreeIconType = {
+metal: IconAtom2,
   name: IconPoint,
   description: IconInfoCircle,
   variant_of: IconHierarchy,
@@ -278,7 +280,7 @@ const icons: InvenTreeIconType = {
 
   chart_bar: IconChartBar,
   chart_line: IconChartLine,
-  news: IconNews
+  news: IconNews,
 };
 
 /**
@@ -304,7 +306,7 @@ export function InvenTreeIcon(props: Readonly<InvenTreeIconProps>) {
     Icon = GetIcon(props.icon);
   } else {
     console.warn(
-      `Icon name '${props.icon}' is not registered with the Icon manager`
+      `Icon name '${props.icon}' is not registered with the Icon manager`,
     );
     Icon = IconQuestionMark;
   }

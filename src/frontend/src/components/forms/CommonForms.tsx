@@ -1,27 +1,36 @@
-import { IconUsers } from '@tabler/icons-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { IconUsers } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
-import { ModelType } from '@lib/enums/ModelType';
-import { apiUrl } from '@lib/functions/Api';
-import type { ApiFormFieldSet, ApiFormFieldType } from '@lib/types/Forms';
+import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
+import { ModelType } from "@lib/enums/ModelType";
+import { apiUrl } from "@lib/functions/Api";
+import type { ApiFormFieldSet, ApiFormFieldType } from "@lib/types/Forms";
 import type {
   StatusCodeInterface,
-  StatusCodeListInterface
-} from '../shared/render/StatusRenderer';
-import { useApi } from '@context/ApiContext';
-import { useGlobalStatusState } from '@store/GlobalStatusState';
-import { useUserState } from '@store/UserState';
-import { ProjectCodeField } from './CommonFields';
+  StatusCodeListInterface,
+} from "../shared/render/StatusRenderer";
+import { useApi } from "@context/ApiContext";
+import { useGlobalStatusState } from "@store/GlobalStatusState";
+import { useUserState } from "@store/UserState";
+import { ProjectCodeField } from "./CommonFields";
 
 export function projectCodeFields(): ApiFormFieldSet {
   return {
     code: {},
     description: {},
     responsible: {
-      icon: <IconUsers />
+      icon: <IconUsers />,
     },
-    active: {}
+    active: {},
+  };
+}
+
+export function metalTypeFields(): ApiFormFieldSet {
+  return {
+    code: {},
+    name: {},
+    description: {},
+    active: {},
   };
 }
 
@@ -30,23 +39,23 @@ export function useCustomStateFields(): ApiFormFieldSet {
   const statusCodes = useGlobalStatusState();
 
   // Selected base status class
-  const [statusClass, setStatusClass] = useState<string>('');
+  const [statusClass, setStatusClass] = useState<string>("");
 
   // Construct a list of status options based on the selected status class
   const statusOptions: any[] = useMemo(() => {
     const options: any[] = [];
 
     const valuesList = Object.values(statusCodes.status ?? {}).find(
-      (value: StatusCodeListInterface) => value.status_class === statusClass
+      (value: StatusCodeListInterface) => value.status_class === statusClass,
     );
 
     Object.values(valuesList?.values ?? {}).forEach(
       (value: StatusCodeInterface) => {
         options.push({
           value: value.key,
-          display_name: value.label
+          display_name: value.label,
         });
-      }
+      },
     );
 
     return options;
@@ -57,17 +66,17 @@ export function useCustomStateFields(): ApiFormFieldSet {
       reference_status: {
         onValueChange(value) {
           setStatusClass(value);
-        }
+        },
       },
       logical_key: {
-        field_type: 'choice',
-        choices: statusOptions
+        field_type: "choice",
+        choices: statusOptions,
       },
       key: {},
       name: {},
       label: {},
       color: {},
-      model: {}
+      model: {},
     };
   }, [statusOptions]);
 }
@@ -76,14 +85,14 @@ export function customUnitsFields(): ApiFormFieldSet {
   return {
     name: {},
     definition: {},
-    symbol: {}
+    symbol: {},
   };
 }
 
 export function extraLineItemFields(): ApiFormFieldSet {
   return {
     order: {
-      hidden: true
+      hidden: true,
     },
     line: {},
     reference: {},
@@ -93,7 +102,7 @@ export function extraLineItemFields(): ApiFormFieldSet {
     price_currency: {},
     project_code: ProjectCodeField(),
     notes: {},
-    link: {}
+    link: {},
   };
 }
 
@@ -108,10 +117,10 @@ export function useParameterTemplateFields(): ApiFormFieldSet {
       checkbox: {},
       selectionlist: {
         filters: {
-          active: true
-        }
+          active: true,
+        },
       },
-      enabled: {}
+      enabled: {},
     };
   }, []);
 }
@@ -139,15 +148,15 @@ export function useDynamicParameterValueField(resetDep?: any): {
   const [selectionListId, setSelectionListId] = useState<number | null>(null);
   const [choices, setChoices] = useState<any[]>([]);
   const [fieldType, setFieldType] = useState<
-    'string' | 'boolean' | 'choice' | 'related field'
-  >('string');
-  const [data, setData] = useState<string>('');
+    "string" | "boolean" | "choice" | "related field"
+  >("string");
+  const [data, setData] = useState<string>("");
 
   const reset = useCallback(() => {
     setSelectionListId(null);
-    setFieldType('string');
+    setFieldType("string");
     setChoices([]);
-    setData('');
+    setData("");
   }, []);
 
   useEffect(() => {
@@ -162,7 +171,7 @@ export function useDynamicParameterValueField(resetDep?: any): {
 
       return api
         .get(apiUrl(ApiEndpoints.selectionentry_list, selectionListId), {
-          params: { value: value }
+          params: { value: value },
         })
         .then((response) => {
           if (response.data && response.data.length == 1) {
@@ -172,50 +181,50 @@ export function useDynamicParameterValueField(resetDep?: any): {
           }
         });
     },
-    [selectionListId]
+    [selectionListId],
   );
 
   const onTemplateValueChange = useCallback(
     (value: any, record: any) => {
       setSelectionListId(record?.selectionlist || null);
-      setData('');
+      setData("");
 
       if (record?.checkbox) {
         setChoices([]);
-        setFieldType('boolean');
-        setData('false');
+        setFieldType("boolean");
+        setData("false");
       } else if (record?.choices) {
-        const _choices: string[] = record.choices.split(',');
+        const _choices: string[] = record.choices.split(",");
 
         if (_choices.length > 0) {
           setChoices(
             _choices.map((choice) => ({
               display_name: choice.trim(),
-              value: choice.trim()
-            }))
+              value: choice.trim(),
+            })),
           );
-          setFieldType('choice');
+          setFieldType("choice");
         } else {
           setChoices([]);
-          setFieldType('string');
-          setData('');
+          setFieldType("string");
+          setData("");
         }
       } else if (record?.selectionlist) {
-        setFieldType('related field');
-        setData('');
+        setFieldType("related field");
+        setData("");
       } else {
-        setFieldType('string');
-        setData('');
+        setFieldType("string");
+        setData("");
       }
     },
-    [setFieldType, setData, setChoices]
+    [setFieldType, setData, setChoices],
   );
 
   const valueFieldConfig: ApiFormFieldType = useMemo(
     () => ({
       value: data,
       onValueChange: (value: any, record: any) => {
-        if (fieldType === 'related field' && selectionListId) {
+        if (fieldType === "related field" && selectionListId) {
           // For related fields, store the primary key value (not the string representation)
           setData(record?.value ?? value);
         } else {
@@ -223,33 +232,33 @@ export function useDynamicParameterValueField(resetDep?: any): {
         }
       },
       field_type: fieldType,
-      choices: fieldType === 'choice' ? choices : undefined,
-      default: fieldType === 'boolean' ? false : undefined,
+      choices: fieldType === "choice" ? choices : undefined,
+      default: fieldType === "boolean" ? false : undefined,
       pk_field:
-        fieldType === 'related field' && selectionListId ? 'value' : undefined,
+        fieldType === "related field" && selectionListId ? "value" : undefined,
       model:
-        fieldType === 'related field' && selectionListId
+        fieldType === "related field" && selectionListId
           ? ModelType.selectionentry
           : undefined,
       api_url:
-        fieldType === 'related field' && selectionListId
+        fieldType === "related field" && selectionListId
           ? apiUrl(ApiEndpoints.selectionentry_list, selectionListId)
           : undefined,
-      filters: fieldType === 'related field' ? { active: true } : undefined,
+      filters: fieldType === "related field" ? { active: true } : undefined,
       adjustValue: (value: any) => {
         let v: string = value.toString().trim();
 
-        if (fieldType === 'boolean') {
-          if (v.toLowerCase() !== 'true') {
-            v = 'false';
+        if (fieldType === "boolean") {
+          if (v.toLowerCase() !== "true") {
+            v = "false";
           }
         }
 
         return v;
       },
-      singleFetchFunction: fetchSelectionEntry
+      singleFetchFunction: fetchSelectionEntry,
     }),
-    [data, fieldType, choices, selectionListId, fetchSelectionEntry]
+    [data, fieldType, choices, selectionListId, fetchSelectionEntry],
   );
 
   return { onTemplateValueChange, valueFieldConfig, reset };
@@ -257,7 +266,7 @@ export function useDynamicParameterValueField(resetDep?: any): {
 
 export function useParameterFields({
   modelType,
-  modelId
+  modelId,
 }: {
   modelType: ModelType;
   modelId: number;
@@ -267,7 +276,7 @@ export function useParameterFields({
 
   const resetKey = useMemo(
     () => `${modelType}-${modelId}`,
-    [modelType, modelId]
+    [modelType, modelId],
   );
   const { onTemplateValueChange, valueFieldConfig } =
     useDynamicParameterValueField(resetKey);
@@ -276,22 +285,22 @@ export function useParameterFields({
     return {
       model_type: {
         hidden: true,
-        value: modelType
+        value: modelType,
       },
       model_id: {
         hidden: true,
-        value: modelId
+        value: modelId,
       },
       template: {
         filters: {
           for_model: modelType,
-          enabled: true
+          enabled: true,
         },
         onValueChange: onTemplateValueChange,
-        addCreateFields: user.isStaff() ? templateCreateFields : undefined
+        addCreateFields: user.isStaff() ? templateCreateFields : undefined,
       },
       data: valueFieldConfig,
-      note: {}
+      note: {},
     };
   }, [
     modelType,
@@ -299,7 +308,7 @@ export function useParameterFields({
     onTemplateValueChange,
     valueFieldConfig,
     templateCreateFields,
-    user
+    user,
   ]);
 }
 
@@ -309,7 +318,7 @@ export function selectionListFields(): ApiFormFieldSet {
     description: {},
     active: {},
     source_plugin: {},
-    source_string: {}
+    source_string: {},
   };
 }
 
@@ -318,6 +327,6 @@ export function selectionEntryFields(): ApiFormFieldSet {
     value: {},
     label: {},
     description: {},
-    active: {}
+    active: {},
   };
 }
