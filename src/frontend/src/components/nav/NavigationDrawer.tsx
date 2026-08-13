@@ -73,9 +73,9 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
         icon: "part",
       },
       {
-        id: "metal",
+        id: "master",
         title: t`Metal Types`,
-        link: "/metal/index/",
+        link: "/master/index/",
         hidden: !user.hasViewRole(UserRoles.part),
         icon: "metal",
       },

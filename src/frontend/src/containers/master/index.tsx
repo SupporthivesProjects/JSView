@@ -45,7 +45,7 @@ export default function MetalTypeIndex() {
 
   return (
     <Stack>
-      <PageDetail title={t`Metal Types`} />
+      <PageDetail title={t`Master`} />
       <PanelGroup pageKey="metal-type-index" panels={panels} />
     </Stack>
   );
