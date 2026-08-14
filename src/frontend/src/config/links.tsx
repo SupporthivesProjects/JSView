@@ -45,7 +45,7 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
     },
     {
       name: "master",
-      title: t`Metal Types`,
+      title: t`Master`,
       icon: <IconAtom2 />,
       visible: user.hasViewRole(UserRoles.part),
     },
