@@ -6,7 +6,7 @@ from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework.pagination import LimitOffsetPagination
-from permissions import MasterDataPermission
+from master.permissions import MasterDataPermission
 
 from . import serializers as master_serializers
 from .models import (
