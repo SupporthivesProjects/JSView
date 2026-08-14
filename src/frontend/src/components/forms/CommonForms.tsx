@@ -80,6 +80,24 @@ export function finishTypeFields(): ApiFormFieldSet {
     active: {},
   };
 }
+
+export function ListDutyFields(): ApiFormFieldSet {
+  return {
+    metal_type: {
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    duty: {},
+    markup: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();

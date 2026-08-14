@@ -14,6 +14,7 @@ import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
 import MetalRateTable from "@components/tables/metal/MetalRateTable";
 import FindingTypeTable from "@components/tables/metal/FindingTypeTable";
 import FinishTypeTable from "@components/tables/metal/FinishTypeTable";
+import ListDutyTable from "@components/tables/metal/ListDutyTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -49,6 +50,12 @@ export default function MetalTypeIndex() {
         label: t`Finish Type`,
         icon: <IconAtom2 />,
         content: <FinishTypeTable />,
+      },
+      {
+        name: "duty-list",
+        label: t`Duty`,
+        icon: <IconAtom2 />,
+        content: <ListDutyTable />,
       },
     ];
   }, []);
