@@ -48,6 +48,14 @@ export default function MetalPurityTable() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Active-only subset for the create/edit form's Metal Type dropdown -
+  // the backend doesn't filter this itself, so it's done here in JS.
+  const activeMetalTypes = useMemo(() => {
+    return (metalTypesQuery.data ?? []).filter(
+      (metalType: any) => metalType.active,
+    );
+  }, [metalTypesQuery.data]);
+
   const metalTypeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
     (metalTypesQuery.data ?? []).forEach((metalType: any) => {
@@ -99,7 +107,7 @@ export default function MetalPurityTable() {
   const newMetalPurity = useCreateApiFormModal({
     url: ApiEndpoints.metal_purity_list,
     title: t`Add Metal Purity`,
-    fields: metalPurityFields(),
+    fields: metalPurityFields(activeMetalTypes),
     table: table,
   });
 
@@ -112,7 +120,7 @@ export default function MetalPurityTable() {
     url: ApiEndpoints.metal_purity_list,
     pk: selectedMetalPurity,
     title: t`Edit Metal Purity`,
-    fields: metalPurityFields(),
+    fields: metalPurityFields(activeMetalTypes),
     table: table,
   });
 

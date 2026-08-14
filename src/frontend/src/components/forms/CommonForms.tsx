@@ -34,15 +34,26 @@ export function metalTypeFields(): ApiFormFieldSet {
   };
 }
 
-export function metalPurityFields(): ApiFormFieldSet {
+export function metalPurityFields(
+  // Pre-fetched, already-active-filtered Metal Types, supplied by the
+  // caller (MetalPurityTable already loads the full list for its own
+  // pk -> name column lookup, so this reuses that instead of fetching
+  // again). The backend's metal-type list endpoint doesn't honor an
+  // `active` query filter (confirmed: passing `filters: { active: true }`
+  // to a related-field picker still returned inactive rows), so filtering
+  // has to happen here in JS rather than relying on the server - this
+  // swaps metal_type from a live API-search picker to a plain choice
+  // dropdown built from a list we've already filtered ourselves, which is
+  // correct regardless of what the backend does with query params.
+  activeMetalTypes: { pk: number; name: string }[] = [],
+): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
-        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
-      },
+      field_type: "choice",
+      choices: activeMetalTypes.map((metalType) => ({
+        value: metalType.pk,
+        display_name: metalType.name,
+      })),
     },
     name: {},
     purity: {},
@@ -50,18 +61,18 @@ export function metalPurityFields(): ApiFormFieldSet {
   };
 }
 
-export function metalRate(): ApiFormFieldSet {
+export function metalRate(activeMetalTypes: { pk: number; name: string }[] = [],): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
-      },
+      field_type: "choice",
+      choices: activeMetalTypes.map((metalType) => ({
+        value: metalType.pk,
+        display_name: metalType.name,
+      })),
     },
     rate: {},
-    active: {},
     date: {},
+    active: {},
   };
 }
 
