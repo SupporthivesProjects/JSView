@@ -73,6 +73,13 @@ export function findingTypeFields(): ApiFormFieldSet {
   };
 }
 
+export function finishTypeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
