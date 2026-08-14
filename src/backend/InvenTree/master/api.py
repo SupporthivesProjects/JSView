@@ -6,6 +6,7 @@ from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework.pagination import LimitOffsetPagination
+from master.permissions import MasterDataPermission
 
 from . import serializers as master_serializers
 from .models import (
@@ -14,9 +15,11 @@ from .models import (
     Duty,
     FindingType,
     FinishType,
+    LabourSetting,
     MetalPurity,
     MetalRate,
     MetalType,
+    Setting,
     Stamp,
     Terms,
 )
@@ -35,6 +38,7 @@ class MetalTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['code','name', 'description']
     ordering_fields = ['code', 'name', 'active']
@@ -46,6 +50,7 @@ class MetalTypeDetail(RetrieveUpdateDestroyAPI):
 
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class MetalPurityList(DataExportViewMixin, ListCreateAPI):
@@ -54,6 +59,7 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type']
     search_fields = ['name']
@@ -66,6 +72,7 @@ class MetalPurityDetail(RetrieveUpdateDestroyAPI):
 
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
+    permission_classes = [MasterDataPermission]
 
 
 class MetalRateList(DataExportViewMixin, ListCreateAPI):
@@ -74,6 +81,7 @@ class MetalRateList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type']
     ordering_fields = ['date', 'rate']
@@ -85,6 +93,7 @@ class MetalRateDetail(RetrieveUpdateDestroyAPI):
 
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class FindingTypeList(DataExportViewMixin, ListCreateAPI):
@@ -93,10 +102,55 @@ class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
+
+
+
+class SettingList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating Setting objects."""
+
+    queryset = Setting.objects.all()
+    serializer_class = master_serializers.SettingSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'active']
+    ordering = 'name'
+
+
+class SettingDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single Setting object."""
+
+    queryset = Setting.objects.all()
+    serializer_class = master_serializers.SettingSerializer
+    permission_classes = [MasterDataPermission]
+
+
+class LabourSettingList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating LabourSetting objects."""
+
+    queryset = LabourSetting.objects.all()
+    serializer_class = master_serializers.LabourSettingSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['setting', 'charge_type']
+    search_fields = ['name']
+    ordering_fields = ['name', 'charge_type', 'rate', 'active']
+    ordering = 'name'
+
+
+class LabourSettingDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single LabourSetting object."""
+
+    queryset = LabourSetting.objects.all()
+    serializer_class = master_serializers.LabourSettingSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class FindingTypeDetail(RetrieveUpdateDestroyAPI):
@@ -104,6 +158,7 @@ class FindingTypeDetail(RetrieveUpdateDestroyAPI):
 
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class FinishTypeList(DataExportViewMixin, ListCreateAPI):
@@ -112,6 +167,7 @@ class FinishTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -123,6 +179,7 @@ class FinishTypeDetail(RetrieveUpdateDestroyAPI):
 
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class DutyList(DataExportViewMixin, ListCreateAPI):
@@ -131,6 +188,7 @@ class DutyList(DataExportViewMixin, ListCreateAPI):
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     # search_fields = ['name', 'description']
     search_fields = ['description']
@@ -144,6 +202,7 @@ class DutyDetail(RetrieveUpdateDestroyAPI):
 
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
+    permission_classes = [MasterDataPermission]
 
 
 class StampList(DataExportViewMixin, ListCreateAPI):
@@ -152,6 +211,7 @@ class StampList(DataExportViewMixin, ListCreateAPI):
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
@@ -163,6 +223,7 @@ class StampDetail(RetrieveUpdateDestroyAPI):
 
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
@@ -171,6 +232,7 @@ class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'code', 'email']
     ordering_fields = ['name', 'active']
@@ -182,6 +244,7 @@ class ACExecutiveDetail(RetrieveUpdateDestroyAPI):
 
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class TermsList(DataExportViewMixin, ListCreateAPI):
@@ -190,6 +253,7 @@ class TermsList(DataExportViewMixin, ListCreateAPI):
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'days']
@@ -201,6 +265,7 @@ class TermsDetail(RetrieveUpdateDestroyAPI):
 
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class CourierServiceList(DataExportViewMixin, ListCreateAPI):
@@ -209,6 +274,7 @@ class CourierServiceList(DataExportViewMixin, ListCreateAPI):
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
     pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = ['name', 'contact_person']
     ordering_fields = ['name', 'active']
@@ -220,6 +286,7 @@ class CourierServiceDetail(RetrieveUpdateDestroyAPI):
 
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
+    permission_classes = [MasterDataPermission]
 
 
 master_api_urls = [
@@ -244,6 +311,16 @@ master_api_urls = [
         path('<int:pk>/', FinishTypeDetail.as_view(), name='api-finish-type-detail'),
         path('', FinishTypeList.as_view(), name='api-finish-type-list'),
     ])),
+
+    path('setting/', include([
+        path('<int:pk>/', SettingDetail.as_view(), name='api-setting-detail'),
+        path('', SettingList.as_view(), name='api-setting-list'),
+    ])),
+    path('labour-setting/', include([
+        path('<int:pk>/', LabourSettingDetail.as_view(), name='api-labour-setting-detail'),
+        path('', LabourSettingList.as_view(), name='api-labour-setting-list'),
+    ])),
+
     path('duty/', include([
         path('<int:pk>/', DutyDetail.as_view(), name='api-duty-detail'),
         path('', DutyList.as_view(), name='api-duty-list'),

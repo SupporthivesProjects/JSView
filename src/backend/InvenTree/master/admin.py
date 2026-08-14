@@ -24,25 +24,24 @@ class MetalPurityAdmin(admin.ModelAdmin):
     autocomplete_fields = ('metal_type',)
     list_filter = ('active',)
 
+@admin.register(models.Setting)
+class SettingAdmin(admin.ModelAdmin):
+    """Admin class for the Setting model."""
 
-# @admin.register(models.Setting)
-# class SettingAdmin(admin.ModelAdmin):
-#     """Admin class for the Setting model."""
-#
-#     list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
-#     search_fields = ('name', 'description')
-#     list_filter = ('active',)
+    list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'description')
+    list_filter = ('active',)
 
 
-# @admin.register(models.LabourSetting)
-# class LabourSettingAdmin(admin.ModelAdmin):
-#     """Admin class for the LabourSetting model."""
-#
-#     list_display = ('name', 'setting', 'charge_type', 'rate', 'active', 'created_at', 'updated_at')
-#     search_fields = ('name',)
-#     autocomplete_fields = ('setting',)
-#     list_filter = ('charge_type', 'active')
+@admin.register(models.LabourSetting)
+class LabourSettingAdmin(admin.ModelAdmin):
+    """Admin class for the LabourSetting model."""
 
+    list_display = ('name', 'setting', 'charge_type', 'rate', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'setting__name')
+    autocomplete_fields = ('setting',)
+    list_filter = ('charge_type', 'active')
+    
 
 @admin.register(models.MetalRate)
 class MetalRateAdmin(admin.ModelAdmin):

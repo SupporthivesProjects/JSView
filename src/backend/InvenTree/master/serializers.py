@@ -2,20 +2,22 @@
 
 from InvenTree.serializers import InvenTreeModelSerializer
 
+from data_exporter.mixins import DataExportSerializerMixin
+
 from .models import (
     ACExecutive,
     CourierService,
     Duty,
     FindingType,
     FinishType,
+    LabourSetting,
     MetalPurity,
     MetalRate,
     MetalType,
+    Setting,
     Stamp,
     Terms,
 )
-
-from data_exporter.mixins import DataExportSerializerMixin
 
 
 class MetalTypeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -32,7 +34,6 @@ class MetalPuritySerializer(DataExportSerializerMixin, InvenTreeModelSerializer)
     class Meta:
         model = MetalPurity
         fields = ['pk', 'metal_type', 'name', 'purity', 'active', 'created_at', 'updated_at']
-
 
 
 class MetalRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -57,6 +58,22 @@ class FinishTypeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     class Meta:
         model = FinishType
         fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+
+
+class SettingSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the Setting model."""
+
+    class Meta:
+        model = Setting
+        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+
+
+class LabourSettingSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the LabourSetting model."""
+
+    class Meta:
+        model = LabourSetting
+        fields = ['pk', 'name', 'setting', 'charge_type', 'rate', 'active', 'created_at', 'updated_at']
 
 
 class DutySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -97,4 +114,3 @@ class CourierServiceSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
     class Meta:
         model = CourierService
         fields = ['pk', 'name', 'contact_person', 'phone', 'email', 'tracking_url', 'active', 'created_at', 'updated_at']
-

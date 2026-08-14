@@ -567,6 +567,10 @@ logger.debug('Configuring database backend:')
 database = db_backend.get_db_backend()
 DB_ENGINE = database['ENGINE']
 
+if DB_ENGINE == "mysql":
+    import pymysql
+    pymysql.install_as_MySQLdb()
+
 DATABASES = {'default': database}
 
 # login settings

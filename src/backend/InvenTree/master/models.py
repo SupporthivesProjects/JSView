@@ -66,6 +66,58 @@ class MetalPurity(MasterFieldsMixin):
         return f'{self.metal_type.name} - {self.name}'
 
 
+
+class Setting(MasterFieldsMixin):
+    """Jewelry setting type (e.g. Prong, Bezel, Pave)."""
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry setting type.'))
+    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry setting type.'))
+
+    class Meta:
+        verbose_name = _('Setting')
+        verbose_name_plural = _('Settings')
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+
+class LabourSetting(MasterFieldsMixin):
+    """Labour charge configuration for a jewelry setting."""
+
+    CHARGE_TYPE_FIXED = 'fixed'
+    CHARGE_TYPE_PER_GRAM = 'per_gram'
+    CHARGE_TYPE_PER_PIECE = 'per_piece'
+    CHARGE_TYPE_PERCENTAGE = 'percentage'
+
+    CHARGE_TYPE_CHOICES = [
+        (CHARGE_TYPE_FIXED, _('Fixed')),
+        (CHARGE_TYPE_PER_GRAM, _('Per Gram')),
+        (CHARGE_TYPE_PER_PIECE, _('Per Piece')),
+        (CHARGE_TYPE_PERCENTAGE, _('Percentage')),
+    ]
+
+    name = models.CharField(max_length=100, verbose_name=_('Name'), help_text=_('Name of the labour setting.'))
+    setting = models.ForeignKey(Setting, on_delete=models.SET_NULL, null=True, blank=True, related_name='labour_settings', verbose_name=_('Setting'), help_text=_('Jewelry setting associated with this labour configuration.'))
+    charge_type = models.CharField(max_length=20, choices=CHARGE_TYPE_CHOICES, default=CHARGE_TYPE_FIXED, verbose_name=_('Charge Type'), help_text=_('Method used to calculate the labour charge.'))
+    rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Rate'), help_text=_('Labour charge rate based on the selected charge type.'))
+
+    class Meta:
+        verbose_name = _('Labour Setting')
+        verbose_name_plural = _('Labour Settings')
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    
+
 class MetalRate(MasterFieldsMixin):
     """Dated metal rate for a MetalType / MetalPurity."""
 
