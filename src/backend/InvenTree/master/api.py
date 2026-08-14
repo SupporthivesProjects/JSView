@@ -15,9 +15,11 @@ from .models import (
     Duty,
     FindingType,
     FinishType,
+    LabourSetting,
     MetalPurity,
     MetalRate,
     MetalType,
+    Setting,
     Stamp,
     Terms,
 )
@@ -105,6 +107,50 @@ class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
+
+
+
+class SettingList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating Setting objects."""
+
+    queryset = Setting.objects.all()
+    serializer_class = master_serializers.SettingSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'active']
+    ordering = 'name'
+
+
+class SettingDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single Setting object."""
+
+    queryset = Setting.objects.all()
+    serializer_class = master_serializers.SettingSerializer
+    permission_classes = [MasterDataPermission]
+
+
+class LabourSettingList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating LabourSetting objects."""
+
+    queryset = LabourSetting.objects.all()
+    serializer_class = master_serializers.LabourSettingSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['setting', 'charge_type']
+    search_fields = ['name']
+    ordering_fields = ['name', 'charge_type', 'rate', 'active']
+    ordering = 'name'
+
+
+class LabourSettingDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single LabourSetting object."""
+
+    queryset = LabourSetting.objects.all()
+    serializer_class = master_serializers.LabourSettingSerializer
+    permission_classes = [MasterDataPermission]
 
 
 class FindingTypeDetail(RetrieveUpdateDestroyAPI):
@@ -265,6 +311,16 @@ master_api_urls = [
         path('<int:pk>/', FinishTypeDetail.as_view(), name='api-finish-type-detail'),
         path('', FinishTypeList.as_view(), name='api-finish-type-list'),
     ])),
+
+    path('setting/', include([
+        path('<int:pk>/', SettingDetail.as_view(), name='api-setting-detail'),
+        path('', SettingList.as_view(), name='api-setting-list'),
+    ])),
+    path('labour-setting/', include([
+        path('<int:pk>/', LabourSettingDetail.as_view(), name='api-labour-setting-detail'),
+        path('', LabourSettingList.as_view(), name='api-labour-setting-list'),
+    ])),
+
     path('duty/', include([
         path('<int:pk>/', DutyDetail.as_view(), name='api-duty-detail'),
         path('', DutyList.as_view(), name='api-duty-list'),
