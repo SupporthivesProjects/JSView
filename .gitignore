@@ -121,3 +121,4 @@ InvenTree/web/static
 .codspeed/
 src/backend/venv
 /frontendMDFiles
+src/backend/InvenTree/inventree.sqlite3
