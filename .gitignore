@@ -122,3 +122,5 @@ InvenTree/web/static
 src/backend/venv
 /frontendMDFiles
 src/backend/InvenTree/inventree.sqlite3
+inventree.sqlite3-*
+
