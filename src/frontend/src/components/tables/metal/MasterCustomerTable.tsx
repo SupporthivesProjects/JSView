@@ -16,7 +16,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DecimalColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { masterVendorsCustomer } from "../../forms/CommonForms";
+import { masterCustomer } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -82,27 +82,6 @@ export default function MasterCustomerTable() {
       sortable: true,
       switchable: true,
     },
-    BooleanColumn({
-      accessor: "active",
-    }),
-    BooleanColumn({
-      accessor: "is_customer",
-      title: t`Customer`,
-    }),
-    BooleanColumn({
-      accessor: "is_supplier",
-      title: t`Supplier`,
-    }),
-    BooleanColumn({
-      accessor: "is_manufacturer",
-      title: t`Manufacturer`,
-    }),
-    {
-      accessor: "currency",
-      title: t`Currency`,
-      sortable: true,
-      switchable: true,
-    },
     {
       accessor: "tax_id",
       title: t`Tax ID`,
@@ -158,7 +137,7 @@ export default function MasterCustomerTable() {
   const newMasterCustomer = useCreateApiFormModal({
     url: ApiEndpoints.master_vendor_customer,
     title: t`Add Master Customer`,
-    fields: masterVendorsCustomer(),
+    fields: masterCustomer(),
     table: table,
   });
 
@@ -171,7 +150,7 @@ export default function MasterCustomerTable() {
     url: ApiEndpoints.master_vendor_customer,
     pk: selectedCustomer,
     title: t`Edit Master Customer`,
-    fields: masterVendorsCustomer(),
+    fields: masterCustomer(),
     table: table,
   });
 

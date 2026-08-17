@@ -16,7 +16,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DecimalColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { masterVendorsCustomer } from "../../forms/CommonForms";
+import { masterVendors } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -158,7 +158,7 @@ export default function MasterVendorTable() {
   const newMasterVendor = useCreateApiFormModal({
     url: ApiEndpoints.master_vendor_customer,
     title: t`Add Master Vendor`,
-    fields: masterVendorsCustomer(),
+    fields: masterVendors(),
     table: table,
   });
 
@@ -171,7 +171,7 @@ export default function MasterVendorTable() {
     url: ApiEndpoints.master_vendor_customer,
     pk: selectedVendor,
     title: t`Edit Master Vendor`,
-    fields: masterVendorsCustomer(),
+    fields: masterVendors(),
     table: table,
   });
 

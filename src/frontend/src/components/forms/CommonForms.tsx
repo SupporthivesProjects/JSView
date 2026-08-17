@@ -151,7 +151,7 @@ export function LabourSettingFields(): ApiFormFieldSet {
   };
 }
 
-export function masterVendorsCustomer(): ApiFormFieldSet {
+export function masterVendors(): ApiFormFieldSet {
   return {
     code: {},
     name: {},
@@ -161,11 +161,18 @@ export function masterVendorsCustomer(): ApiFormFieldSet {
     email: {},
     contact: {},
     link: {},
-    active: {},
-    is_customer: {},
-    is_supplier: {},
-    is_manufacturer: {},
-    currency: {},
+    is_customer: {
+      hidden: true,
+      value: false
+    },
+    is_supplier: {
+      hidden: true,
+      value: true
+    },
+    is_manufacturer: {
+      hidden: true,
+      value: false
+    },
     tax_id: {},
     fax: {},
     city: {},
@@ -174,6 +181,41 @@ export function masterVendorsCustomer(): ApiFormFieldSet {
     rating: {},
     credit_limit: {},
     ref_by: {},
+    active: {},
+  };
+}
+
+export function masterCustomer(): ApiFormFieldSet {
+  return {
+    code: {},
+    name: {},
+    description: {},
+    website: {},
+    phone: {},
+    email: {},
+    contact: {},
+    link: {},
+    is_customer: {
+      hidden: true,
+      value: true
+    },
+    is_supplier: {
+      hidden: true,
+      value: false
+    },
+    is_manufacturer: {
+      hidden: true,
+      value: false
+    },
+    tax_id: {},
+    fax: {},
+    city: {},
+    state: {},
+    country: {},
+    rating: {},
+    credit_limit: {},
+    ref_by: {},
+    active: {},
   };
 }
 
