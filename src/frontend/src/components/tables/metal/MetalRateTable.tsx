@@ -50,11 +50,11 @@ export default function MetalRateTable() {
 
   // Active-only subset for the create/edit form's Metal Type dropdown -
   // the backend doesn't filter this itself, so it's done here in JS.
-  const activeMetalTypes = useMemo(() => {
-    return (metalTypesQuery.data ?? []).filter(
-      (metalType: any) => metalType.active,
-    );
-  }, [metalTypesQuery.data]);
+  // const activeMetalTypes = useMemo(() => {
+  //   return (metalTypesQuery.data ?? []).filter(
+  //     (metalType: any) => metalType.active,
+  //   );
+  // }, [metalTypesQuery.data]);
 
   const metalTypeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -108,7 +108,7 @@ export default function MetalRateTable() {
   const newMetalRate = useCreateApiFormModal({
     url: ApiEndpoints.metal_rate,
     title: t`Add Metal Rate`,
-    fields: metalRate(activeMetalTypes),
+    fields: metalRate(),
     table: table,
   });
 
@@ -121,7 +121,7 @@ export default function MetalRateTable() {
     url: ApiEndpoints.metal_rate,
     pk: selectedMetalRate,
     title: t`Edit Metal Rate`,
-    fields: metalRate(activeMetalTypes),
+    fields: metalRate(),
     table: table,
   });
 
