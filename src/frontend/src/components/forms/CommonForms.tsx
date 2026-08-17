@@ -72,6 +72,15 @@ export function masterTerms(): ApiFormFieldSet {
     active: {},
   };
 }
+export function masterExecutive(): ApiFormFieldSet {
+  return {
+    name: {},
+    code: {},
+    email: {},
+    phone: {},
+    active: {},
+  };
+}
 export function findingTypeFields(): ApiFormFieldSet {
   return {
     name: {},

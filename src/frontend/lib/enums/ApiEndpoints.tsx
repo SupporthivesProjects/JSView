@@ -136,6 +136,7 @@ export enum ApiEndpoints {
   finish_type = "master/finish-type/",
   list_duty = "master/duty/",
   master_terms = "master/terms/",
+  master_executive = "master/ac-executive/",
 
   // Company API endpoints
   company_list = "company/",

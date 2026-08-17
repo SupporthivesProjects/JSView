@@ -16,20 +16,18 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DecimalColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { masterTerms } from "../../forms/CommonForms";
+import { masterExecutive } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
-import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
 
-export default function MasterTermsTable() {
-  const table = useTable("master-terms");
+export default function MasterExecutiveTable() {
+  const table = useTable("master-executive");
 
   const user = useUserState();
-  const api = useApi();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -40,11 +38,20 @@ export default function MasterTermsTable() {
         switchable: false,
       },
       {
-        accessor: "days",
+        accessor: "code",
         sortable: true,
         switchable: false,
       },
-      DescriptionColumn({}),
+      {
+        accessor: "email",
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "phone",
+        sortable: true,
+        switchable: false,
+      },
       BooleanColumn({
         accessor: "active",
       }),
@@ -64,30 +71,30 @@ export default function MasterTermsTable() {
   }, []);
 
   // --- Create modal ----------------------------------------------------
-  const newMasterTerms = useCreateApiFormModal({
-    url: ApiEndpoints.master_terms,
-    title: t`Add Master Terms`,
-    fields: masterTerms(),
+  const newMasterExecutive = useCreateApiFormModal({
+    url: ApiEndpoints.master_executive,
+    title: t`Add Master Executive`,
+    fields: masterExecutive(),
     table: table,
   });
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedTerms, setSelectedTerms] = useState<
+  const [selectedExecutive, setSelectedExecutive] = useState<
     number | undefined
   >(undefined);
 
-  const editMasterTerms = useEditApiFormModal({
-    url: ApiEndpoints.master_terms,
-    pk: selectedTerms,
-    title: t`Edit Master Terms`,
-    fields: masterTerms(),
+  const editMasterExecutive = useEditApiFormModal({
+    url: ApiEndpoints.master_executive,
+    pk: selectedExecutive,
+    title: t`Edit Master Executive`,
+    fields: masterExecutive(),
     table: table,
   });
 
-  const deleteMasterTerms = useDeleteApiFormModal({
-    url: ApiEndpoints.master_terms,
-    pk: selectedTerms,
-    title: t`Delete Master Terms`,
+  const deleteMasterExecutive = useDeleteApiFormModal({
+    url: ApiEndpoints.master_executive,
+    pk: selectedExecutive,
+    title: t`Delete Master Executive`,
     table: table,
   });
 
@@ -98,15 +105,15 @@ export default function MasterTermsTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setSelectedTerms(record.pk);
-            editMasterTerms.open();
+            setSelectedExecutive(record.pk);
+            editMasterExecutive.open();
           },
         }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
-            setSelectedTerms(record.pk);
-            deleteMasterTerms.open();
+            setSelectedExecutive(record.pk);
+            deleteMasterExecutive.open();
           },
         }),
       ];
@@ -120,7 +127,7 @@ export default function MasterTermsTable() {
       {
         name: "active",
         label: t`Active`,
-        description: t`Show active master terms`,
+        description: t`Show active master executive`,
         type: "boolean",
       },
     ];
@@ -130,9 +137,9 @@ export default function MasterTermsTable() {
   const tableActions = useMemo(() => {
     return [
       <AddItemButton
-        key="add-master-terms"
-        onClick={() => newMasterTerms.open()}
-        tooltip={t`Add Master Terms`}
+        key="add-master-executive"
+        onClick={() => newMasterExecutive.open()}
+        tooltip={t`Add Master Executive`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
@@ -140,11 +147,11 @@ export default function MasterTermsTable() {
 
   return (
     <>
-      {newMasterTerms.modal}
-      {editMasterTerms.modal}
-      {deleteMasterTerms.modal}
+      {newMasterExecutive.modal}
+      {editMasterExecutive.modal}
+      {deleteMasterExecutive.modal}
       <InvenTreeTable
-        url={apiUrl(ApiEndpoints.master_terms)}
+        url={apiUrl(ApiEndpoints.master_executive)}
         tableState={table}
         columns={columns}
         props={{
