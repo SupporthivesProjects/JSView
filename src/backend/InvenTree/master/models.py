@@ -67,6 +67,40 @@ class MetalPurity(MasterFieldsMixin):
 
 
 
+class JewelryCategory(MasterFieldsMixin):
+    """Jewelry category master."""
+
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry category.'))
+    description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry category.'))
+
+    class Meta:
+        verbose_name = _('Jewelry Category')
+        verbose_name_plural = _('Jewelry Categories')
+        ordering = ['name']
+        indexes = [models.Index(fields=['active'])]
+
+    def __str__(self):
+        return self.name
+
+
+class JewelrySubCategory(MasterFieldsMixin):
+    """Jewelry sub-category master."""
+
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry sub-category.'))
+    description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry sub-category.'))
+    category = models.ForeignKey(JewelryCategory, on_delete=models.CASCADE, related_name='subcategories', verbose_name=_('Category'), help_text=_('Jewelry category associated with this sub-category.'))
+
+    class Meta:
+        verbose_name = _('Jewelry Sub Category')
+        verbose_name_plural = _('Jewelry Sub Categories')
+        ordering = ['name']
+        indexes = [models.Index(fields=['active']), models.Index(fields=['category'])]
+
+    def __str__(self):
+        return self.name
+
+
+
 class Setting(MasterFieldsMixin):
     """Jewelry setting type (e.g. Prong, Bezel, Pave)."""
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry setting type.'))

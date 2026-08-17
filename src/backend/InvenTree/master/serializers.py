@@ -10,6 +10,8 @@ from .models import (
     Duty,
     FindingType,
     FinishType,
+    JewelryCategory,
+    JewelrySubCategory,
     LabourSetting,
     MetalPurity,
     MetalRate,
@@ -89,15 +91,7 @@ class StampSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
 
     class Meta:
         model = Stamp
-        fields = [
-            'pk',
-            'name',
-            'description',
-            'image',
-            'active',
-            'created_at',
-            'updated_at',
-        ]
+        fields = ['pk', 'name', 'description', 'image', 'active', 'created_at', 'updated_at']
 
 
 class ACExecutiveSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
@@ -122,3 +116,19 @@ class CourierServiceSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
     class Meta:
         model = CourierService
         fields = ['pk', 'name', 'contact_person', 'phone', 'email', 'tracking_url', 'active', 'created_at', 'updated_at']
+
+
+class JewelryCategorySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the JewelryCategory model."""
+
+    class Meta:
+        model = JewelryCategory
+        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+
+
+class JewelrySubCategorySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the JewelrySubCategory model."""
+
+    class Meta:
+        model = JewelrySubCategory
+        fields = ['pk', 'category', 'name', 'description', 'active', 'created_at', 'updated_at']

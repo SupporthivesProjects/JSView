@@ -91,3 +91,20 @@ def annotate_latest_metal_rate(reference: str = '') -> QuerySet:
         output_field=DecimalField(),
     )
 
+
+def annotate_subcategory_count(reference: str = '') -> QuerySet:
+    """Count JewelrySubCategory entries for a JewelryCategory."""
+    subquery = master.models.JewelrySubCategory.objects.filter(
+        category=OuterRef(f'{reference}pk')
+    )
+
+    return Coalesce(
+        Subquery(
+            subquery
+            .annotate(total=Func(F('pk'), function='COUNT', output_field=IntegerField()))
+            .values('total')
+            .order_by()
+        ),
+        0,
+        output_field=IntegerField(),
+    )
