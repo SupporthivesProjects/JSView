@@ -73,6 +73,7 @@ export function masterTerms(): ApiFormFieldSet {
   };
 }
 
+
 export function masterCourierService(): ApiFormFieldSet {
   return {
     name: {},
@@ -147,6 +148,32 @@ export function LabourSettingFields(): ApiFormFieldSet {
     charge_type: {},
     rate: {},
     active: {},
+  };
+}
+
+export function masterVendorsCustomer(): ApiFormFieldSet {
+  return {
+    code: {},
+    name: {},
+    description: {},
+    website: {},
+    phone: {},
+    email: {},
+    contact: {},
+    link: {},
+    active: {},
+    is_customer: {},
+    is_supplier: {},
+    is_manufacturer: {},
+    currency: {},
+    tax_id: {},
+    fax: {},
+    city: {},
+    state: {},
+    country: {},
+    rating: {},
+    credit_limit: {},
+    ref_by: {},
   };
 }
 

@@ -20,6 +20,8 @@ import MasterExecutiveTable from "@components/tables/metal/MasterExecutiveTable"
 import CourierServiceTable from "@components/tables/metal/CourierServiceTable";
 import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
 import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
+import MasterVendorTable from "@components/tables/metal/MasterCustomerTable";
+import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -91,6 +93,18 @@ export default function MetalTypeIndex() {
         label: t`Labour Settings`,
         icon: <IconAtom2 />,
         content: <LabourSettingTable />,
+      },
+      {
+        name: "master-vendor",
+        label: t`Vendor`,
+        icon: <IconAtom2 />,
+        content: <MasterVendorTable />,
+      },
+      {
+        name: "master-customer",
+        label: t`Customer`,
+        icon: <IconAtom2 />,
+        content: <MasterCustomerTable />,
       },
     ];
   }, []);
