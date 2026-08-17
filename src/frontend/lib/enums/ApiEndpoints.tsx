@@ -138,6 +138,7 @@ export enum ApiEndpoints {
   master_terms = "master/terms/",
   master_executive = "master/ac-executive/",
   courier_service = "master/courier-service/",
+  master_setting = "master/setting/",
 
   // Company API endpoints
   company_list = "company/",
