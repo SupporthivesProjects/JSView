@@ -17,6 +17,7 @@ import FinishTypeTable from "@components/tables/metal/FinishTypeTable";
 import ListDutyTable from "@components/tables/metal/ListDutyTable";
 import MasterTermsTable from "@components/tables/metal/MasterTermsTable";
 import MasterExecutiveTable from "@components/tables/metal/MasterExecutiveTable";
+import CourierServiceTable from "@components/tables/metal/CourierServiceTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -70,6 +71,12 @@ export default function MetalTypeIndex() {
         label: t`A/C Executive`,
         icon: <IconAtom2 />,
         content: <MasterExecutiveTable />,
+      },
+      {
+        name: "courier-service",
+        label: t`Courier Service`,
+        icon: <IconAtom2 />,
+        content: <CourierServiceTable />,
       },
     ];
   }, []);

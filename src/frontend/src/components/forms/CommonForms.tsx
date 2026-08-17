@@ -72,6 +72,18 @@ export function masterTerms(): ApiFormFieldSet {
     active: {},
   };
 }
+
+export function masterCourierService(): ApiFormFieldSet {
+  return {
+    name: {},
+    contact_person: {},
+    phone: {},
+    email: {},
+    tracking_url: {},
+    active: {},
+  };
+}
+
 export function masterExecutive(): ApiFormFieldSet {
   return {
     name: {},
