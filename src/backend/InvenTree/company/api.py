@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 import django_filters.rest_framework.filters as rest_filters
 from django_filters.rest_framework.filterset import FilterSet
+from rest_framework.pagination import LimitOffsetPagination
 
 import common.filters
 import part.models
@@ -38,6 +39,13 @@ from .serializers import (
 )
 
 
+class CompanyPagination(LimitOffsetPagination):
+    """Default pagination for company app list endpoints."""
+
+    default_limit = 10
+    max_limit = 100
+
+
 class CompanyFilter(FilterSet):
     """Custom API filters for the CompanyList endpoint."""
 
@@ -45,7 +53,13 @@ class CompanyFilter(FilterSet):
         """Metaclass options."""
 
         model = Company
-        fields = ['is_customer', 'is_manufacturer', 'is_supplier', 'name', 'active']
+        fields = [
+            'is_customer',
+            'is_manufacturer',
+            'is_supplier',
+            'name',
+            'active',
+        ]
 
     tags = common.filters.TagsFilter()
 
@@ -64,22 +78,32 @@ class CompanyMixin(OutputOptionsMixin):
         return queryset
 
 
-class CompanyList(CompanyMixin, ParameterListMixin, DataExportViewMixin, ListCreateAPI):
-    """API endpoint for accessing a list of Company objects.
+class CompanyList(
+    CompanyMixin,
+    ParameterListMixin,
+    DataExportViewMixin,
+    ListCreateAPI,
+):
+    """API endpoint for listing and creating Company objects."""
 
-    Provides two methods:
-
-    - GET: Return list of objects
-    - POST: Create a new Company object
-    """
+    pagination_class = CompanyPagination
 
     filter_backends = SEARCH_ORDER_FILTER
-
     filterset_class = CompanyFilter
 
-    search_fields = ['name', 'description', 'website', 'tax_id']
+    search_fields = [
+        'name',
+        'description',
+        'website',
+        'tax_id',
+    ]
 
-    ordering_fields = ['active', 'name', 'parts_supplied', 'parts_manufactured']
+    ordering_fields = [
+        'active',
+        'name',
+        'parts_supplied',
+        'parts_manufactured',
+    ]
 
     ordering = 'name'
 
@@ -89,16 +113,20 @@ class CompanyDetail(CompanyMixin, RetrieveUpdateDestroyAPI):
 
 
 class ContactList(DataExportViewMixin, ListCreateDestroyAPIView):
-    """API endpoint for list view of Company model."""
+    """API endpoint for listing and creating Contact objects."""
 
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
+    pagination_class = CompanyPagination
 
     filter_backends = SEARCH_ORDER_FILTER
 
     filterset_fields = ['company']
 
-    search_fields = ['company__name', 'name']
+    search_fields = [
+        'company__name',
+        'name',
+    ]
 
     ordering_fields = ['name']
 
@@ -106,7 +134,7 @@ class ContactList(DataExportViewMixin, ListCreateDestroyAPIView):
 
 
 class ContactDetail(RetrieveUpdateDestroyAPI):
-    """Detail endpoint for Company model."""
+    """Detail endpoint for Contact object."""
 
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
@@ -141,15 +169,22 @@ class ManufacturerPartFilter(FilterSet):
         """Metaclass options."""
 
         model = ManufacturerPart
-        fields = ['manufacturer', 'MPN', 'part', 'tags__name', 'tags__slug']
+        fields = [
+            'manufacturer',
+            'MPN',
+            'part',
+            'tags__name',
+            'tags__slug',
+        ]
 
-    # Filter by 'active' status of linked part
     part_active = rest_filters.BooleanFilter(
-        field_name='part__active', label=_('Part is Active')
+        field_name='part__active',
+        label=_('Part is Active'),
     )
 
     manufacturer_active = rest_filters.BooleanFilter(
-        field_name='manufacturer__active', label=_('Manufacturer is Active')
+        field_name='manufacturer__active',
+        label=_('Manufacturer is Active'),
     )
 
     tags = common.filters.TagsFilter(label=_('Tags'))
@@ -188,7 +223,10 @@ class ManufacturerPartMixin(SerializerContextMixin):
         queryset = super().get_queryset(*args, **kwargs)
 
         queryset = queryset.prefetch_related('supplier_parts')
-        queryset = queryset.prefetch_related('part', 'part__pricing_data')
+        queryset = queryset.prefetch_related(
+            'part',
+            'part__pricing_data',
+        )
 
         return queryset
 
@@ -201,17 +239,18 @@ class ManufacturerPartList(
     ParameterListMixin,
     ListCreateDestroyAPIView,
 ):
-    """API endpoint for list view of ManufacturerPart object.
-
-    - GET: Return list of ManufacturerPart objects
-    - POST: Create a new ManufacturerPart object
-    """
+    """API endpoint for list view of ManufacturerPart object."""
 
     filterset_class = ManufacturerPartFilter
     filter_backends = SEARCH_ORDER_FILTER
     output_options = ManufacturerOutputOptions
 
-    ordering_fields = ['part', 'IPN', 'MPN', 'manufacturer']
+    ordering_fields = [
+        'part',
+        'IPN',
+        'MPN',
+        'manufacturer',
+    ]
 
     ordering_field_aliases = {
         'part': 'part__name',
@@ -232,14 +271,11 @@ class ManufacturerPartList(
 
 
 class ManufacturerPartDetail(
-    ManufacturerPartMixin, OutputOptionsMixin, RetrieveUpdateDestroyAPI
+    ManufacturerPartMixin,
+    OutputOptionsMixin,
+    RetrieveUpdateDestroyAPI,
 ):
-    """API endpoint for detail view of ManufacturerPart object.
-
-    - GET: Retrieve detail view
-    - PATCH: Update object
-    - DELETE: Delete object
-    """
+    """API endpoint for detail view of ManufacturerPart object."""
 
 
 class SupplierPartFilter(FilterSet):
@@ -258,55 +294,60 @@ class SupplierPartFilter(FilterSet):
             'tags__slug',
         ]
 
-    active = rest_filters.BooleanFilter(label=_('Supplier Part is Active'))
+    active = rest_filters.BooleanFilter(
+        label=_('Supplier Part is Active')
+    )
 
-    primary = rest_filters.BooleanFilter(label=_('Primary Supplier Part'))
+    primary = rest_filters.BooleanFilter(
+        label=_('Primary Supplier Part')
+    )
 
-    # Filter by 'active' status of linked part
     part_active = rest_filters.BooleanFilter(
-        field_name='part__active', label=_('Internal Part is Active')
+        field_name='part__active',
+        label=_('Internal Part is Active'),
     )
 
-    # Filter by 'active' status of linked supplier
     supplier_active = rest_filters.BooleanFilter(
-        field_name='supplier__active', label=_('Supplier is Active')
+        field_name='supplier__active',
+        label=_('Supplier is Active'),
     )
 
-    # Filter by the 'MPN' of linked manufacturer part
     MPN = rest_filters.CharFilter(
         label='Manufacturer Part Number',
         field_name='manufacturer_part__MPN',
         lookup_expr='iexact',
     )
 
-    # Filter by 'manufacturer'
     manufacturer = rest_filters.ModelChoiceFilter(
         label=_('Manufacturer'),
         queryset=Company.objects.all(),
         field_name='manufacturer_part__manufacturer',
     )
 
-    # Filter by 'company' (either manufacturer or supplier)
     company = rest_filters.ModelChoiceFilter(
-        label=_('Company'), queryset=Company.objects.all(), method='filter_company'
+        label=_('Company'),
+        queryset=Company.objects.all(),
+        method='filter_company',
     )
 
     def filter_company(self, queryset, name, value: int):
         """Filter the queryset by either manufacturer or supplier."""
         return queryset.filter(
-            Q(manufacturer_part__manufacturer=value) | Q(supplier=value)
+            Q(manufacturer_part__manufacturer=value)
+            | Q(supplier=value)
         ).distinct()
 
     has_stock = rest_filters.BooleanFilter(
-        label=_('Has Stock'), method='filter_has_stock'
+        label=_('Has Stock'),
+        method='filter_has_stock',
     )
 
     def filter_has_stock(self, queryset, name, value):
-        """Filter the queryset based on whether the SupplierPart has stock available."""
+        """Filter the queryset based on stock availability."""
         if value:
             return queryset.filter(in_stock__gt=0)
-        else:
-            return queryset.exclude(in_stock__gt=0)
+
+        return queryset.exclude(in_stock__gt=0)
 
     tags = common.filters.TagsFilter(label=_('Tags'))
 
@@ -350,11 +391,15 @@ class SupplierPartMixin:
     serializer_class = SupplierPartSerializer
 
     def get_queryset(self, *args, **kwargs):
-        """Return annotated queryset object for the SupplierPart list."""
+        """Return annotated queryset for the SupplierPart list."""
+
         queryset = super().get_queryset(*args, **kwargs)
         queryset = SupplierPartSerializer.annotate_queryset(queryset)
 
-        queryset = queryset.prefetch_related('part', 'part__pricing_data')
+        queryset = queryset.prefetch_related(
+            'part',
+            'part__pricing_data',
+        )
 
         return queryset
 
@@ -366,11 +411,7 @@ class SupplierPartList(
     OutputOptionsMixin,
     ListCreateDestroyAPIView,
 ):
-    """API endpoint for list view of SupplierPart object.
-
-    - GET: Return list of SupplierPart objects
-    - POST: Create a new SupplierPart object
-    """
+    """API endpoint for list view of SupplierPart object."""
 
     filterset_class = SupplierPartFilter
     filter_backends = SEARCH_ORDER_FILTER
@@ -395,7 +436,10 @@ class SupplierPartList(
         'part': 'part__name',
         'supplier': 'supplier__name',
         'manufacturer': 'manufacturer_part__manufacturer__name',
-        'pack_quantity': ['pack_quantity_native', 'pack_quantity'],
+        'pack_quantity': [
+            'pack_quantity_native',
+            'pack_quantity',
+        ],
         'IPN': 'part__IPN',
         'MPN': 'manufacturer_part__MPN',
     }
@@ -416,14 +460,11 @@ class SupplierPartList(
 
 
 class SupplierPartDetail(
-    SupplierPartMixin, OutputOptionsMixin, RetrieveUpdateDestroyAPI
+    SupplierPartMixin,
+    OutputOptionsMixin,
+    RetrieveUpdateDestroyAPI,
 ):
-    """API endpoint for detail view of SupplierPart object.
-
-    - GET: Retrieve detail view
-    - PATCH: Update object
-    - DELETE: Delete object
-    """
+    """API endpoint for detail view of SupplierPart object."""
 
     output_options = SupplierPartOutputOptions
 
@@ -432,10 +473,13 @@ class SupplierPriceBreakFilter(FilterSet):
     """Custom API filters for the SupplierPriceBreak list endpoint."""
 
     class Meta:
-        """Metaclass options."""
+        """Metaclass option."""
 
         model = SupplierPriceBreak
-        fields = ['part', 'quantity']
+        fields = [
+            'part',
+            'quantity',
+        ]
 
     base_part = rest_filters.ModelChoiceFilter(
         label='Base Part',
@@ -444,7 +488,9 @@ class SupplierPriceBreakFilter(FilterSet):
     )
 
     supplier = rest_filters.ModelChoiceFilter(
-        label='Supplier', queryset=Company.objects.all(), field_name='part__supplier'
+        label='Supplier',
+        queryset=Company.objects.all(),
+        field_name='part__supplier',
     )
 
 
@@ -479,26 +525,37 @@ class SupplierPriceBreakList(
     OutputOptionsMixin,
     ListCreateAPI,
 ):
-    """API endpoint for list view of SupplierPriceBreak object.
-
-    - GET: Retrieve list of SupplierPriceBreak objects
-    - POST: Create a new SupplierPriceBreak object
-    """
+    """API endpoint for list view of SupplierPriceBreak object."""
 
     output_options = SupplierPriceBreakOutputOptions
 
     filterset_class = SupplierPriceBreakFilter
     filter_backends = SEARCH_ORDER_FILTER
-    ordering_fields = ['quantity', 'supplier', 'SKU', 'price']
 
-    search_fields = ['part__SKU', 'part__supplier__name']
+    ordering_fields = [
+        'quantity',
+        'supplier',
+        'SKU',
+        'price',
+    ]
 
-    ordering_field_aliases = {'supplier': 'part__supplier__name', 'SKU': 'part__SKU'}
+    search_fields = [
+        'part__SKU',
+        'part__supplier__name',
+    ]
+
+    ordering_field_aliases = {
+        'supplier': 'part__supplier__name',
+        'SKU': 'part__SKU',
+    }
 
     ordering = 'quantity'
 
 
-class SupplierPriceBreakDetail(SupplierPriceBreakMixin, RetrieveUpdateDestroyAPI):
+class SupplierPriceBreakDetail(
+    SupplierPriceBreakMixin,
+    RetrieveUpdateDestroyAPI,
+):
     """Detail endpoint for SupplierPriceBreak object."""
 
 
@@ -514,8 +571,11 @@ manufacturer_part_api_urls = [
             ),
         ]),
     ),
-    # Catch anything else
-    path('', ManufacturerPartList.as_view(), name='api-manufacturer-part-list'),
+    path(
+        '',
+        ManufacturerPartList.as_view(),
+        name='api-manufacturer-part-list',
+    ),
 ]
 
 
@@ -524,18 +584,30 @@ supplier_part_api_urls = [
         '<int:pk>/',
         include([
             meta_path(SupplierPart),
-            path('', SupplierPartDetail.as_view(), name='api-supplier-part-detail'),
+            path(
+                '',
+                SupplierPartDetail.as_view(),
+                name='api-supplier-part-detail',
+            ),
         ]),
     ),
-    # Catch anything else
-    path('', SupplierPartList.as_view(), name='api-supplier-part-list'),
+    path(
+        '',
+        SupplierPartList.as_view(),
+        name='api-supplier-part-list',
+    ),
 ]
 
 
 company_api_urls = [
-    path('part/manufacturer/', include(manufacturer_part_api_urls)),
-    path('part/', include(supplier_part_api_urls)),
-    # Supplier price breaks
+    path(
+        'part/manufacturer/',
+        include(manufacturer_part_api_urls),
+    ),
+    path(
+        'part/',
+        include(supplier_part_api_urls),
+    ),
     path(
         'price-break/',
         include([
@@ -555,7 +627,11 @@ company_api_urls = [
         '<int:pk>/',
         include([
             meta_path(Company),
-            path('', CompanyDetail.as_view(), name='api-company-detail'),
+            path(
+                '',
+                CompanyDetail.as_view(),
+                name='api-company-detail',
+            ),
         ]),
     ),
     path(
@@ -565,18 +641,38 @@ company_api_urls = [
                 '<int:pk>/',
                 include([
                     meta_path(Contact),
-                    path('', ContactDetail.as_view(), name='api-contact-detail'),
+                    path(
+                        '',
+                        ContactDetail.as_view(),
+                        name='api-contact-detail',
+                    ),
                 ]),
             ),
-            path('', ContactList.as_view(), name='api-contact-list'),
+            path(
+                '',
+                ContactList.as_view(),
+                name='api-contact-list',
+            ),
         ]),
     ),
     path(
         'address/',
         include([
-            path('<int:pk>/', AddressDetail.as_view(), name='api-address-detail'),
-            path('', AddressList.as_view(), name='api-address-list'),
+            path(
+                '<int:pk>/',
+                AddressDetail.as_view(),
+                name='api-address-detail',
+            ),
+            path(
+                '',
+                AddressList.as_view(),
+                name='api-address-list',
+            ),
         ]),
     ),
-    path('', CompanyList.as_view(), name='api-company-list'),
+    path(
+        '',
+        CompanyList.as_view(),
+        name='api-company-list',
+    ),
 ]

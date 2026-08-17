@@ -11,15 +11,11 @@ from order.status_codes import PurchaseOrderStatusGroups
 
 
 def annotate_on_order_quantity():
-    """Annotate the 'on_order' quantity for each SupplierPart in a queryset.
+    """Annotate the on-order quantity for each SupplierPart."""
 
-    - This is the total quantity of parts on order from all open purchase orders
-    - Takes into account the 'received' quantity for each order line
-    """
-    # Filter only 'active' purhase orders
-    # Filter only line with outstanding quantity
     order_filter = Q(
-        order__status__in=PurchaseOrderStatusGroups.OPEN, quantity__gt=F('received')
+        order__status__in=PurchaseOrderStatusGroups.OPEN,
+        quantity__gt=F('received'),
     )
 
     return Coalesce(

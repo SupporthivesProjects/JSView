@@ -30,21 +30,10 @@ from common.currency import currency_code_default
 from InvenTree.fields import InvenTreeURLField, RoundingDecimalField
 from order.status_codes import PurchaseOrderStatusGroups
 
-
 def rename_company_image(instance, filename):
-    """Function to rename a company image after upload.
-
-    Args:
-        instance: Company object
-        filename: uploaded image filename
-
-    Returns:
-        New image filename
-    """
+    """Rename a company image after upload."""
     base = 'company_images'
-
     ext = filename.split('.')[-1] if filename.count('.') > 0 else ''
-
     fn = f'company_{instance.pk}_img'
 
     if ext:
@@ -54,17 +43,7 @@ def rename_company_image(instance, filename):
 
 
 class CompanyReportContext(report.mixins.BaseReportContext, TypedDict):
-    """Report context for the Company model.
-
-    Attributes:
-        company: The Company object associated with this context
-        name: The name of the Company
-        description: A description of the Company
-        website: The website URL for the Company
-        phone: The contact phone number for the Company
-        email: The contact email address for the Company
-        address: The primary address associated with the Company
-    """
+    """Report context for the Company model."""
 
     company: 'Company'
     name: str
@@ -84,39 +63,12 @@ class Company(
     InvenTree.models.InvenTreeImageMixin,
     InvenTree.models.InvenTreeMetadataModel,
 ):
-    """A Company object represents an external company.
-
-    It may be a supplier or a customer or a manufacturer (or a combination)
-
-    - A supplier is a company from which parts can be purchased
-    - A customer is a company to which parts can be sold
-    - A manufacturer is a company which manufactures a raw good (they may or may not be a "supplier" also)
-
-
-    Attributes:
-        name: Brief name of the company
-        description: Longer form description
-        website: URL for the company website
-        address: One-line string representation of primary address
-        phone: contact phone number
-        email: contact email address
-        link: Secondary URL e.g. for link to internal Wiki page
-        image: Company image / logo
-        notes: Extra notes about the company
-        active: boolean value, is this company active
-        is_customer: boolean value, is this company a customer
-        is_supplier: boolean value, is this company a supplier
-        is_manufacturer: boolean value, is this company a manufacturer
-        currency_code: Specifies the default currency for the company
-        tax_id: Tax ID for the company
-    """
+    """A Company object represents an external company."""
 
     IMAGE_RENAME = rename_company_image
     IMPORT_ID_FIELDS = ['name']
 
     class Meta:
-        """Metaclass defines extra model options."""
-
         ordering = ['name']
         constraints = [
             UniqueConstraint(fields=['name', 'email'], name='unique_name_email_pair')
@@ -124,74 +76,67 @@ class Company(
         verbose_name = _('Company')
         verbose_name_plural = _('Companies')
 
-    @staticmethod
-    def get_api_url():
-        """Return the API URL associated with the Company model."""
-        return reverse('api-company-list')
-
-    def report_context(self) -> CompanyReportContext:
-        """Generate a dict of context data to provide to the reporting framework."""
-        return {
-            'company': self,
-            'name': self.name,
-            'description': self.description,
-            'website': self.website,
-            'phone': self.phone,
-            'email': self.email,
-            'address': str(self.address) if self.address else '',
-        }
+    code = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Code'),
+        help_text=_('Unique or internal code used to identify the company.'),
+    )
 
     name = models.CharField(
         max_length=100,
         blank=False,
-        help_text=_('Company name'),
         verbose_name=_('Company name'),
+        help_text=_('Company name.'),
     )
 
     description = models.CharField(
         max_length=500,
-        verbose_name=_('Company description'),
-        help_text=_('Description of the company'),
         blank=True,
+        verbose_name=_('Company description'),
+        help_text=_('Description of the company.'),
     )
 
     website = InvenTreeURLField(
         blank=True,
         verbose_name=_('Website'),
-        help_text=_('Company website URL'),
+        help_text=_('Company website URL.'),
         max_length=2000,
     )
 
     phone = models.CharField(
         max_length=50,
-        verbose_name=_('Phone number'),
         blank=True,
-        help_text=_('Contact phone number'),
+        verbose_name=_('Phone number'),
+        help_text=_('Contact phone number.'),
     )
 
     email = models.EmailField(
         blank=True,
         null=True,
         verbose_name=_('Email'),
-        help_text=_('Contact email address'),
+        help_text=_('Contact email address.'),
     )
 
     contact = models.CharField(
         max_length=100,
-        verbose_name=_('Contact'),
         blank=True,
-        help_text=_('Point of contact'),
+        verbose_name=_('Contact'),
+        help_text=_('Primary point of contact.'),
     )
 
     link = InvenTreeURLField(
         blank=True,
         verbose_name=_('Link'),
-        help_text=_('Link to external company information'),
+        help_text=_('Link to external company information.'),
         max_length=2000,
     )
 
     active = models.BooleanField(
-        default=True, verbose_name=_('Active'), help_text=_('Is this company active?')
+        default=True,
+        verbose_name=_('Active'),
+        help_text=_('Is this company active?'),
     )
 
     is_customer = models.BooleanField(
@@ -214,10 +159,10 @@ class Company(
 
     currency = models.CharField(
         max_length=3,
-        verbose_name=_('Currency'),
         blank=True,
         default=currency_code_default,
-        help_text=_('Default currency used for this company'),
+        verbose_name=_('Currency'),
+        help_text=_('Default currency used for this company.'),
         validators=[InvenTree.validators.validate_currency_code],
     )
 
@@ -225,23 +170,93 @@ class Company(
         max_length=50,
         blank=True,
         verbose_name=_('Tax ID'),
-        help_text=_('Company Tax ID'),
+        help_text=_('Company Tax ID.'),
     )
+
+    fax = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name=_('Fax'),
+        help_text=_('Company fax number.'),
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('City'),
+        help_text=_('City where the company is located.'),
+    )
+
+    state = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('State'),
+        help_text=_('State or province where the company is located.'),
+    )
+
+    country = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Country'),
+        help_text=_('Country where the company is located.'),
+    )
+
+    rating = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name=_('Rating'),
+        help_text=_('Rating assigned to the company.'),
+    )
+
+    credit_limit = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name=_('Credit Limit'),
+        help_text=_('Maximum credit limit allowed for the company.'),
+    )
+
+    ref_by = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_('Ref By'),
+        help_text=_('Person or source that referred the company.'),
+    )
+
+    @staticmethod
+    def get_api_url():
+        """Return the API URL associated with the Company model."""
+        return reverse('api-company-list')
+
+    def report_context(self) -> CompanyReportContext:
+        """Generate report context for the Company."""
+        return {
+            'company': self,
+            'name': self.name,
+            'description': self.description,
+            'website': self.website,
+            'phone': self.phone,
+            'email': self.email,
+            'address': str(self.address) if self.address else '',
+        }
 
     @property
     def address(self):
-        """Return the string representation for the primary address.
-
-        This property exists for backwards compatibility
-        """
+        """Return the primary address as a string."""
         addr = self.primary_address
-
         return str(addr) if addr is not None else None
 
     @property
     def primary_address(self):
-        """Returns address object of primary address for this Company."""
-        # We may have a pre-fetched primary address list
+        """Return the primary address for this Company."""
         if hasattr(self, 'primary_address_list'):
             addresses = self.primary_address_list
             return (
@@ -250,16 +265,11 @@ class Company(
                 else None
             )
 
-        # Otherwise, query the database
         return self.addresses.filter(primary=True).first()
 
     @property
     def currency_code(self):
-        """Return the currency code associated with this company.
-
-        - If the currency code is invalid, use the default currency
-        - If the currency code is not specified, use the default currency
-        """
+        """Return the currency code for this Company."""
         code = self.currency
 
         if code not in CURRENCIES:
@@ -268,29 +278,34 @@ class Company(
         return code
 
     def __str__(self):
-        """Get string representation of a Company."""
+        """Return string representation of the Company."""
         return f'{self.name} - {self.description}'
 
     def get_absolute_url(self):
-        """Get the web URL for the detail view for this Company."""
-        return InvenTree.helpers.pui_url(f'/purchasing/manufacturer/{self.id}')
+        """Return the absolute URL for this Company."""
+        return InvenTree.helpers.pui_url(
+            f'/purchasing/manufacturer/{self.id}'
+        )
 
     @property
     def parts(self):
-        """Return SupplierPart objects which are supplied or manufactured by this company."""
+        """Return parts supplied or manufactured by this Company."""
         return SupplierPart.objects.filter(
-            Q(supplier=self.id) | Q(manufacturer_part__manufacturer=self.id)
+            Q(supplier=self.id)
+            | Q(manufacturer_part__manufacturer=self.id)
         ).distinct()
 
     @property
     def stock_items(self):
-        """Return a list of all stock items supplied or manufactured by this company."""
+        """Return stock items supplied or manufactured by this Company."""
         stock = apps.get_model('stock', 'StockItem')
+
         return stock.objects.filter(
             Q(supplier_part__supplier=self.id)
-            | Q(supplier_part__manufacturer_part__manufacturer=self.id)
+            | Q(
+                supplier_part__manufacturer_part__manufacturer=self.id
+            )
         ).distinct()
-
 
 class Contact(InvenTree.models.InvenTreeMetadataModel):
     """A Contact represents a person who works at a particular company. A Company may have zero or more associated Contact objects.
@@ -298,9 +313,10 @@ class Contact(InvenTree.models.InvenTreeMetadataModel):
     Attributes:
         company: Company link for this contact
         name: Name of the contact
-        phone: contact phone number
-        email: contact email
-        role: position in company
+        phone: Contact phone number
+        email: Contact email
+        role: Position in company
+        mobile: Mobile phone number of the contact
     """
 
     IMPORT_ID_FIELDS = ['name', 'email']
@@ -319,14 +335,39 @@ class Contact(InvenTree.models.InvenTreeMetadataModel):
         Company, related_name='contacts', on_delete=models.CASCADE
     )
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(
+        max_length=100,
+        verbose_name=_('Name'),
+        help_text=_('Name of the contact person.'),
+    )
 
-    phone = models.CharField(max_length=100, blank=True)
+    phone = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_('Phone'),
+        help_text=_('Phone number of the contact person.'),
+    )
 
-    email = models.EmailField(blank=True)
+    email = models.EmailField(
+        blank=True,
+        verbose_name=_('Email'),
+        help_text=_('Email address of the contact person.'),
+    )
 
-    role = models.CharField(max_length=100, blank=True)
+    role = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_('Role'),
+        help_text=_('Designation or position of the contact person.'),
+    )
 
+    mobile = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name=_('Mobile'),
+        help_text=_('Mobile phone number of the contact person.'),
+    )
 
 class Address(InvenTree.models.InvenTreeModel):
     """An address represents a physical location where the company is located. It is possible for a company to have multiple locations.

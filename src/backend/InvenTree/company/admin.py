@@ -20,9 +20,41 @@ class CompanyAdmin(admin.ModelAdmin):
 
     serializer_class = company.serializers.CompanySerializer
 
-    list_display = ('name', 'website', 'contact')
+    list_display = (
+        'name',
+        'code',
+        'website',
+        'contact',
+        'phone',
+        'email',
+        'city',
+        'state',
+        'country',
+        'is_customer',
+        'is_supplier',
+        'is_manufacturer',
+        'active',
+    )
 
-    search_fields = ['name', 'description']
+    search_fields = [
+        'name',
+        'code',
+        'description',
+        'contact',
+        'phone',
+        'email',
+        'city',
+        'state',
+        'country',
+        'tax_id',
+    ]
+
+    list_filter = (
+        'active',
+        'is_customer',
+        'is_supplier',
+        'is_manufacturer',
+    )
 
 
 class SupplierPriceBreakInline(admin.TabularInline):
@@ -79,8 +111,21 @@ class AddressAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     """Admin class for the Contact model."""
 
-    list_display = ('company', 'name', 'role', 'email', 'phone')
+    list_display = (
+        'company',
+        'name',
+        'role',
+        'email',
+        'phone',
+        'mobile',
+    )
 
-    search_fields = ['company', 'name', 'email']
+    search_fields = [
+        'company__name',
+        'name',
+        'email',
+        'phone',
+        'mobile',
+    ]
 
     autocomplete_fields = ['company']
