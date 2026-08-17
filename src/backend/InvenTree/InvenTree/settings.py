@@ -317,6 +317,7 @@ INSTALLED_APPS = [
 
 
     'master.apps.MasterConfig',
+    'properties.apps.PropertiesConfig',
 
     'order.apps.OrderConfig',
     'part.apps.PartConfig',

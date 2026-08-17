@@ -26,6 +26,7 @@ import master.api
 import order.api
 import part.api
 import plugin.api
+import properties.urls
 import report.api
 import stock.api
 import users.api
@@ -64,6 +65,7 @@ apipatterns = [
     path('master/', include(master.api.master_api_urls)),
     path('order/', include(order.api.order_api_urls)),
     path('part/', include(part.api.part_api_urls)),
+    path('properties/', include('properties.urls')),
     path('report/', include(report.api.report_api_urls)),
     path('search/', APISearchView.as_view(), name='api-search'),
     path('settings/', include(common.api.settings_api_urls)),
