@@ -222,6 +222,9 @@ export default function MasterCustomerTable() {
           tableActions: tableActions,
           tableFilters: tableFilters,
           enableDownload: true,
+          params: { is_customer: true },
+          dataFormatter: (data: any[]) =>
+            (data ?? []).filter((row) => row.is_customer === true),
         }}
       />
     </>

@@ -82,27 +82,6 @@ export default function MasterVendorTable() {
       sortable: true,
       switchable: true,
     },
-    BooleanColumn({
-      accessor: "active",
-    }),
-    BooleanColumn({
-      accessor: "is_customer",
-      title: t`Customer`,
-    }),
-    BooleanColumn({
-      accessor: "is_supplier",
-      title: t`Supplier`,
-    }),
-    BooleanColumn({
-      accessor: "is_manufacturer",
-      title: t`Manufacturer`,
-    }),
-    {
-      accessor: "currency",
-      title: t`Currency`,
-      sortable: true,
-      switchable: true,
-    },
     {
       accessor: "tax_id",
       title: t`Tax ID`,
@@ -243,6 +222,9 @@ export default function MasterVendorTable() {
           tableActions: tableActions,
           tableFilters: tableFilters,
           enableDownload: true,
+          params: { is_supplier: true },
+          dataFormatter: (data: any[]) =>
+            (data ?? []).filter((row) => row.is_supplier === true),
         }}
       />
     </>

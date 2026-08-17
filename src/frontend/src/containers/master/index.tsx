@@ -20,7 +20,7 @@ import MasterExecutiveTable from "@components/tables/metal/MasterExecutiveTable"
 import CourierServiceTable from "@components/tables/metal/CourierServiceTable";
 import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
 import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
-import MasterVendorTable from "@components/tables/metal/MasterCustomerTable";
+import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
 import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
 
 export default function MetalTypeIndex() {
