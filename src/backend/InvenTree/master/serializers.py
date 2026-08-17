@@ -89,7 +89,15 @@ class StampSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
 
     class Meta:
         model = Stamp
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'image',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
 class ACExecutiveSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):

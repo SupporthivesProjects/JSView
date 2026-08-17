@@ -205,7 +205,7 @@ class Stamp(MasterFieldsMixin):
     """Hallmark / stamp type (e.g. BIS Hallmark, 916)."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the hallmark or stamp.'))
-    image = models.ImageField(upload_to=stamp_image, verbose_name=_('Image'), help_text=_('Image representing the hallmark or stamp.'))
+    image = models.ImageField(upload_to=stamp_image, blank=True,null=True,verbose_name=_('Image'),help_text=_('Optional image representing the hallmark or stamp.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the stamp.'))
 
     class Meta:
