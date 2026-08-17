@@ -36,7 +36,7 @@ export function metalTypeFields(): ApiFormFieldSet {
 
 export function metalPurityFields(): ApiFormFieldSet {
   return {
-   metal_type: {
+    metal_type: {
       api_url: apiUrl(ApiEndpoints.metal_type_list),
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
@@ -134,6 +134,21 @@ export function MasterSettingFields(): ApiFormFieldSet {
   };
 }
 
+export function LabourSettingFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    setting: {
+      api_url: apiUrl(ApiEndpoints.master_setting),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    charge_type: {},
+    rate: {},
+    active: {},
+  };
+}
 
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
