@@ -76,6 +76,14 @@ export function metalRate(activeMetalTypes: { pk: number; name: string }[] = [],
   };
 }
 
+export function masterTerms(): ApiFormFieldSet {
+  return {
+    name: {},
+    days: {},
+    description: {},
+    active: {},
+  };
+}
 export function findingTypeFields(): ApiFormFieldSet {
   return {
     name: {},
