@@ -123,4 +123,4 @@ src/backend/venv
 /frontendMDFiles
 src/backend/InvenTree/inventree.sqlite3
 inventree.sqlite3-*
-
+media/
