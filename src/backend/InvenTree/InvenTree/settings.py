@@ -822,7 +822,7 @@ for i, host in enumerate(ALLOWED_HOSTS):
 CSRF_TRUSTED_ORIGINS = get_setting(
     'INVENTREE_TRUSTED_ORIGINS',
     config_key='trusted_origins',
-    default_value=["*"],
+    default_value=["http://", "https://"],
     typecast=list,
 )
 
