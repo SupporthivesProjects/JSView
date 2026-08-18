@@ -142,6 +142,7 @@ export enum ApiEndpoints {
   labour_setting = "master/labour-setting/",
   master_vendor_customer = "company/",
   jewellery_category = "master/jewelry-category/",
+  jewellery_sub_category = "master/jewelry-sub-category/",
 
   // Company API endpoints
   company_list = "company/",

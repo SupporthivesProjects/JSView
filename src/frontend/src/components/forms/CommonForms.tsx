@@ -226,6 +226,21 @@ export function jewelleryCategoryFields(): ApiFormFieldSet {
   };
 }
 
+export function jewellerySubCategoryFields(): ApiFormFieldSet {
+  return {
+    category: {
+      api_url: apiUrl(ApiEndpoints.jewellery_category),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
