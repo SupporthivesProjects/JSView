@@ -134,3 +134,22 @@ class JewelrySubCategoryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'category__name')
     autocomplete_fields = ('category',)
     list_filter = ('active',)
+
+
+@admin.register(models.Templates)
+class TemplatesAdmin(admin.ModelAdmin):
+    """Admin class for the Templates model."""
+
+    list_display = ('name', 'subject', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'subject')
+    list_filter = ('active',)
+
+
+@admin.register(models.POMail)
+class POMailAdmin(admin.ModelAdmin):
+    """Admin class for the POMail model."""
+
+    list_display = ('name', 'order', 'format1', 'format2', 'format3', 'format4', 'active', 'created_at', 'updated_at')
+    search_fields = ('name',)
+    autocomplete_fields = ('format1', 'format2', 'format3', 'format4')
+    list_filter = ('active',)

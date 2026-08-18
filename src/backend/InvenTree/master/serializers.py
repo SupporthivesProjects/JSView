@@ -3,7 +3,6 @@
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
-
 from .models import (
     ACExecutive,
     CourierService,
@@ -16,11 +15,12 @@ from .models import (
     MetalPurity,
     MetalRate,
     MetalType,
+    POMail,
     Setting,
     Stamp,
+    Templates,
     Terms,
 )
-
 
 class MetalTypeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the MetalType model."""
@@ -132,3 +132,19 @@ class JewelrySubCategorySerializer(DataExportSerializerMixin, InvenTreeModelSeri
     class Meta:
         model = JewelrySubCategory
         fields = ['pk', 'category', 'name', 'description', 'active', 'created_at', 'updated_at']
+
+
+class TemplatesSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the Templates model."""
+
+    class Meta:
+        model = Templates
+        fields = ['pk', 'name', 'subject', 'template', 'active', 'created_at', 'updated_at']
+
+
+class POMailSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the POMail model."""
+
+    class Meta:
+        model = POMail
+        fields = ['pk', 'name', 'order', 'format1', 'format2', 'format3', 'format4', 'active', 'created_at', 'updated_at']

@@ -21,8 +21,10 @@ from .models import (
     MetalPurity,
     MetalRate,
     MetalType,
+    POMail,
     Setting,
     Stamp,
+    Templates,
     Terms,
 )
 
@@ -331,6 +333,49 @@ class JewelrySubCategoryDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
+
+class TemplatesList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating Templates objects."""
+
+    queryset = Templates.objects.all()
+    serializer_class = master_serializers.TemplatesSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    search_fields = ['name', 'subject']
+    ordering_fields = ['name', 'active']
+    ordering = 'name'
+
+
+class TemplatesDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single Templates object."""
+
+    queryset = Templates.objects.all()
+    serializer_class = master_serializers.TemplatesSerializer
+    permission_classes = [MasterDataPermission]
+
+
+class POMailList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating POMail objects."""
+
+    queryset = POMail.objects.all()
+    serializer_class = master_serializers.POMailSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    search_fields = ['name']
+    ordering_fields = ['name', 'order', 'active']
+    ordering = 'order'
+
+
+class POMailDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single POMail object."""
+
+    queryset = POMail.objects.all()
+    serializer_class = master_serializers.POMailSerializer
+    permission_classes = [MasterDataPermission]
+
+
 master_api_urls = [
     path('metal-type/', include([
         path('<int:pk>/', MetalTypeDetail.as_view(), name='api-metal-type-detail'),
@@ -400,5 +445,15 @@ master_api_urls = [
     path('jewelry-sub-category/', include([
         path('<int:pk>/',JewelrySubCategoryDetail.as_view(),name='api-jewelry-sub-category-detail',),
         path('',JewelrySubCategoryList.as_view(),name='api-jewelry-sub-category-list',),
+    ])),
+
+    path('templates/', include([
+        path('<int:pk>/', TemplatesDetail.as_view(), name='api-templates-detail'),
+        path('', TemplatesList.as_view(), name='api-templates-list'),
+    ])),
+
+    path('po-mail/', include([
+        path('<int:pk>/', POMailDetail.as_view(), name='api-po-mail-detail'),
+        path('', POMailList.as_view(), name='api-po-mail-list'),
     ])),
 ]
