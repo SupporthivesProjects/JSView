@@ -8,6 +8,8 @@ from .models import (
     ColorStone,
     ColorStoneColor,
     ColorStoneCut,
+    ColorStoneQuality,
+    ColorStoneRate,
     ColorStoneShape,
     ColorStoneSize,
     DiamondColor,
@@ -16,6 +18,7 @@ from .models import (
     DiamondShape,
     DiamondSize,
     DiamondStone,
+    DiamondStoneRate,
 )
 
 
@@ -105,3 +108,57 @@ class ColorStoneSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
     class Meta:
         model = ColorStoneSize
         fields = ['pk', 'name', 'mm_size', 'description', 'active', 'created_at', 'updated_at']
+
+
+class ColorStoneQualitySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the ColorStoneQuality model."""
+
+    class Meta:
+        model = ColorStoneQuality
+        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+
+
+class DiamondStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the DiamondStoneRate model."""
+
+    shape_detail = DiamondShapeSerializer(read_only=True, source='shape')
+    mm_size_detail = DiamondSizeSerializer(read_only=True, source='mm_size')
+    stone_detail = DiamondStoneSerializer(read_only=True, source='stone')
+    color_detail = DiamondColorSerializer(read_only=True, source='color')
+    cut_detail = DiamondCutSerializer(read_only=True, source='cut')
+    quality_detail = DiamondQualitySerializer(read_only=True, source='quality')
+
+    class Meta:
+        model = DiamondStoneRate
+        fields = [
+            'pk',
+            'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+            'pointer', 'rate', 'pc', 'customer_id',
+            'active', 'created_at', 'updated_at',
+            'shape_detail', 'mm_size_detail', 'stone_detail',
+            'color_detail', 'cut_detail', 'quality_detail',
+        ]
+        read_only_fields = ['pk', 'created_at', 'updated_at']
+
+
+class ColorStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """Serializer for the ColorStoneRate model."""
+
+    shape_detail = ColorStoneShapeSerializer(read_only=True, source='shape')
+    mm_size_detail = ColorStoneSizeSerializer(read_only=True, source='mm_size')
+    stone_detail = ColorStoneSerializer(read_only=True, source='stone')
+    color_detail = ColorStoneColorSerializer(read_only=True, source='color')
+    cut_detail = ColorStoneCutSerializer(read_only=True, source='cut')
+    quality_detail = ColorStoneQualitySerializer(read_only=True, source='quality')
+
+    class Meta:
+        model = ColorStoneRate
+        fields = [
+            'pk',
+            'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+            'pointer', 'rate', 'pc', 'customer_id',
+            'active', 'created_at', 'updated_at',
+            'shape_detail', 'mm_size_detail', 'stone_detail',
+            'color_detail', 'cut_detail', 'quality_detail',
+        ]
+        read_only_fields = ['pk', 'created_at', 'updated_at']

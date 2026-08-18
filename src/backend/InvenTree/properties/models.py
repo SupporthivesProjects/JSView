@@ -218,3 +218,183 @@ class ColorStoneSize(PropertiesFieldsMixin):
 
     def __str__(self):
         return self.name
+
+
+class ColorStoneQuality(PropertiesFieldsMixin):
+    """Color stone quality grade."""
+
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone quality grade.'))
+    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone quality grade.'))
+
+    class Meta:
+        verbose_name = _('Color Stone Quality')
+        verbose_name_plural = _('Color Stone Qualities')
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class DiamondStoneRate(PropertiesFieldsMixin):
+    """Weight-per-stone rate for diamonds.
+
+    Maps to tbprice WHERE mtype = 'DIAWEIGHTPERSTONE' in jsidb.
+    Combines shape, size, stone type, color, cut, quality and pointer
+    to produce a per-piece or per-carat rate.
+    """
+
+    shape = models.ForeignKey(
+        DiamondShape, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Shape'), help_text=_('Diamond shape.'),
+    )
+    mm_size = models.ForeignKey(
+        DiamondSize, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Size'), help_text=_('Diamond size.'),
+    )
+    stone = models.ForeignKey(
+        DiamondStone, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Stone'), help_text=_('Diamond stone type.'),
+    )
+    color = models.ForeignKey(
+        DiamondColor, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Color'), help_text=_('Diamond color grade.'),
+    )
+    cut = models.ForeignKey(
+        DiamondCut, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Cut'), help_text=_('Diamond cut type.'),
+    )
+    quality = models.ForeignKey(
+        DiamondQuality, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Quality'), help_text=_('Diamond quality grade.'),
+    )
+    pointer = models.DecimalField(
+        max_digits=10, decimal_places=4, null=True, blank=True,
+        verbose_name=_('Pointer'), help_text=_('Pointer value for rate lookup.'),
+    )
+    rate = models.DecimalField(
+        max_digits=10, decimal_places=4,
+        verbose_name=_('Rate'), help_text=_('Rate per piece or per carat.'),
+    )
+    pc = models.CharField(
+        max_length=1, choices=[('P', _('Per Piece')), ('C', _('Per Carat'))],
+        default='C', verbose_name=_('P/C'),
+        help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
+    )
+    customer_id = models.IntegerField(
+        null=True, blank=True,
+        verbose_name=_('Customer ID'),
+        help_text=_('Optional customer-specific rate override.'),
+    )
+
+    class Meta:
+        unique_together = [
+            'shape', 'mm_size', 'stone', 'color',
+            'cut', 'quality', 'pointer', 'customer_id',
+        ]
+        ordering = ['shape', 'mm_size', 'pointer']
+        verbose_name = _('Diamond Stone Rate')
+        verbose_name_plural = _('Diamond Stone Rates')
+        indexes = [
+            models.Index(fields=['active']),
+            models.Index(fields=['shape', 'mm_size', 'pointer']),
+        ]
+
+    def __str__(self):
+        parts = []
+        if self.shape:
+            parts.append(str(self.shape))
+        if self.mm_size:
+            parts.append(str(self.mm_size))
+        if self.pointer:
+            parts.append(str(self.pointer))
+        return ' / '.join(parts) if parts else f'DiamondStoneRate #{self.pk}'
+
+
+class ColorStoneRate(PropertiesFieldsMixin):
+    """Weight-per-stone rate for color stones.
+
+    Maps to tbprice WHERE mtype = 'COLWEIGHTPERSTONE' in jsidb.
+    Combines shape, size, stone type, color, cut, quality and pointer
+    to produce a per-piece or per-carat rate.
+    """
+
+    shape = models.ForeignKey(
+        ColorStoneShape, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Shape'), help_text=_('Color stone shape.'),
+    )
+    mm_size = models.ForeignKey(
+        ColorStoneSize, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Size'), help_text=_('Color stone size.'),
+    )
+    stone = models.ForeignKey(
+        ColorStone, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Stone'), help_text=_('Color stone type.'),
+    )
+    color = models.ForeignKey(
+        ColorStoneColor, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Color'), help_text=_('Color stone color.'),
+    )
+    cut = models.ForeignKey(
+        ColorStoneCut, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Cut'), help_text=_('Color stone cut type.'),
+    )
+    quality = models.ForeignKey(
+        ColorStoneQuality, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='rates',
+        verbose_name=_('Quality'), help_text=_('Color stone quality grade.'),
+    )
+    pointer = models.DecimalField(
+        max_digits=10, decimal_places=4, null=True, blank=True,
+        verbose_name=_('Pointer'), help_text=_('Pointer value for rate lookup.'),
+    )
+    rate = models.DecimalField(
+        max_digits=10, decimal_places=4,
+        verbose_name=_('Rate'), help_text=_('Rate per piece or per carat.'),
+    )
+    pc = models.CharField(
+        max_length=1, choices=[('P', _('Per Piece')), ('C', _('Per Carat'))],
+        default='C', verbose_name=_('P/C'),
+        help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
+    )
+    customer_id = models.IntegerField(
+        null=True, blank=True,
+        verbose_name=_('Customer ID'),
+        help_text=_('Optional customer-specific rate override.'),
+    )
+
+    class Meta:
+        unique_together = [
+            'shape', 'mm_size', 'stone', 'color',
+            'cut', 'quality', 'pointer', 'customer_id',
+        ]
+        ordering = ['shape', 'mm_size', 'pointer']
+        verbose_name = _('Color Stone Rate')
+        verbose_name_plural = _('Color Stone Rates')
+        indexes = [
+            models.Index(fields=['active']),
+            models.Index(fields=['shape', 'mm_size', 'pointer']),
+        ]
+
+    def __str__(self):
+        parts = []
+        if self.shape:
+            parts.append(str(self.shape))
+        if self.mm_size:
+            parts.append(str(self.mm_size))
+        if self.pointer:
+            parts.append(str(self.pointer))
+        return ' / '.join(parts) if parts else f'ColorStoneRate #{self.pk}'

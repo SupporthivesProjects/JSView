@@ -10,14 +10,17 @@ from .models import (
     ColorStone,
     ColorStoneColor,
     ColorStoneCut,
+    ColorStoneQuality,
     ColorStoneShape,
     ColorStoneSize,
+    ColorStoneRate,
     DiamondColor,
     DiamondCut,
     DiamondQuality,
     DiamondShape,
     DiamondSize,
     DiamondStone,
+    DiamondStoneRate,
 )
 from .permissions import PropertiesDataPermission
 
@@ -268,4 +271,76 @@ class ColorStoneSizeDetail(RetrieveUpdateDestroyAPI):
 
     queryset = ColorStoneSize.objects.all()
     serializer_class = properties_serializers.ColorStoneSizeSerializer
+    permission_classes = [PropertiesDataPermission]
+
+
+class ColorStoneQualityList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating ColorStoneQuality objects."""
+
+    queryset = ColorStoneQuality.objects.all()
+    serializer_class = properties_serializers.ColorStoneQualitySerializer
+    pagination_class = PropertiesPagination
+    permission_classes = [PropertiesDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
+    search_fields = ['name']
+    ordering_fields = ['name', 'created_at']
+    ordering = 'name'
+
+
+class ColorStoneQualityDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single ColorStoneQuality object."""
+
+    queryset = ColorStoneQuality.objects.all()
+    serializer_class = properties_serializers.ColorStoneQualitySerializer
+    permission_classes = [PropertiesDataPermission]
+
+
+class DiamondStoneRateList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating DiamondStoneRate objects."""
+
+    queryset = DiamondStoneRate.objects.all()
+    serializer_class = properties_serializers.DiamondStoneRateSerializer
+    pagination_class = PropertiesPagination
+    permission_classes = [PropertiesDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = [
+        'active', 'shape', 'mm_size', 'stone',
+        'color', 'cut', 'quality', 'pc', 'customer_id',
+    ]
+    search_fields = ['stone__name', 'shape__name']
+    ordering_fields = ['shape', 'mm_size', 'pointer', 'rate', 'created_at']
+    ordering = ['shape', 'mm_size', 'pointer']
+
+
+class DiamondStoneRateDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single DiamondStoneRate object."""
+
+    queryset = DiamondStoneRate.objects.all()
+    serializer_class = properties_serializers.DiamondStoneRateSerializer
+    permission_classes = [PropertiesDataPermission]
+
+
+class ColorStoneRateList(DataExportViewMixin, ListCreateAPI):
+    """API endpoint for listing / creating ColorStoneRate objects."""
+
+    queryset = ColorStoneRate.objects.all()
+    serializer_class = properties_serializers.ColorStoneRateSerializer
+    pagination_class = PropertiesPagination
+    permission_classes = [PropertiesDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = [
+        'active', 'shape', 'mm_size', 'stone',
+        'color', 'cut', 'quality', 'pc', 'customer_id',
+    ]
+    search_fields = ['stone__name', 'shape__name']
+    ordering_fields = ['shape', 'mm_size', 'pointer', 'rate', 'created_at']
+    ordering = ['shape', 'mm_size', 'pointer']
+
+
+class ColorStoneRateDetail(RetrieveUpdateDestroyAPI):
+    """API endpoint for detail view of a single ColorStoneRate object."""
+
+    queryset = ColorStoneRate.objects.all()
+    serializer_class = properties_serializers.ColorStoneRateSerializer
     permission_classes = [PropertiesDataPermission]

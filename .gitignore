@@ -124,3 +124,5 @@ src/backend/venv
 src/backend/InvenTree/inventree.sqlite3
 inventree.sqlite3-*
 
+Client Project/
+src/backend/InvenTree/InvenTree/settings.py

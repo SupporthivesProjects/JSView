@@ -102,3 +102,34 @@ class ColorStoneSizeAdmin(admin.ModelAdmin):
     list_display = ('name', 'active', 'created_at')
     search_fields = ('name',)
     list_filter = ('active',)
+
+
+@admin.register(models.ColorStoneQuality)
+class ColorStoneQualityAdmin(admin.ModelAdmin):
+    """Admin class for the ColorStoneQuality model."""
+
+    list_display = ('name', 'active', 'created_at')
+    search_fields = ('name',)
+    list_filter = ('active',)
+
+
+@admin.register(models.DiamondStoneRate)
+class DiamondStoneRateAdmin(admin.ModelAdmin):
+    """Admin class for the DiamondStoneRate model."""
+
+    list_display = (
+        'shape', 'mm_size', 'stone', 'color',
+        'cut', 'quality', 'pointer', 'rate', 'pc', 'active',
+    )
+    list_filter = ['stone', 'color', 'cut', 'pc', 'active']
+
+
+@admin.register(models.ColorStoneRate)
+class ColorStoneRateAdmin(admin.ModelAdmin):
+    """Admin class for the ColorStoneRate model."""
+
+    list_display = (
+        'shape', 'mm_size', 'stone', 'color',
+        'cut', 'quality', 'pointer', 'rate', 'pc', 'active',
+    )
+    list_filter = ['stone', 'color', 'cut', 'pc', 'active']

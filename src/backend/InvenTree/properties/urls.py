@@ -49,4 +49,16 @@ urlpatterns = [
         path('<int:pk>/', views.ColorStoneSizeDetail.as_view(), name='api-colorstone-size-detail'),
         path('', views.ColorStoneSizeList.as_view(), name='api-colorstone-size-list'),
     ])),
+    path('colorstone-quality/', include([
+        path('<int:pk>/', views.ColorStoneQualityDetail.as_view(), name='api-colorstone-quality-detail'),
+        path('', views.ColorStoneQualityList.as_view(), name='api-colorstone-quality-list'),
+    ])),
+    path('diamond-stone-rate/', include([
+        path('<int:pk>/', views.DiamondStoneRateDetail.as_view(), name='api-diamond-stone-rate-detail'),
+        path('', views.DiamondStoneRateList.as_view(), name='api-diamond-stone-rate-list'),
+    ])),
+    path('colorstone-rate/', include([
+        path('<int:pk>/', views.ColorStoneRateDetail.as_view(), name='api-colorstone-rate-detail'),
+        path('', views.ColorStoneRateList.as_view(), name='api-colorstone-rate-list'),
+    ])),
 ]
