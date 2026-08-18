@@ -73,7 +73,6 @@ export function masterTerms(): ApiFormFieldSet {
   };
 }
 
-
 export function masterCourierService(): ApiFormFieldSet {
   return {
     name: {},
@@ -163,15 +162,15 @@ export function masterVendors(): ApiFormFieldSet {
     link: {},
     is_customer: {
       hidden: true,
-      value: false
+      value: false,
     },
     is_supplier: {
       hidden: true,
-      value: true
+      value: true,
     },
     is_manufacturer: {
       hidden: true,
-      value: false
+      value: false,
     },
     tax_id: {},
     fax: {},
@@ -197,15 +196,15 @@ export function masterCustomer(): ApiFormFieldSet {
     link: {},
     is_customer: {
       hidden: true,
-      value: true
+      value: true,
     },
     is_supplier: {
       hidden: true,
-      value: false
+      value: false,
     },
     is_manufacturer: {
       hidden: true,
-      value: false
+      value: false,
     },
     tax_id: {},
     fax: {},
@@ -215,6 +214,14 @@ export function masterCustomer(): ApiFormFieldSet {
     rating: {},
     credit_limit: {},
     ref_by: {},
+    active: {},
+  };
+}
+
+export function jewelleryCategoryFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
     active: {},
   };
 }

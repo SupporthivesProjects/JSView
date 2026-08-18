@@ -22,6 +22,7 @@ import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
 import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
 import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
 import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
+import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -39,6 +40,12 @@ export default function MetalTypeIndex() {
         label: t`Metal Purity`,
         icon: <IconAtom2 />,
         content: <MetalPurityTable />,
+      },
+      {
+        name: "jewellery-category",
+        label: t`Jewel Category`,
+        icon: <IconAtom2 />,
+        content: <JewelleryCategoryTable />,
       },
       {
         name: "metal-rate",
