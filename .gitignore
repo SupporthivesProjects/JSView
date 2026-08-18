@@ -126,3 +126,5 @@ inventree.sqlite3-*
 API.md
 Client Project/
 src/backend/InvenTree/InvenTree/settings.py
+__pycache__/
+*.pyc
