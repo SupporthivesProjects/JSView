@@ -171,7 +171,7 @@ class CostCardSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
             # Common
             'active', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['front_view', 'side_view', 'back_view']
+        read_only_fields = ['cost_card_no','front_view', 'side_view', 'back_view']
 
     def create(self, validated_data):
         diamond_lines_data = validated_data.pop('diamond_lines', [])

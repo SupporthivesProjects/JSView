@@ -151,6 +151,20 @@ class CostCard(CardsFieldsMixin):
     def __str__(self):
         return f'{self.cost_card_no} - {self.our_style_no}'
 
+    def save(self, *args, **kwargs):
+        if not self.cost_card_no:
+            last_card = CostCard.objects.order_by('-id').first()
+
+            if last_card:
+                last_number = int(last_card.cost_card_no.split('-')[-1])
+                next_number = last_number + 1
+            else:
+                next_number = 1
+
+            self.cost_card_no = f'CC{next_number:06d}'
+
+        super().save(*args, **kwargs)
+
 
 class CostCardStoneLineMixin(CardsFieldsMixin):
     """Common fields shared by diamond and color stone cost card lines."""
