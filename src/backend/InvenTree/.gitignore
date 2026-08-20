@@ -4,3 +4,5 @@ _tests_report*.txt
 
 # Playwright files for CI
 InvenTree/static/img/playwright*.png
+__pycache__/
+*.py[cod]
