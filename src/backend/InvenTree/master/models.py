@@ -313,3 +313,45 @@ class CourierService(MasterFieldsMixin):
 
     def __str__(self):
         return self.name
+
+
+
+class Templates(MasterFieldsMixin):
+    """Email/attachment template used by POMail formats (stores template code or a path)."""
+
+    name = models.CharField(max_length=150, verbose_name=_('Name'), help_text=_('Name of the template.'))
+    subject = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Subject'), help_text=_('Email subject line to use with this template.'))
+    template = models.TextField(blank=True, null=True, verbose_name=_('Template'), help_text=_('Template content — inline HTML/code, or a path/reference to a report template.'))
+
+    class Meta:
+        verbose_name = _('Template')
+        verbose_name_plural = _('Templates')
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class POMail(MasterFieldsMixin):
+    """P.O. Mail configuration — maps recipient formats (Vendor, Diamond Office, etc.) to Templates."""
+    
+    name = models.CharField(max_length=150, verbose_name=_('Name'), help_text=_('Name of the P.O. Mail configuration.'))
+    format1 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format1', verbose_name=_('Format 1'), help_text=_('Template used for Vendor.'))
+    format2 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format2', verbose_name=_('Format 2'), help_text=_('Template used for Diamond Office.'))
+    format3 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format3', verbose_name=_('Format 3'), help_text=_('Template used for Color Stone Office.'))
+    format4 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format4', verbose_name=_('Format 4'), help_text=_('Template used for New York Office.'))
+    order = models.PositiveIntegerField(default=0, verbose_name=_('Order'), help_text=_('Display order of this configuration.'))
+    
+    class Meta:
+        verbose_name = _('P.O. Mail')
+        verbose_name_plural = _('P.O. Mails')
+        ordering = ['order']
+        indexes = [
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name

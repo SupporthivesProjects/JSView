@@ -123,4 +123,9 @@ src/backend/venv
 /frontendMDFiles
 src/backend/InvenTree/inventree.sqlite3
 inventree.sqlite3-*
+API.md
+Client Project/
+src/backend/InvenTree/InvenTree/settings.py
+src/backend/InvenTree/properties/migrations/__pycache__/
+*.pyc
 media/

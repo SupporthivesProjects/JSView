@@ -23,9 +23,11 @@ import importer.api
 import InvenTree.logging  # noqa: F401 - ensure logging handlers are registered
 import machine.api
 import master.api
+import cards.api
 import order.api
 import part.api
 import plugin.api
+import properties.urls
 import report.api
 import stock.api
 import users.api
@@ -62,8 +64,10 @@ apipatterns = [
     path('label/', include(report.api.label_api_urls)),
     path('machine/', include(machine.api.machine_api_urls)),
     path('master/', include(master.api.master_api_urls)),
+    path('cards/', include(cards.api.cards_api_urls)),
     path('order/', include(order.api.order_api_urls)),
     path('part/', include(part.api.part_api_urls)),
+    path('properties/', include('properties.urls')),
     path('report/', include(report.api.report_api_urls)),
     path('search/', APISearchView.as_view(), name='api-search'),
     path('settings/', include(common.api.settings_api_urls)),
