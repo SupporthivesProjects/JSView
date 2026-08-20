@@ -24,6 +24,7 @@ import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
 import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
+import StampTable from "@components/tables/metal/StampTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -77,6 +78,12 @@ export default function MetalTypeIndex() {
         label: t`Duty`,
         icon: <IconAtom2 />,
         content: <ListDutyTable />,
+      },
+      {
+        name: "stamp",
+        label: t`Stamp`,
+        icon: <IconAtom2 />,
+        content: <StampTable />,
       },
       {
         name: "master-terms",

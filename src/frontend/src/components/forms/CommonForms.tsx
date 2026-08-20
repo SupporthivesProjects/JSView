@@ -241,6 +241,28 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
   };
 }
 
+export function stampFields(
+  includeImage: boolean = true,
+  onImageChange?: (file: File | null) => void,
+): ApiFormFieldSet {
+  const fields: ApiFormFieldSet = {
+    name: {},
+    description: {},
+    active: {},
+  };
+
+  if (includeImage) {
+    fields.image = {
+      field_type: "file upload",
+      onValueChange: (value: any) => {
+        onImageChange?.(value instanceof File ? value : null);
+      },
+    };
+  }
+
+  return fields;
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
