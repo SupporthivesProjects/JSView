@@ -50,7 +50,7 @@ from django.contrib import admin
 
 # Set admin header from config or use default
 admin.site.site_header = get_setting(
-    'INVENTREE_SITE_HEADER', 'customize.site_header', 'InvenTree Admin'
+    'INVENTREE_SITE_HEADER', 'customize.site_header', 'JSIView APIs Manager'
 )
 
 
