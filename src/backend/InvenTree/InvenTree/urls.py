@@ -64,7 +64,7 @@ apipatterns = [
     path('label/', include(report.api.label_api_urls)),
     path('machine/', include(machine.api.machine_api_urls)),
     path('master/', include(master.api.master_api_urls)),
-    path('cards/', include(cards.api.order_cards_urls)),
+    path('cards/', include(cards.api.cards_api_urls)),
     path('order/', include(order.api.order_api_urls)),
     path('part/', include(part.api.part_api_urls)),
     path('properties/', include('properties.urls')),
