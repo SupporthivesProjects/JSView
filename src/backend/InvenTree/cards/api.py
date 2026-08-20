@@ -3,6 +3,8 @@ from django.urls import include, path
 from rest_framework import generics
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework import generics, status
+from rest_framework.response import Response
 
 from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
@@ -18,6 +20,7 @@ from .models import (
     CostCardFinishLine,
     StonePlace,
 )
+from .duplicates import duplicate_cost_card
 
 
 class CardsPagination(LimitOffsetPagination):
@@ -179,6 +182,31 @@ class CostCardFinishLineDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [CostCardPermission]
 
 
+
+class CostCardDuplicate(generics.GenericAPIView):
+    queryset = CostCard.objects.prefetch_related(
+        'diamond_lines',
+        'colorstone_lines',
+        'finish_lines',
+    ).all()
+    serializer_class = cards_serializers.CostCardSerializer
+    permission_classes = [CostCardPermission]
+
+    def post(self, request, pk):
+        cost_card = self.get_object()
+
+        new_cost_card = duplicate_cost_card(cost_card)
+
+        serializer = self.get_serializer(new_cost_card)
+
+        return Response(
+            {
+                'duplicated': serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 cards_api_urls = [
     path('stone-place/', include([
         path('<int:pk>/', StonePlaceDetail.as_view(), name='api-stone-place-detail'),
@@ -186,10 +214,14 @@ cards_api_urls = [
     ])),
 
     path('cost-card/', include([
-        path('<int:pk>/', include([
-            path('images/', CostCardImageUpload.as_view(), name='api-cost-card-images'),
-            path('', CostCardDetail.as_view(), name='api-cost-card-detail'),
-        ])),
+        path(
+            '<int:pk>/',
+            include([
+                path('images/', CostCardImageUpload.as_view(), name='api-cost-card-images'),
+                path('duplicate/', CostCardDuplicate.as_view(), name='api-cost-card-duplicate'),
+                path('', CostCardDetail.as_view(), name='api-cost-card-detail'),
+            ])
+        ),
         path('', CostCardList.as_view(), name='api-cost-card-list'),
     ])),
 

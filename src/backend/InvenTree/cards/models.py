@@ -138,7 +138,8 @@ class CostCard(CardsFieldsMixin):
 
     # ---- Remarks tab ----
     remarks_full = models.TextField(null=True, blank=True, verbose_name=_('Remarks (Detail)'), help_text=_('Detailed remarks entered on the dedicated Remarks tab.'))
-
+    parent = models.ForeignKey('self', null=True, blank=True,on_delete=models.SET_NULL,related_name='child_cards',verbose_name=_('Parent Cost Card'),help_text=_('Parent cost card from which this card was copied.'),)
+    
     class Meta:
         verbose_name = _('Cost Card')
         verbose_name_plural = _('Cost Cards')
@@ -156,7 +157,7 @@ class CostCard(CardsFieldsMixin):
             last_card = CostCard.objects.order_by('-id').first()
 
             if last_card:
-                last_number = int(last_card.cost_card_no.split('-')[-1])
+                last_number = int(last_card.cost_card_no.replace('CC', ''))
                 next_number = last_number + 1
             else:
                 next_number = 1
