@@ -58,7 +58,14 @@ class CostCardDiamondLineAdmin(admin.ModelAdmin):
 
     list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'amount', 'active', 'created_at')
     search_fields = ('cost_card__cost_card_no', 'cost_card__our_style_no')
-    autocomplete_fields = ('cost_card', 'stone', 'shape', 'mm_size', 'color', 'cut', 'quality', 'setting', 'stone_place', 'rate_source')
+    # NOTE: 'rate_source' (-> properties.DiamondStoneRate) is deliberately left
+    # out of autocomplete_fields. Django's admin checks (admin.E040) require the
+    # *target* model's own ModelAdmin to define search_fields for it to be used
+    # in autocomplete_fields, and DiamondStoneRateAdmin doesn't define one.
+    # Either add search_fields to DiamondStoneRateAdmin in properties/admin.py,
+    # or leave 'rate_source' as a plain FK dropdown/raw_id_fields entry here.
+    autocomplete_fields = ('cost_card', 'stone', 'shape', 'mm_size', 'color', 'cut', 'quality', 'setting', 'stone_place')
+    raw_id_fields = ('rate_source',)
     list_filter = ('active', 'shape', 'quality')
 
 
@@ -68,7 +75,8 @@ class CostCardColorStoneLineAdmin(admin.ModelAdmin):
 
     list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'amount', 'active', 'created_at')
     search_fields = ('cost_card__cost_card_no', 'cost_card__our_style_no')
-    autocomplete_fields = ('cost_card', 'stone', 'shape', 'mm_size', 'color', 'cut', 'quality', 'setting', 'stone_place', 'rate_source')
+    autocomplete_fields = ('cost_card', 'stone', 'shape', 'mm_size', 'color', 'cut', 'quality', 'setting', 'stone_place')
+    raw_id_fields = ('rate_source',)
     list_filter = ('active', 'shape', 'quality')
 
 
