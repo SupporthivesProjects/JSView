@@ -44,6 +44,7 @@ class MetalTypeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['code', 'name', 'description']
     ordering_fields = ['code', 'name', 'active']
     ordering = 'name'
@@ -65,7 +66,7 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['metal_type']
+    filterset_fields = ['metal_type', 'active']
     search_fields = ['name']
     ordering_fields = ['metal_type', 'name', 'purity']
     ordering = 'name'
@@ -87,7 +88,7 @@ class MetalRateList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['metal_type']
+    filterset_fields = ['metal_type', 'active']
     ordering_fields = ['date', 'rate']
     ordering = '-date'
 
@@ -108,6 +109,7 @@ class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -129,6 +131,7 @@ class FinishTypeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -150,6 +153,7 @@ class SettingList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -171,7 +175,7 @@ class LabourSettingList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['setting', 'charge_type']
+    filterset_fields = ['setting', 'charge_type', 'active']
     search_fields = ['name']
     ordering_fields = ['name', 'charge_type', 'rate', 'active']
     ordering = 'name'
@@ -193,6 +197,7 @@ class DutyList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['description']
     ordering_fields = ['metal_type', 'duty', 'markup']
     ordering = 'metal_type'
@@ -214,6 +219,7 @@ class StampList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -235,6 +241,7 @@ class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'code', 'email']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -256,6 +263,7 @@ class TermsList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'days']
     ordering = 'name'
@@ -277,6 +285,7 @@ class CourierServiceList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'contact_person']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -298,6 +307,7 @@ class JewelryCategoryList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -319,7 +329,7 @@ class JewelrySubCategoryList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['category']
+    filterset_fields = ['category', 'active']
     search_fields = ['name', 'description', 'category__name']
     ordering_fields = ['name', 'category', 'active']
     ordering = 'name'
@@ -342,6 +352,7 @@ class TemplatesList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'subject']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -363,6 +374,7 @@ class POMailList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name']
     ordering_fields = ['name', 'order', 'active']
     ordering = 'order'
