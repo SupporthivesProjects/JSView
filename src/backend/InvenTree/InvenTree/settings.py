@@ -318,6 +318,7 @@ INSTALLED_APPS = [
 
     'master.apps.MasterConfig',
     'cards.apps.CardsConfig',
+    'purchase_order.apps.PurchaseOrderConfig',
     'properties.apps.PropertiesConfig',
 
     'order.apps.OrderConfig',
