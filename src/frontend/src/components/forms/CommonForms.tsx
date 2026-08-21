@@ -37,7 +37,7 @@ export function metalTypeFields(): ApiFormFieldSet {
 export function metalPurityFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -52,7 +52,7 @@ export function metalPurityFields(): ApiFormFieldSet {
 export function metalRate(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -112,7 +112,7 @@ export function finishTypeFields(): ApiFormFieldSet {
 export function ListDutyFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
