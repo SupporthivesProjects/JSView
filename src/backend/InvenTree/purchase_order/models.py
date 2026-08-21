@@ -244,7 +244,7 @@ class PurchaseOrder(POFieldsMixin):
             self.pono, self.npono = generate_po_number(
                 potype=self.potype,
                 pocategory=self.pocategory,
-                customer=self.customerid,
+                customerid=self.customerid_id,
                 podate=self.podate,
             )
             self.nyear = self.podate.year if self.podate else 0
