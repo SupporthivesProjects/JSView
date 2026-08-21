@@ -43,6 +43,7 @@ class StonePlaceList(DataExportViewMixin, ListCreateAPI):
     pagination_class = CardsPagination
     permission_classes = [CardsDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'active']
     ordering = 'name'
