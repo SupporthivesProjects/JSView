@@ -10,7 +10,7 @@ from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 
-from cards.permissions import CardsDataPermission, CostCardPermission
+from costcard.permissions import CardsDataPermission, CostCardPermission
 
 from . import serializers as cards_serializers
 from .models import (
