@@ -54,14 +54,23 @@ class CompanyFilter(FilterSet):
 
         model = Company
         fields = [
-            'is_customer',
-            'is_manufacturer',
-            'is_supplier',
             'name',
             'active',
         ]
 
     tags = common.filters.TagsFilter()
+
+    is_customer = rest_filters.BooleanFilter(
+        label=_('Is Customer'),
+    )
+
+    is_supplier = rest_filters.BooleanFilter(
+        label=_('Is Supplier'),
+    )
+
+    is_manufacturer = rest_filters.BooleanFilter(
+        label=_('Is Manufacturer'),
+    )
 
 
 class CompanyMixin(OutputOptionsMixin):

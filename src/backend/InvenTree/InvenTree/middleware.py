@@ -57,10 +57,17 @@ def ensure_slashes(path: str):
 
 
 # List of target URL endpoints where *do not* want to redirect to
+# urls = [
+#     reverse_lazy('account_login'),
+#     reverse_lazy('admin:login'),
+#     reverse_lazy('admin:logout'),
+# ]
+
 urls = [
     reverse_lazy('account_login'),
     reverse_lazy('admin:login'),
     reverse_lazy('admin:logout'),
+    ensure_slashes(settings.INVENTREE_ADMIN_URL),
 ]
 
 paths_ignore_handling = [
@@ -72,19 +79,37 @@ paths_ignore_handling = [
 ]
 """Paths that should not use InvenTrees own auth rejection behaviour, no host checking or redirecting. Security
  are still enforced."""
+# paths_own_security = [
+#     '/api/',  # DRF handles API
+#     '/o/',  # oAuth2 library - has its own auth model
+#     '/anymail/',  # Mails - webhooks etc
+#     '/accounts/',  # allauth account management - has its own auth model
+#     '/assets/',  # Web assets - only used for testing, no security model needed
+#     ensure_slashes(
+#         settings.STATIC_URL
+#     ),  # Static files  - static files are considered safe to serve
+#     ensure_slashes(
+#         settings.FRONTEND_URL_BASE
+#     ),  # Frontend files - frontend paths have their own security model
+# ]
+
+
 paths_own_security = [
-    '/api/',  # DRF handles API
-    '/o/',  # oAuth2 library - has its own auth model
-    '/anymail/',  # Mails - webhooks etc
-    '/accounts/',  # allauth account management - has its own auth model
-    '/assets/',  # Web assets - only used for testing, no security model needed
-    ensure_slashes(
-        settings.STATIC_URL
-    ),  # Static files  - static files are considered safe to serve
-    ensure_slashes(
-        settings.FRONTEND_URL_BASE
-    ),  # Frontend files - frontend paths have their own security model
+    '/api/',
+    '/o/',
+    '/anymail/',
+    '/accounts/',
+    '/assets/',
+
+    # Django admin handles its own authentication
+    ensure_slashes(settings.INVENTREE_ADMIN_URL),
+
+    # Static / frontend
+    ensure_slashes(settings.STATIC_URL),
+    ensure_slashes(settings.FRONTEND_URL_BASE),
 ]
+
+
 """Paths that handle their own security model."""
 pages_mfa_bypass = [
     'api-user-meta',
