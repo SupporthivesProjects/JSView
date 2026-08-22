@@ -193,7 +193,6 @@ export function vendorContactFields(): ApiFormFieldSet {
     role: {},
   };
 }
-vendorViewContactData
 export function vendorViewContactData(): ApiFormFieldSet {
   return {
     company: {hidden: true},
