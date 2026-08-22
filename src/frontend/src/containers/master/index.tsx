@@ -3,6 +3,25 @@ import { Stack } from "@mantine/core";
 import { IconAtom2 } from "@tabler/icons-react";
 import { useMemo } from "react";
 
+import {
+  IconBrush,
+  IconBuildingStore,
+  IconCertificate,
+  IconCoin,
+  IconComponents,
+  IconDiamond,
+  IconFileDescription,
+  IconHammer,
+  IconReceiptTax,
+  IconScale,
+  IconSettings,
+  IconTag,
+  IconTrendingUp,
+  IconTruckDelivery,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
+
 import { UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
@@ -34,98 +53,98 @@ export default function MetalTypeIndex() {
       {
         name: "metal-types",
         label: t`Metal Types`,
-        icon: <IconAtom2 />,
+        icon: <IconCoin />,
         content: <MetalTypeTable />,
       },
       {
         name: "metal-purity",
         label: t`Metal Purity`,
-        icon: <IconAtom2 />,
+        icon: <IconScale />,
         content: <MetalPurityTable />,
       },
       {
         name: "jewellery-category",
         label: t`Jewel Category`,
-        icon: <IconAtom2 />,
+        icon: <IconDiamond />,
         content: <JewelleryCategoryTable />,
       },
       {
         name: "jewellery-sub-category",
         label: t`Jewel Sub Category`,
-        icon: <IconAtom2 />,
+        icon: <IconTag />,
         content: <JewellerySubCategoryTable />,
-      },
-      {
-        name: "metal-rate",
-        label: t`Metal Rate`,
-        icon: <IconAtom2 />,
-        content: <MetalRateTable />,
-      },
-      {
-        name: "finding-type",
-        label: t`Finding Type`,
-        icon: <IconAtom2 />,
-        content: <FindingTypeTable />,
-      },
-      {
-        name: "finish-type",
-        label: t`Finish Type`,
-        icon: <IconAtom2 />,
-        content: <FinishTypeTable />,
-      },
-      {
-        name: "duty-list",
-        label: t`Duty`,
-        icon: <IconAtom2 />,
-        content: <ListDutyTable />,
-      },
-      {
-        name: "stamp",
-        label: t`Stamp`,
-        icon: <IconAtom2 />,
-        content: <StampTable />,
-      },
-      {
-        name: "master-terms",
-        label: t`Terms`,
-        icon: <IconAtom2 />,
-        content: <MasterTermsTable />,
-      },
-      {
-        name: "master-executive",
-        label: t`A/C Executive`,
-        icon: <IconAtom2 />,
-        content: <MasterExecutiveTable />,
-      },
-      {
-        name: "courier-service",
-        label: t`Courier Service`,
-        icon: <IconAtom2 />,
-        content: <CourierServiceTable />,
       },
       {
         name: "settings",
         label: t`Settings`,
-        icon: <IconAtom2 />,
+        icon: <IconSettings />,
         content: <MasterSettingsTable />,
       },
       {
         name: "labour-setting",
         label: t`Labour Settings`,
-        icon: <IconAtom2 />,
+        icon: <IconHammer />,
         content: <LabourSettingTable />,
       },
       {
-        name: "master-vendor",
-        label: t`Vendor`,
-        icon: <IconAtom2 />,
-        content: <MasterVendorTable />,
+        name: "metal-rate",
+        label: t`Metal Rate`,
+        icon: <IconTrendingUp />,
+        content: <MetalRateTable />,
+      },
+      {
+        name: "finding-type",
+        label: t`Finding Type`,
+        icon: <IconComponents />,
+        content: <FindingTypeTable />,
       },
       {
         name: "master-customer",
         label: t`Customer`,
-        icon: <IconAtom2 />,
+        icon: <IconUsers />,
         content: <MasterCustomerTable />,
+      },
+      {
+        name: "master-vendor",
+        label: t`Vendor`,
+        icon: <IconBuildingStore />,
+        content: <MasterVendorTable />,
+      },
+      {
+        name: "finish-type",
+        label: t`Finish Type`,
+        icon: <IconBrush />,
+        content: <FinishTypeTable />,
+      },
+      {
+        name: "duty-list",
+        label: t`Duty`,
+        icon: <IconReceiptTax />,
+        content: <ListDutyTable />,
+      },
+      {
+        name: "stamp",
+        label: t`Stamp`,
+        icon: <IconCertificate />,
+        content: <StampTable />,
+      },
+      {
+        name: "master-executive",
+        label: t`A/C Executive`,
+        icon: <IconUserCheck />,
+        content: <MasterExecutiveTable />,
+      },
+      {
+        name: "master-terms",
+        label: t`Terms`,
+        icon: <IconFileDescription />,
+        content: <MasterTermsTable />,
+      },
+      {
+        name: "courier-service",
+        label: t`Courier Service`,
+        icon: <IconTruckDelivery />,
+        content: <CourierServiceTable />,
       },
     ];
   }, []);
