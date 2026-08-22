@@ -2617,7 +2617,7 @@ es6-error@^4.0.1:
   resolved "https://registry.npmjs.org/es6-error/-/es6-error-4.1.1.tgz"
   integrity sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==
 
-esbuild@*, esbuild@^0.25.1, "esbuild@npm:esbuild@>=0.17.6 <0.29.0":
+esbuild@*, esbuild@^0.25.1, "esbuild@^0.27.0 || ^0.28.0", "esbuild@npm:esbuild@>=0.17.6 <0.29.0":
   version "0.25.12"
   resolved "https://registry.npmjs.org/esbuild/-/esbuild-0.25.12.tgz"
   integrity sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==
@@ -2648,38 +2648,6 @@ esbuild@*, esbuild@^0.25.1, "esbuild@npm:esbuild@>=0.17.6 <0.29.0":
     "@esbuild/win32-arm64" "0.25.12"
     "@esbuild/win32-ia32" "0.25.12"
     "@esbuild/win32-x64" "0.25.12"
-
-"esbuild@^0.27.0 || ^0.28.0":
-  version "0.28.1"
-  resolved "https://registry.npmjs.org/esbuild/-/esbuild-0.28.1.tgz"
-  integrity sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==
-  optionalDependencies:
-    "@esbuild/aix-ppc64" "0.28.1"
-    "@esbuild/android-arm" "0.28.1"
-    "@esbuild/android-arm64" "0.28.1"
-    "@esbuild/android-x64" "0.28.1"
-    "@esbuild/darwin-arm64" "0.28.1"
-    "@esbuild/darwin-x64" "0.28.1"
-    "@esbuild/freebsd-arm64" "0.28.1"
-    "@esbuild/freebsd-x64" "0.28.1"
-    "@esbuild/linux-arm" "0.28.1"
-    "@esbuild/linux-arm64" "0.28.1"
-    "@esbuild/linux-ia32" "0.28.1"
-    "@esbuild/linux-loong64" "0.28.1"
-    "@esbuild/linux-mips64el" "0.28.1"
-    "@esbuild/linux-ppc64" "0.28.1"
-    "@esbuild/linux-riscv64" "0.28.1"
-    "@esbuild/linux-s390x" "0.28.1"
-    "@esbuild/linux-x64" "0.28.1"
-    "@esbuild/netbsd-arm64" "0.28.1"
-    "@esbuild/netbsd-x64" "0.28.1"
-    "@esbuild/openbsd-arm64" "0.28.1"
-    "@esbuild/openbsd-x64" "0.28.1"
-    "@esbuild/openharmony-arm64" "0.28.1"
-    "@esbuild/sunos-x64" "0.28.1"
-    "@esbuild/win32-arm64" "0.28.1"
-    "@esbuild/win32-ia32" "0.28.1"
-    "@esbuild/win32-x64" "0.28.1"
 
 escalade@^3.2.0:
   version "3.2.0"
@@ -2855,6 +2823,16 @@ fs-extra@^10.0.0:
     graceful-fs "^4.2.0"
     jsonfile "^6.0.1"
     universalify "^2.0.0"
+
+fsevents@~2.3.1, fsevents@~2.3.2, fsevents@~2.3.3:
+  version "2.3.3"
+  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
+
+fsevents@2.3.2:
+  version "2.3.2"
+  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz"
+  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
 
 function-bind@^1.1.2:
   version "1.1.2"
@@ -3769,17 +3747,22 @@ picocolors@^1.0.0, picocolors@^1.1.1:
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
 
-picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1:
+picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.3.1, "picomatch@^3 || ^4":
   version "2.3.2"
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz"
   integrity sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==
 
-"picomatch@^3 || ^4", picomatch@^4.0.3, picomatch@^4.0.4:
+picomatch@^4.0.2:
   version "4.0.5"
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz"
   integrity sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==
 
-picomatch@^4.0.2:
+picomatch@^4.0.3:
+  version "4.0.5"
+  resolved "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz"
+  integrity sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==
+
+picomatch@^4.0.4:
   version "4.0.5"
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-4.0.5.tgz"
   integrity sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==
@@ -4849,11 +4832,6 @@ yaml@^1.10.0:
   version "1.10.3"
   resolved "https://registry.npmjs.org/yaml/-/yaml-1.10.3.tgz"
   integrity sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA==
-
-yaml@^2.4.2:
-  version "2.9.0"
-  resolved "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz"
-  integrity sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==
 
 yargs-parser@^18.1.2:
   version "18.1.3"
