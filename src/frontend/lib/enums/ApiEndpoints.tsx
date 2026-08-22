@@ -141,6 +141,7 @@ export enum ApiEndpoints {
   master_setting = "master/setting/",
   labour_setting = "master/labour-setting/",
   master_vendor_customer = "company/",
+  master_vendor_customer_contact = "company/contact/",
   jewellery_category = "master/jewelry-category/",
   jewellery_sub_category = "master/jewelry-sub-category/",
   master_stamp = "master/stamp/",

@@ -183,6 +183,26 @@ export function masterVendors(): ApiFormFieldSet {
     active: {},
   };
 }
+export function vendorContactFields(): ApiFormFieldSet {
+  return {
+    company: {hidden: true},
+    name: {},
+    phone: {},
+    mobile: {},
+    email: {},
+    role: {},
+  };
+}
+export function vendorViewContactData(): ApiFormFieldSet {
+  return {
+    company: {hidden: true},
+    name: {},
+    phone: {},
+    mobile: {},
+    email: {},
+    role: {},
+  };
+}
 
 export function masterCustomer(): ApiFormFieldSet {
   return {
