@@ -37,7 +37,7 @@ export function metalTypeFields(): ApiFormFieldSet {
 export function metalPurityFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -52,7 +52,7 @@ export function metalPurityFields(): ApiFormFieldSet {
 export function metalRate(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -72,7 +72,6 @@ export function masterTerms(): ApiFormFieldSet {
     active: {},
   };
 }
-
 
 export function masterCourierService(): ApiFormFieldSet {
   return {
@@ -113,7 +112,7 @@ export function finishTypeFields(): ApiFormFieldSet {
 export function ListDutyFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
@@ -163,15 +162,15 @@ export function masterVendors(): ApiFormFieldSet {
     link: {},
     is_customer: {
       hidden: true,
-      value: false
+      value: false,
     },
     is_supplier: {
       hidden: true,
-      value: true
+      value: true,
     },
     is_manufacturer: {
       hidden: true,
-      value: false
+      value: false,
     },
     tax_id: {},
     fax: {},
@@ -184,6 +183,29 @@ export function masterVendors(): ApiFormFieldSet {
     active: {},
   };
 }
+export function vendorContactFields(): ApiFormFieldSet {
+  return {
+    company: { hidden: true },
+    name: {},
+    phone: {},
+    mobile: {},
+    email: {},
+    role: {},
+  };
+}
+
+
+export function customerContactFields(): ApiFormFieldSet {
+  return {
+    company: { hidden: true },
+    name: {},
+    phone: {},
+    mobile: {},
+    email: {},
+    role: {},
+  };
+}
+
 
 export function masterCustomer(): ApiFormFieldSet {
   return {
@@ -197,15 +219,15 @@ export function masterCustomer(): ApiFormFieldSet {
     link: {},
     is_customer: {
       hidden: true,
-      value: true
+      value: true,
     },
     is_supplier: {
       hidden: true,
-      value: false
+      value: false,
     },
     is_manufacturer: {
       hidden: true,
-      value: false
+      value: false,
     },
     tax_id: {},
     fax: {},
@@ -217,6 +239,51 @@ export function masterCustomer(): ApiFormFieldSet {
     ref_by: {},
     active: {},
   };
+}
+
+export function jewelleryCategoryFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function jewellerySubCategoryFields(): ApiFormFieldSet {
+  return {
+    category: {
+      api_url: apiUrl(ApiEndpoints.jewellery_category),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function stampFields(
+  includeImage: boolean = true,
+  onImageChange?: (file: File | null) => void,
+): ApiFormFieldSet {
+  const fields: ApiFormFieldSet = {
+    name: {},
+    description: {},
+    active: {},
+  };
+
+  if (includeImage) {
+    fields.image = {
+      field_type: "file upload",
+      onValueChange: (value: any) => {
+        onImageChange?.(value instanceof File ? value : null);
+      },
+    };
+  }
+
+  return fields;
 }
 
 export function useCustomStateFields(): ApiFormFieldSet {

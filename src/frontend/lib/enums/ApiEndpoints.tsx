@@ -128,7 +128,7 @@ export enum ApiEndpoints {
   related_part_list = "part/related/",
   part_test_template_list = "part/test-template/",
 
-  // Metals API endpoints
+  // Master API endpoints
   metal_type_list = "master/metal-type/",
   metal_purity_list = "master/metal-purity/",
   metal_rate = "master/metal-rate/",
@@ -141,6 +141,10 @@ export enum ApiEndpoints {
   master_setting = "master/setting/",
   labour_setting = "master/labour-setting/",
   master_vendor_customer = "company/",
+  master_vendor_customer_contact = "company/contact/",
+  jewellery_category = "master/jewelry-category/",
+  jewellery_sub_category = "master/jewelry-sub-category/",
+  master_stamp = "master/stamp/",
 
   // Company API endpoints
   company_list = "company/",

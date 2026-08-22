@@ -22,6 +22,9 @@ import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
 import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
 import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
 import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
+import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
+import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
+import StampTable from "@components/tables/metal/StampTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -39,6 +42,18 @@ export default function MetalTypeIndex() {
         label: t`Metal Purity`,
         icon: <IconAtom2 />,
         content: <MetalPurityTable />,
+      },
+      {
+        name: "jewellery-category",
+        label: t`Jewel Category`,
+        icon: <IconAtom2 />,
+        content: <JewelleryCategoryTable />,
+      },
+      {
+        name: "jewellery-sub-category",
+        label: t`Jewel Sub Category`,
+        icon: <IconAtom2 />,
+        content: <JewellerySubCategoryTable />,
       },
       {
         name: "metal-rate",
@@ -63,6 +78,12 @@ export default function MetalTypeIndex() {
         label: t`Duty`,
         icon: <IconAtom2 />,
         content: <ListDutyTable />,
+      },
+      {
+        name: "stamp",
+        label: t`Stamp`,
+        icon: <IconAtom2 />,
+        content: <StampTable />,
       },
       {
         name: "master-terms",
