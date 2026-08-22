@@ -16,9 +16,8 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
-import { BooleanColumn, DecimalColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { masterVendors, vendorContactFields, vendorViewContactData } from "../../forms/CommonForms";
+import { masterVendors, vendorContactFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -27,7 +26,7 @@ import {
 import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
 import { useModal } from "../../../hooks/UseModal";
-import { VendorContactsPanel } from "./sharedComponents/VendorContactsPanel";
+import { ContactsPanel } from "./sharedComponents/ContactsPanel";
 
 export default function MasterVendorTable() {
   const table = useTable("master-vendor");
@@ -37,21 +36,21 @@ export default function MasterVendorTable() {
   const queryClient = useQueryClient();
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedVendor, setSelectedVendor] = useState<
-    number | undefined
-  >(undefined);
+  const [selectedVendor, setSelectedVendor] = useState<number | undefined>(
+    undefined,
+  );
 
   const contactDetailsQuery = useQuery({
     queryKey: ["contact-details-lookup", selectedVendor],
     queryFn: () =>
       api
-        .get(`${apiUrl(ApiEndpoints.master_vendor_customer_contact)}?company=${selectedVendor}`)
+        .get(
+          `${apiUrl(ApiEndpoints.master_vendor_customer_contact)}?company=${selectedVendor}`,
+        )
         .then((response) => response.data?.results ?? response.data ?? []),
     enabled: !!selectedVendor,
     staleTime: 5 * 60 * 1000,
   });
-
-
 
   // useEffect(() => {
   //   if (
@@ -70,7 +69,6 @@ export default function MasterVendorTable() {
   //   contactDetailsQuery.isSuccess,
   //   contactDetailsQuery.data,
   // ]);
-
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -190,7 +188,6 @@ export default function MasterVendorTable() {
   // // --- Contact Details --------------------------------------------
   // const [selectedContact, setSelectedContact] = useState<any | undefined>(undefined);
 
-
   const editMasterVendor = useEditApiFormModal({
     url: ApiEndpoints.master_vendor_customer,
     pk: selectedVendor,
@@ -211,7 +208,7 @@ export default function MasterVendorTable() {
     id: "master-vendor-contacts",
     title: t`Vendor Contacts`,
     size: "lg",
-    children: <VendorContactsPanel vendorId={selectedVendor} />,
+    children: <ContactsPanel id={selectedVendor} queryKey="vendor-contact" />,
   });
   const addContactMasterVendor = useCreateApiFormModal({
     url: ApiEndpoints.master_vendor_customer_contact,
@@ -220,11 +217,11 @@ export default function MasterVendorTable() {
     initialData: { company: selectedVendor },
     table: table,
     onFormSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["vendor-contacts", selectedVendor] });
+      queryClient.invalidateQueries({
+        queryKey: ["vendor-contact", selectedVendor],
+      });
     },
   });
-
-
 
   // --- Row actions (edit / delete) -------------------------------------
   const rowActions = useCallback(

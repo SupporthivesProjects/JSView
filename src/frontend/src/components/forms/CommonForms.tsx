@@ -185,7 +185,7 @@ export function masterVendors(): ApiFormFieldSet {
 }
 export function vendorContactFields(): ApiFormFieldSet {
   return {
-    company: {hidden: true},
+    company: { hidden: true },
     name: {},
     phone: {},
     mobile: {},
@@ -193,9 +193,11 @@ export function vendorContactFields(): ApiFormFieldSet {
     role: {},
   };
 }
-export function vendorViewContactData(): ApiFormFieldSet {
+
+
+export function customerContactFields(): ApiFormFieldSet {
   return {
-    company: {hidden: true},
+    company: { hidden: true },
     name: {},
     phone: {},
     mobile: {},
@@ -203,6 +205,7 @@ export function vendorViewContactData(): ApiFormFieldSet {
     role: {},
   };
 }
+
 
 export function masterCustomer(): ApiFormFieldSet {
   return {

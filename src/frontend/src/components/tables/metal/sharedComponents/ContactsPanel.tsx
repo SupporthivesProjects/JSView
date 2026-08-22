@@ -24,21 +24,27 @@ import { apiUrl } from "@lib/functions/Api";
 import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
 
-export function VendorContactsPanel({ vendorId }: { vendorId?: number }) {
+export function ContactsPanel({
+  id,
+  queryKey,
+}: {
+  id?: number;
+  queryKey: string;
+}) {
   const api = useApi();
   const user = useUserState();
   const queryClient = useQueryClient();
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const query = useQuery({
-    queryKey: ["vendor-contacts", vendorId],
+    queryKey: [queryKey, id],
     queryFn: () =>
       api
         .get(apiUrl(ApiEndpoints.master_vendor_customer_contact), {
-          params: { company: vendorId },
+          params: { company: id },
         })
         .then((r) => r.data?.results ?? r.data ?? []),
-    enabled: !!vendorId,
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -52,7 +58,7 @@ export function VendorContactsPanel({ vendorId }: { vendorId?: number }) {
         message: t`The contact was removed`,
         color: "green",
       });
-      queryClient.invalidateQueries({ queryKey: ["vendor-contacts", vendorId] });
+      queryClient.invalidateQueries({ queryKey: [queryKey, id] });
     },
     onError: (error: any) => {
       notifications.show({
@@ -65,7 +71,7 @@ export function VendorContactsPanel({ vendorId }: { vendorId?: number }) {
 
   const canDelete = user.hasDeleteRole(UserRoles.part);
 
-  if (!vendorId || query.isLoading) {
+  if (!id || query.isLoading) {
     return (
       <Group justify="center" p="md">
         <Loader size="sm" />
@@ -80,7 +86,9 @@ export function VendorContactsPanel({ vendorId }: { vendorId?: number }) {
   const contacts: any[] = query.data ?? [];
 
   if (contacts.length === 0) {
-    return <Alert color="blue">{t`No contacts recorded for this vendor`}</Alert>;
+    return (
+      <Alert color="blue">{t`No contacts recorded for this vendor`}</Alert>
+    );
   }
 
   return (
