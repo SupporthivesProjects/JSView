@@ -264,6 +264,14 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
   };
 }
 
+export function stoneTypeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function stampFields(
   includeImage: boolean = true,
   onImageChange?: (file: File | null) => void,
