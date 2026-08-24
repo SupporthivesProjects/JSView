@@ -308,10 +308,18 @@ export function diamondShapeFields(): ApiFormFieldSet {
   };
 }
 
-
 export function diamondColorFields(): ApiFormFieldSet {
   return {
     name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function diamondSizeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    mm_size: {},
     description: {},
     active: {},
   };

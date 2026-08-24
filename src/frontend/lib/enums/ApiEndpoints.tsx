@@ -151,6 +151,7 @@ export enum ApiEndpoints {
   diamond_cut_list = "properties/diamond-cut/",
   diamond_shape_list = "properties/diamond-shape/",
   diamond_color_list = "properties/diamond-color/",
+  diamond_size_list = "properties/diamond-size/",
 
   // Company API endpoints
   company_list = "company/",

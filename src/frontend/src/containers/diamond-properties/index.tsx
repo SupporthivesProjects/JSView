@@ -48,6 +48,7 @@ import DiamondStoneTable from "@components/tables/diamond-properties/diamondSton
 import DiamondCutTable from "@components/tables/diamond-properties/DiamondCutTable";
 import DiamondShapeTable from "@components/tables/diamond-properties/DiamondShapeTable";
 import DiamondColorTable from "@components/tables/diamond-properties/DiamondColorTable";
+import DiamondSizeTable from "@components/tables/diamond-properties/DiamondSizeTable";
 
 export default function DiamondPropertiesIndex() {
   const user = useUserState();
@@ -77,6 +78,12 @@ export default function DiamondPropertiesIndex() {
         label: t`Diamond Color`,
         icon: <IconCoin />,
         content: <DiamondColorTable />,
+      },
+      {
+        name: "diamond-size",
+        label: t`Diamond Size`,
+        icon: <IconCoin />,
+        content: <DiamondSizeTable />,
       },
     ];
   }, []);
