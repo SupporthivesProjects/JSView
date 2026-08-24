@@ -289,6 +289,14 @@ export function colorStoneShapeFields(): ApiFormFieldSet {
   };
 }
 
+export function colorStoneColorFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function stampFields(
   includeImage: boolean = true,
   onImageChange?: (file: File | null) => void,

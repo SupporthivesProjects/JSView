@@ -47,6 +47,7 @@ import StampTable from "@components/tables/metal/StampTable";
 import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
 import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
 import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
+import ColorStoneColorTable from "@components/tables/colorStone/ColorStoneColorTable";
 
 export default function ColorStonePropertiesIndex() {
   const user = useUserState();
@@ -73,11 +74,10 @@ export default function ColorStonePropertiesIndex() {
       content: <ColorStoneShapeTable />,
     },
     {
-      name: "color-stone-color",
+      name: "stone-color",
       label: t`Color`,
       icon: <IconDiamond />,
-      //   content: <ColorStoneColorTable />,
-      content: <MetalTypeTable />,
+      content: <ColorStoneColorTable />,
     },
     {
       name: "color-stone-size",
