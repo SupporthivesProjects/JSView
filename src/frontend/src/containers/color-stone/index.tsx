@@ -48,6 +48,7 @@ import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
 import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
 import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
 import ColorStoneColorTable from "@components/tables/colorStone/ColorStoneColorTable";
+import ColorStoneSizeTable from "@components/tables/colorStone/ColorStoneSizeTable";
 
 export default function ColorStonePropertiesIndex() {
   const user = useUserState();
@@ -80,11 +81,10 @@ export default function ColorStonePropertiesIndex() {
       content: <ColorStoneColorTable />,
     },
     {
-      name: "color-stone-size",
+      name: "stone-size",
       label: t`Size`,
       icon: <IconDiamond />,
-      //   content: <ColorStoneSizeTable />,
-      content: <MetalTypeTable />,
+      content: <ColorStoneSizeTable />,
     },
     {
       name: "color-stone-quality",

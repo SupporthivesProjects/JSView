@@ -151,6 +151,7 @@ export enum ApiEndpoints {
   color_stone_cut_list = "properties/colorstone-cut/",
   color_stone_shape_list = "properties/colorstone-shape/",
   color_stone_color_list = "properties/colorstone-color/",
+  color_stone_size_list = "properties/colorstone-size/",
 
   // Company API endpoints
   company_list = "company/",
