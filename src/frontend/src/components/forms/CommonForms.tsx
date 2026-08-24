@@ -300,6 +300,14 @@ export function diamondCutFields(): ApiFormFieldSet {
   };
 }
 
+export function diamondShapeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
