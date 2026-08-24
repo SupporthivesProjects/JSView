@@ -45,6 +45,7 @@ import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTa
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
 import StampTable from "@components/tables/metal/StampTable";
 import DiamondStoneTable from "@components/tables/diamond-properties/diamondStoneTable";
+import DiamondCutTable from "@components/tables/diamond-properties/DiamondCutTable";
 
 export default function DiamondPropertiesIndex() {
   const user = useUserState();
@@ -56,6 +57,12 @@ export default function DiamondPropertiesIndex() {
         label: t`Diamond Stone`,
         icon: <IconCoin />,
         content: <DiamondStoneTable />,
+      },
+      {
+        name: "diamond-cut",
+        label: t`Diamond Cut`,
+        icon: <IconCoin />,
+        content: <DiamondCutTable />,
       },
     ];
   }, []);

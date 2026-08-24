@@ -292,6 +292,14 @@ export function DiamondStoneFields(): ApiFormFieldSet {
   };
 }
 
+export function diamondCutFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
