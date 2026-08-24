@@ -264,7 +264,7 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
   };
 }
 
-export function stoneTypeFields(): ApiFormFieldSet {
+export function colorStoneTypeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},

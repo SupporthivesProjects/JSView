@@ -15,7 +15,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { stoneTypeFields } from "../../forms/CommonForms";
+import { colorStoneTypeFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -62,7 +62,7 @@ export default function ColorStoneTable() {
   const newStoneType = useCreateApiFormModal({
     url: ApiEndpoints.color_stone_type_list,
     title: t`Add Stone Type`,
-    fields: stoneTypeFields(),
+    fields: colorStoneTypeFields(),
     table: table,
   });
 
@@ -75,7 +75,7 @@ export default function ColorStoneTable() {
     url: ApiEndpoints.color_stone_type_list,
     pk: selectedStoneType,
     title: t`Edit Stone Type`,
-    fields: stoneTypeFields(),
+    fields: colorStoneTypeFields(),
     table: table,
   });
 
