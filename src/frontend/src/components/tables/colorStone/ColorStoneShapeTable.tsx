@@ -15,7 +15,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { colorStoneCutFields } from "../../forms/CommonForms";
+import { colorStoneShapeFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -26,8 +26,8 @@ import { useUserState } from "@store/UserState";
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
  */
-export default function ColorStoneCutTable() {
-  const table = useTable("stone-cuts");
+export default function ColorStoneShapeTable() {
+  const table = useTable("stone-shape");
 
   const user = useUserState();
 
@@ -59,30 +59,30 @@ export default function ColorStoneCutTable() {
   }, []);
 
   // --- Create modal ----------------------------------------------------
-  const newStoneCutType = useCreateApiFormModal({
-    url: ApiEndpoints.color_stone_cut_list,
-    title: t`Add Stone Cut Type`,
-    fields: colorStoneCutFields(),
+  const newStoneShape = useCreateApiFormModal({
+    url: ApiEndpoints.color_stone_shape_list,
+    title: t`Add Stone Shape`,
+    fields: colorStoneShapeFields(),
     table: table,
   });
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedStoneCutType, setSelectedStoneCutType] = useState<
+  const [selectedStoneShape, setSelectedStoneShape] = useState<
     number | undefined
   >(undefined);
 
-  const editStoneCutType = useEditApiFormModal({
-    url: ApiEndpoints.color_stone_cut_list,
-    pk: selectedStoneCutType,
-    title: t`Edit Stone Cut Type`,
-    fields: colorStoneCutFields(),
+  const editStoneShape = useEditApiFormModal({
+    url: ApiEndpoints.color_stone_shape_list,
+    pk: selectedStoneShape,
+    title: t`Edit Stone Shape`,
+    fields: colorStoneShapeFields(),
     table: table,
   });
 
-  const deleteStoneCutType = useDeleteApiFormModal({
-    url: ApiEndpoints.color_stone_cut_list,
-    pk: selectedStoneCutType,
-    title: t`Delete Stone Cut Type`,
+  const deleteStoneShape = useDeleteApiFormModal({
+    url: ApiEndpoints.color_stone_shape_list,
+    pk: selectedStoneShape,
+    title: t`Delete Stone Shape`,
     table: table,
   });
 
@@ -93,15 +93,15 @@ export default function ColorStoneCutTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setSelectedStoneCutType(record.pk);
-            editStoneCutType.open();
+            setSelectedStoneShape(record.pk);
+            editStoneShape.open();
           },
         }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
-            setSelectedStoneCutType(record.pk);
-            deleteStoneCutType.open();
+            setSelectedStoneShape(record.pk);
+            deleteStoneShape.open();
           },
         }),
       ];
@@ -115,7 +115,7 @@ export default function ColorStoneCutTable() {
       {
         name: "active",
         label: t`Active`,
-        description: t`Show active stone types`,
+        description: t`Show active stone shapes`,
         type: "boolean",
       },
     ];
@@ -125,9 +125,9 @@ export default function ColorStoneCutTable() {
   const tableActions = useMemo(() => {
     return [
       <AddItemButton
-        key="add-stone-cut"
-        onClick={() => newStoneCutType.open()}
-        tooltip={t`Add Stone Cut Type`}
+        key="add-stone-shape"
+        onClick={() => newStoneShape.open()}
+        tooltip={t`Add Stone Shape`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
@@ -135,11 +135,11 @@ export default function ColorStoneCutTable() {
 
   return (
     <>
-      {newStoneCutType.modal}
-      {editStoneCutType.modal}
-      {deleteStoneCutType.modal}
+      {newStoneShape.modal}
+      {editStoneShape.modal}
+      {deleteStoneShape.modal}
       <InvenTreeTable
-        url={apiUrl(ApiEndpoints.color_stone_cut_list)}
+        url={apiUrl(ApiEndpoints.color_stone_shape_list)}
         tableState={table}
         columns={columns}
         props={{

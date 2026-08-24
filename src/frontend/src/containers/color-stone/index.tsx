@@ -46,6 +46,7 @@ import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCate
 import StampTable from "@components/tables/metal/StampTable";
 import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
 import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
+import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
 
 export default function ColorStonePropertiesIndex() {
   const user = useUserState();
@@ -66,11 +67,10 @@ export default function ColorStonePropertiesIndex() {
 
     },
     {
-      name: "color-stone-shape",
+      name: "stone-shape",
       label: t`Shape`,
       icon: <IconDiamond />,
-    //   content: <ColorStoneShapeTable />,
-      content: <MetalTypeTable />,
+      content: <ColorStoneShapeTable />,
     },
     {
       name: "color-stone-color",

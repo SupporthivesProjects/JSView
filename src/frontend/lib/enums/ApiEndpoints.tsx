@@ -149,6 +149,7 @@ export enum ApiEndpoints {
   // Color Stone API endpoints
   color_stone_type_list = "properties/colorstone/",
   color_stone_cut_list = "properties/colorstone-cut/",
+  color_stone_shape_list = "properties/colorstone-shape/",
 
   // Company API endpoints
   company_list = "company/",
