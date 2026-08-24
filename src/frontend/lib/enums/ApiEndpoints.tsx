@@ -146,6 +146,9 @@ export enum ApiEndpoints {
   jewellery_sub_category = "master/jewelry-sub-category/",
   master_stamp = "master/stamp/",
 
+  //Diamond API endpoints
+  diamond_stone_list = "properties/diamond-stone/",
+
   // Company API endpoints
   company_list = "company/",
   contact_list = "company/contact/",

@@ -50,6 +50,10 @@ export const PartDetail = Loadable(
 
 export const MasterIndex = Loadable(lazy(() => import("@containers/master")));
 
+export const DiamondPropertiesIndex = Loadable(
+  lazy(() => import("@containers/diamond-properties")),
+);
+
 export const LocationDetail = Loadable(
   lazy(() => import("@containers/stock-location")),
 );
@@ -176,6 +180,10 @@ export const routes = (
         <Route index element={<Navigate to="category/index/" />} />
         <Route path="category/:id?/*" element={<CategoryDetail />} />
         <Route path=":id/*" element={<PartDetail />} />
+      </Route>
+      <Route path="diamond-properties/">
+        <Route index element={<Navigate to="metal-types/" />} />
+        <Route path="*" element={<DiamondPropertiesIndex />} />
       </Route>
       <Route path="master/">
         <Route index element={<Navigate to="metal-types/" />} />

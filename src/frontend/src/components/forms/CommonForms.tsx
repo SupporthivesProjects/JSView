@@ -194,7 +194,6 @@ export function vendorContactFields(): ApiFormFieldSet {
   };
 }
 
-
 export function customerContactFields(): ApiFormFieldSet {
   return {
     company: { hidden: true },
@@ -205,7 +204,6 @@ export function customerContactFields(): ApiFormFieldSet {
     role: {},
   };
 }
-
 
 export function masterCustomer(): ApiFormFieldSet {
   return {
@@ -284,6 +282,14 @@ export function stampFields(
   }
 
   return fields;
+}
+
+export function DiamondStoneFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
 }
 
 export function useCustomStateFields(): ApiFormFieldSet {

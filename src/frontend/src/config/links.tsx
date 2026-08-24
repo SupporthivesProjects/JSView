@@ -44,6 +44,12 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
         user.hasViewRole(UserRoles.part_category),
     },
     {
+      name: "diamond-properties",
+      title: t`Diamond Properties`,
+      icon: <IconAtom2 />,
+      visible: user.hasViewRole(UserRoles.part),
+    },
+    {
       name: "master",
       title: t`Master`,
       icon: <IconAtom2 />,
