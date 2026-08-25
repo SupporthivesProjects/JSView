@@ -262,6 +262,109 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
   };
 }
 
+export function colorStoneTypeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+
+export function colorStoneCutFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function colorStoneShapeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function colorStoneColorFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function colorStoneSizeFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    mm_size: {},
+    description: {},
+    active: {},
+  };
+}
+
+
+export function colorStoneQualityFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
+export function colorStoneRateFields(): ApiFormFieldSet {
+  return {
+    shape: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_shape_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    mm_size: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_size_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    stone: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_type_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    color: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_color_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    cut: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_cut_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    quality: {
+      api_url: `${apiUrl(ApiEndpoints.color_stone_quality_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    pointer: {},
+    rate: {},
+    pc: {},
+    customer_id: {},
+    active: {},
+  };
+}
+
 export function stampFields(
   includeImage: boolean = true,
   onImageChange?: (file: File | null) => void,

@@ -146,6 +146,15 @@ export enum ApiEndpoints {
   jewellery_sub_category = "master/jewelry-sub-category/",
   master_stamp = "master/stamp/",
 
+  // Color Stone API endpoints
+  color_stone_type_list = "properties/colorstone/",
+  color_stone_cut_list = "properties/colorstone-cut/",
+  color_stone_shape_list = "properties/colorstone-shape/",
+  color_stone_color_list = "properties/colorstone-color/",
+  color_stone_size_list = "properties/colorstone-size/",
+  color_stone_quality_list = "properties/colorstone-quality/",
+  color_stone_rate_list = "properties/colorstone-rate/",
+
   //Diamond API endpoints
   diamond_stone_list = "properties/diamond-stone/",
   diamond_cut_list = "properties/diamond-cut/",
