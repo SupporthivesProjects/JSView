@@ -50,6 +50,7 @@ import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeT
 import ColorStoneColorTable from "@components/tables/colorStone/ColorStoneColorTable";
 import ColorStoneSizeTable from "@components/tables/colorStone/ColorStoneSizeTable";
 import ColorStoneQualityTable from "@components/tables/colorStone/ColorStoneQualityTable";
+import ColorStoneRateTable from "@components/tables/colorStone/ColorStoneRateTable";
 
 export default function ColorStonePropertiesIndex() {
   const user = useUserState();
@@ -94,11 +95,10 @@ export default function ColorStonePropertiesIndex() {
       content: <ColorStoneQualityTable />,
     },
     {
-      name: "color-stone-weight-rate",
+      name: "stone-rate",
       label: t`Weight / Rate Per Stone`,
       icon: <IconDiamond />,
-    //   content: <ColorStoneWeightRateTable />,
-      content: <MetalTypeTable />,
+      content: <ColorStoneRateTable />,
     },
   ];
 }, []);
