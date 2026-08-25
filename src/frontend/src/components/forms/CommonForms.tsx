@@ -270,7 +270,6 @@ export function colorStoneTypeFields(): ApiFormFieldSet {
   };
 }
 
-
 export function colorStoneCutFields(): ApiFormFieldSet {
   return {
     name: {},
@@ -303,7 +302,6 @@ export function colorStoneSizeFields(): ApiFormFieldSet {
     active: {},
   };
 }
-
 
 export function colorStoneQualityFields(): ApiFormFieldSet {
   return {
@@ -432,6 +430,58 @@ export function diamondQualityFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
+    active: {},
+  };
+}
+
+export function diamondRateFields(): ApiFormFieldSet {
+  return {
+    shape: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_shape_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    mm_size: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_size_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    stone: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_stone_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    color: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_color_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    cut: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_cut_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    quality: {
+      api_url: `${apiUrl(ApiEndpoints.diamond_quality_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    pointer: {},
+    rate: {},
+    pc: {},
+    customer_id: {},
     active: {},
   };
 }

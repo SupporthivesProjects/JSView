@@ -44,12 +44,14 @@ import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
 import StampTable from "@components/tables/metal/StampTable";
-import DiamondStoneTable from "@components/tables/diamond-properties/diamondStoneTable";
+
 import DiamondCutTable from "@components/tables/diamond-properties/DiamondCutTable";
 import DiamondShapeTable from "@components/tables/diamond-properties/DiamondShapeTable";
 import DiamondColorTable from "@components/tables/diamond-properties/DiamondColorTable";
 import DiamondSizeTable from "@components/tables/diamond-properties/DiamondSizeTable";
 import DiamondQualityTable from "@components/tables/diamond-properties/DiamondQualityTable";
+import DiamondRateTable from "@components/tables/diamond-properties/DiamondRateTable";
+import DiamondStoneTable from "@components/tables/diamond-properties/DiamondStoneTable";
 
 export default function DiamondPropertiesIndex() {
   const user = useUserState();
@@ -92,6 +94,12 @@ export default function DiamondPropertiesIndex() {
         label: t`Diamond Quality`,
         icon: <IconCoin />,
         content: <DiamondQualityTable />,
+      },
+      {
+        name: "diamond-rate",
+        label: t`Diamond Rate`,
+        icon: <IconCoin />,
+        content: <DiamondRateTable />,
       },
     ];
   }, []);

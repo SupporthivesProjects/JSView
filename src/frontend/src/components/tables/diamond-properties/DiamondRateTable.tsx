@@ -15,7 +15,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { colorStoneRateFields } from "../../forms/CommonForms";
+import { diamondRateFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -28,18 +28,18 @@ import { useQuery } from "@tanstack/react-query";
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
  */
-export default function ColorStoneRateTable() {
-  const table = useTable("stone-rate");
+export default function DiamondRateTable() {
+  const table = useTable("diamond-rate");
 
   const api = useApi();
   const user = useUserState();
 
-  // Stone Shape 
-  const stoneShapeQuery = useQuery({
-    queryKey: ["stone-shape-lookup"],
+  // Diamond Shape 
+  const diamondShapeQuery = useQuery({
+    queryKey: ["diamond-shape-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_shape_list), {
+        .get(apiUrl(ApiEndpoints.diamond_shape_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -48,20 +48,20 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneShapeNameByPk = useMemo(() => {
+  const diamondShapeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
-    (stoneShapeQuery.data ?? []).forEach((stoneShape: any) => {
-      map[stoneShape.pk] = stoneShape.name;
+    (diamondShapeQuery.data ?? []).forEach((diamondShape: any) => {
+      map[diamondShape.pk] = diamondShape.name;
     });
     return map;
-  }, [stoneShapeQuery.data]);
+  }, [diamondShapeQuery.data]);
 
-  // Stone Size
-  const stoneSizeQuery = useQuery({
-    queryKey: ["stone-size-lookup"],
+  // Diamond Size
+  const diamondSizeQuery = useQuery({
+    queryKey: ["diamond-size-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_size_list), {
+        .get(apiUrl(ApiEndpoints.diamond_size_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -70,22 +70,22 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneSizeNameByPk = useMemo(() => {
+  const diamondSizeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
 
-    (stoneSizeQuery.data ?? []).forEach((stoneSize: any) => {
-      map[stoneSize.pk] = stoneSize.mm_size;
+    (diamondSizeQuery.data ?? []).forEach((diamondSize: any) => {
+      map[diamondSize.pk] = diamondSize.mm_size;
     });
 
     return map;
-  }, [stoneSizeQuery.data]);
+  }, [diamondSizeQuery.data]);
 
-  // Stone Stone
-  const stoneStoneQuery = useQuery({
-    queryKey: ["stone-stone-lookup"],
+  // Diamond Diamond
+  const diamondStoneQuery = useQuery({
+    queryKey: ["diamond-diamond-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_type_list), {
+        .get(apiUrl(ApiEndpoints.diamond_stone_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -94,22 +94,22 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneStoneNameByPk = useMemo(() => {
+  const diamondStoneNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
 
-    (stoneStoneQuery.data ?? []).forEach((stoneStone: any) => {
-      map[stoneStone.pk] = stoneStone.name;
+    (diamondStoneQuery.data ?? []).forEach((diamondStone: any) => {
+      map[diamondStone.pk] = diamondStone.name;
     });
 
     return map;
-  }, [stoneStoneQuery.data]);
+  }, [diamondStoneQuery.data]);
   
-  // Stone Color
-  const stoneColorQuery = useQuery({
-    queryKey: ["stone-color-lookup"],
+  // Diamond Color
+  const diamondColorQuery = useQuery({
+    queryKey: ["diamond-color-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_color_list), {
+        .get(apiUrl(ApiEndpoints.diamond_color_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -118,22 +118,22 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneColorNameByPk = useMemo(() => {
+  const diamondColorNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
 
-    (stoneColorQuery.data ?? []).forEach((stoneColor: any) => {
-      map[stoneColor.pk] = stoneColor.name;
+    (diamondColorQuery.data ?? []).forEach((diamondColor: any) => {
+      map[diamondColor.pk] = diamondColor.name;
     });
 
     return map;
-  }, [stoneColorQuery.data]);
+  }, [diamondColorQuery.data]);
 
-  // Stone Cut
-  const stoneCutQuery = useQuery({
-    queryKey: ["stone-cut-lookup"],
+  // Diamond Cut
+  const diamondCutQuery = useQuery({
+    queryKey: ["diamond-cut-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_cut_list), {
+        .get(apiUrl(ApiEndpoints.diamond_cut_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -142,22 +142,22 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneCutNameByPk = useMemo(() => {
+  const diamondCutNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
 
-    (stoneCutQuery.data ?? []).forEach((stoneCut: any) => {
-      map[stoneCut.pk] = stoneCut.name;
+    (diamondCutQuery.data ?? []).forEach((diamondCut: any) => {
+      map[diamondCut.pk] = diamondCut.name;
     });
 
     return map;
-  }, [stoneCutQuery.data]);
+  }, [diamondCutQuery.data]);
 
-  // Stone Quality
-  const stoneQualityQuery = useQuery({
-    queryKey: ["stone-quality-lookup"],
+  // Diamond Quality
+  const diamondQualityQuery = useQuery({
+    queryKey: ["diamond-quality-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.color_stone_quality_list), {
+        .get(apiUrl(ApiEndpoints.diamond_quality_list), {
           params: { limit: 1000 },
         })
         .then(
@@ -166,15 +166,15 @@ export default function ColorStoneRateTable() {
         ),
     staleTime: 5 * 60 * 1000,
   });
-  const stoneQualityNameByPk = useMemo(() => {
+  const diamondQualityNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
 
-    (stoneQualityQuery.data ?? []).forEach((stoneQuality: any) => {
-      map[stoneQuality.pk] = stoneQuality.name;
+    (diamondQualityQuery.data ?? []).forEach((diamondQuality: any) => {
+      map[diamondQuality.pk] = diamondQuality.name;
     });
 
     return map;
-  }, [stoneQualityQuery.data]);
+  }, [diamondQualityQuery.data]);
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -184,7 +184,7 @@ export default function ColorStoneRateTable() {
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          stoneShapeNameByPk[record.shape] ?? record.shape,
+          diamondShapeNameByPk[record.shape] ?? record.shape,
       },
       {
         accessor: "mm_size",
@@ -192,32 +192,32 @@ export default function ColorStoneRateTable() {
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          stoneSizeNameByPk[record.mm_size] ?? record.mm_size,
+          diamondSizeNameByPk[record.mm_size] ?? record.mm_size,
       },
       {
-        accessor: "stone",
+        accessor: "Diamond Stone",
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          stoneStoneNameByPk[record.stone] ?? record.stone,
+          diamondStoneNameByPk[record.stone] ?? record.stone,
       },
       {
         accessor: "color",
         sortable: true,
         switchable: false,
-        render: (record: any) => stoneColorNameByPk[record.color] ?? record.color,
+        render: (record: any) => diamondColorNameByPk[record.color] ?? record.color,
       },
       {
         accessor: "cut",
         sortable: true,
         switchable: false,
-        render: (record: any) => stoneCutNameByPk[record.cut] ?? record.cut,
+        render: (record: any) => diamondCutNameByPk[record.cut] ?? record.cut,
       },
       {
         accessor: "quality",
         sortable: true,
         switchable: false,
-        render: (record: any) => stoneQualityNameByPk[record.quality] ?? record.quality,
+        render: (record: any) => diamondQualityNameByPk[record.quality] ?? record.quality,
       },
       {
         accessor: "pointer",
@@ -255,33 +255,33 @@ export default function ColorStoneRateTable() {
         switchable: true,
       },
     ];
-  }, [stoneShapeNameByPk, stoneSizeNameByPk, stoneStoneNameByPk, stoneColorNameByPk, stoneCutNameByPk, stoneQualityNameByPk]);
+  }, [diamondShapeNameByPk, diamondSizeNameByPk, diamondStoneNameByPk, diamondColorNameByPk, diamondCutNameByPk, diamondQualityNameByPk]);
 
   // --- Create modal ----------------------------------------------------
-  const newStoneRate = useCreateApiFormModal({
-    url: ApiEndpoints.color_stone_rate_list,
-    title: t`Add Stone Rate`,
-    fields: colorStoneRateFields(),
+  const newDiamondRate = useCreateApiFormModal({
+    url: ApiEndpoints.diamond_rate_list,
+    title: t`Add Diamond Rate`,
+    fields: diamondRateFields(),
     table: table,
   });
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedStoneRate, setSelectedStoneRate] = useState<
+  const [selectedDiamondRate, setSelectedDiamondRate] = useState<
     number | undefined
   >(undefined);
 
-  const editStoneRate = useEditApiFormModal({
-    url: ApiEndpoints.color_stone_rate_list,
-    pk: selectedStoneRate,
-    title: t`Edit Stone Rate`,
-    fields: colorStoneRateFields(),
+  const editDiamondRate = useEditApiFormModal({
+    url: ApiEndpoints.diamond_rate_list,
+    pk: selectedDiamondRate,
+    title: t`Edit Diamond Rate`,
+    fields: diamondRateFields(),
     table: table,
   });
 
-  const deleteStoneRate = useDeleteApiFormModal({
-    url: ApiEndpoints.color_stone_rate_list,
-    pk: selectedStoneRate,
-    title: t`Delete Stone Rate`,
+  const deleteDiamondRate = useDeleteApiFormModal({
+    url: ApiEndpoints.diamond_rate_list,
+    pk: selectedDiamondRate,
+    title: t`Delete Diamond Rate`,
     table: table,
   });
 
@@ -292,15 +292,15 @@ export default function ColorStoneRateTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setSelectedStoneRate(record.pk);
-            editStoneRate.open();
+            setSelectedDiamondRate(record.pk);
+            editDiamondRate.open();
           },
         }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
-            setSelectedStoneRate(record.pk);
-            deleteStoneRate.open();
+            setSelectedDiamondRate(record.pk);
+            deleteDiamondRate.open();
           },
         }),
       ];
@@ -314,7 +314,7 @@ export default function ColorStoneRateTable() {
       {
         name: "active",
         label: t`Active`,
-        description: t`Show active stone qualities`,
+        description: t`Show active diamond qualities`,
         type: "boolean",
       },
     ];
@@ -324,9 +324,9 @@ export default function ColorStoneRateTable() {
   const tableActions = useMemo(() => {
     return [
       <AddItemButton
-        key="add-stone-rate"
-        onClick={() => newStoneRate.open()}
-        tooltip={t`Add Stone Rate`}
+        key="add-diamond-rate"
+        onClick={() => newDiamondRate.open()}
+        tooltip={t`Add Diamond Rate`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
@@ -334,11 +334,11 @@ export default function ColorStoneRateTable() {
 
   return (
     <>
-      {newStoneRate.modal}
-      {editStoneRate.modal}
-      {deleteStoneRate.modal}
+      {newDiamondRate.modal}
+      {editDiamondRate.modal}
+      {deleteDiamondRate.modal}
       <InvenTreeTable
-        url={apiUrl(ApiEndpoints.color_stone_rate_list)}
+        url={apiUrl(ApiEndpoints.diamond_rate_list)}
         tableState={table}
         columns={columns}
         props={{
