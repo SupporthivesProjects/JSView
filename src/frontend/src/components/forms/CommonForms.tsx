@@ -325,6 +325,14 @@ export function diamondSizeFields(): ApiFormFieldSet {
   };
 }
 
+export function diamondQualityFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function useCustomStateFields(): ApiFormFieldSet {
   // Status codes
   const statusCodes = useGlobalStatusState();
