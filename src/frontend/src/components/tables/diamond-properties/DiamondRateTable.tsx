@@ -34,7 +34,7 @@ export default function DiamondRateTable() {
   const api = useApi();
   const user = useUserState();
 
-  // Diamond Shape 
+  // Diamond Shape
   const diamondShapeQuery = useQuery({
     queryKey: ["diamond-shape-lookup"],
     queryFn: () =>
@@ -42,10 +42,7 @@ export default function DiamondRateTable() {
         .get(apiUrl(ApiEndpoints.diamond_shape_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondShapeNameByPk = useMemo(() => {
@@ -64,10 +61,7 @@ export default function DiamondRateTable() {
         .get(apiUrl(ApiEndpoints.diamond_size_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondSizeNameByPk = useMemo(() => {
@@ -82,16 +76,13 @@ export default function DiamondRateTable() {
 
   // Diamond Diamond
   const diamondStoneQuery = useQuery({
-    queryKey: ["diamond-diamond-lookup"],
+    queryKey: ["diamond-stone-lookup"],
     queryFn: () =>
       api
         .get(apiUrl(ApiEndpoints.diamond_stone_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondStoneNameByPk = useMemo(() => {
@@ -103,7 +94,7 @@ export default function DiamondRateTable() {
 
     return map;
   }, [diamondStoneQuery.data]);
-  
+
   // Diamond Color
   const diamondColorQuery = useQuery({
     queryKey: ["diamond-color-lookup"],
@@ -112,10 +103,7 @@ export default function DiamondRateTable() {
         .get(apiUrl(ApiEndpoints.diamond_color_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondColorNameByPk = useMemo(() => {
@@ -136,10 +124,7 @@ export default function DiamondRateTable() {
         .get(apiUrl(ApiEndpoints.diamond_cut_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondCutNameByPk = useMemo(() => {
@@ -160,10 +145,7 @@ export default function DiamondRateTable() {
         .get(apiUrl(ApiEndpoints.diamond_quality_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
   const diamondQualityNameByPk = useMemo(() => {
@@ -205,7 +187,8 @@ export default function DiamondRateTable() {
         accessor: "color",
         sortable: true,
         switchable: false,
-        render: (record: any) => diamondColorNameByPk[record.color] ?? record.color,
+        render: (record: any) =>
+          diamondColorNameByPk[record.color] ?? record.color,
       },
       {
         accessor: "cut",
@@ -217,7 +200,8 @@ export default function DiamondRateTable() {
         accessor: "quality",
         sortable: true,
         switchable: false,
-        render: (record: any) => diamondQualityNameByPk[record.quality] ?? record.quality,
+        render: (record: any) =>
+          diamondQualityNameByPk[record.quality] ?? record.quality,
       },
       {
         accessor: "pointer",
@@ -255,7 +239,14 @@ export default function DiamondRateTable() {
         switchable: true,
       },
     ];
-  }, [diamondShapeNameByPk, diamondSizeNameByPk, diamondStoneNameByPk, diamondColorNameByPk, diamondCutNameByPk, diamondQualityNameByPk]);
+  }, [
+    diamondShapeNameByPk,
+    diamondSizeNameByPk,
+    diamondStoneNameByPk,
+    diamondColorNameByPk,
+    diamondCutNameByPk,
+    diamondQualityNameByPk,
+  ]);
 
   // --- Create modal ----------------------------------------------------
   const newDiamondRate = useCreateApiFormModal({
