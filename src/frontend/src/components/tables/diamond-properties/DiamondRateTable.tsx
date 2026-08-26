@@ -23,7 +23,16 @@ import {
 } from "../../../hooks/UseForm";
 import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const DIAMOND_RATE_LOOKUP_QUERY_KEYS = [
+  ["diamond-shape-lookup"],
+  ["diamond-size-lookup"],
+  ["diamond-stone-lookup"],
+  ["diamond-color-lookup"],
+  ["diamond-cut-lookup"],
+  ["diamond-quality-lookup"],
+];
 
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
@@ -33,6 +42,13 @@ export default function DiamondRateTable() {
 
   const api = useApi();
   const user = useUserState();
+  const queryClient = useQueryClient();
+
+  const refreshLookupTables = useCallback(() => {
+    DIAMOND_RATE_LOOKUP_QUERY_KEYS.forEach((queryKey) => {
+      queryClient.invalidateQueries({ queryKey });
+    });
+  }, [queryClient]);
 
   // Diamond Shape
   const diamondShapeQuery = useQuery({
@@ -44,6 +60,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondShapeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -63,6 +80,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondSizeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -84,6 +102,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondStoneNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -105,6 +124,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondColorNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -126,6 +146,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondCutNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -147,6 +168,7 @@ export default function DiamondRateTable() {
         })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const diamondQualityNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -254,6 +276,9 @@ export default function DiamondRateTable() {
     title: t`Add Diamond Rate`,
     fields: diamondRateFields(),
     table: table,
+    onFormSuccess: () => {
+      refreshLookupTables();
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -267,6 +292,9 @@ export default function DiamondRateTable() {
     title: t`Edit Diamond Rate`,
     fields: diamondRateFields(),
     table: table,
+    onFormSuccess: () => {
+      refreshLookupTables();
+    },
   });
 
   const deleteDiamondRate = useDeleteApiFormModal({

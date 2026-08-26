@@ -22,10 +22,12 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DiamondShapeTable() {
   const table = useTable("diamond-shape");
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -60,6 +62,9 @@ export default function DiamondShapeTable() {
     title: t`Add Diamond Shape`,
     fields: diamondShapeFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-shape-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -73,6 +78,9 @@ export default function DiamondShapeTable() {
     title: t`Edit Diamond Shape `,
     fields: diamondShapeFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-shape-lookup"] });
+    },
   });
 
   const deleteDiamondShape = useDeleteApiFormModal({

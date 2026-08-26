@@ -22,10 +22,12 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DiamondColorTable() {
   const table = useTable("diamond-color");
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -60,6 +62,9 @@ export default function DiamondColorTable() {
     title: t`Add Diamond Color`,
     fields: diamondColorFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-shape-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -73,6 +78,9 @@ export default function DiamondColorTable() {
     title: t`Edit Diamond Color`,
     fields: diamondColorFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-shape-lookup"] });
+    },
   });
 
   const deleteDiamondColor = useDeleteApiFormModal({

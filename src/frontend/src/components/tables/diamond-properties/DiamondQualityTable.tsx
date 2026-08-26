@@ -22,10 +22,12 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DiamondQualityTable() {
   const table = useTable("diamond-quality");
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -60,6 +62,9 @@ export default function DiamondQualityTable() {
     title: t`Add Diamond Quality`,
     fields: diamondQualityFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-quality-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -73,6 +78,9 @@ export default function DiamondQualityTable() {
     title: t`Edit Diamond Quality`,
     fields: diamondQualityFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-quality-lookup"] });
+    },
   });
 
   const deleteDiamondQuality = useDeleteApiFormModal({

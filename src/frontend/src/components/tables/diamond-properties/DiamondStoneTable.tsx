@@ -22,10 +22,12 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DiamondStoneTable() {
   const table = useTable("diamond-stone");
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -60,6 +62,9 @@ export default function DiamondStoneTable() {
     title: t`Add Diamond Stone`,
     fields: DiamondStoneFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-stone-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -73,6 +78,9 @@ export default function DiamondStoneTable() {
     title: t`Edit Diamond Stome`,
     fields: DiamondStoneFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-stone-lookup"] });
+    },
   });
 
   const deleteDiamondStone = useDeleteApiFormModal({

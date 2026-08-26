@@ -22,10 +22,12 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DiamondCutTable() {
   const table = useTable("diamond-cut");
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -60,6 +62,9 @@ export default function DiamondCutTable() {
     title: t`Add Diamond Cut`,
     fields: diamondCutFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-cut-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -73,6 +78,9 @@ export default function DiamondCutTable() {
     title: t`Edit Diamond Cut`,
     fields: diamondCutFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diamond-cut-lookup"] });
+    },
   });
 
   const deleteDiamondCut = useDeleteApiFormModal({
