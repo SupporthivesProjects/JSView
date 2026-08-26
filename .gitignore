@@ -129,3 +129,5 @@ src/backend/InvenTree/InvenTree/settings.py
 src/backend/InvenTree/properties/migrations/__pycache__/
 *.pyc
 media/
+scripts/
+JSIViewXInventree-OX.md

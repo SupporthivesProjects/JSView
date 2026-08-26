@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import PurchaseOrder, PurchaseOrderLine
+from .models import (
+    POCostCard,
+    POCostCardLine,
+    PurchaseOrder,
+    PurchaseOrderLine,
+)
 
 
 class PurchaseOrderLineInline(admin.TabularInline):
@@ -27,3 +32,28 @@ class PurchaseOrderLineAdmin(admin.ModelAdmin):
     ]
     list_filter = ['active']
     search_fields = ['styleno', 'vstyleno']
+
+
+class POCostCardLineInline(admin.TabularInline):
+    model = POCostCardLine
+    extra = 0
+    fields = ['etype', 'stone', 'shape', 'pcs', 'cts', 'rate', 'amount']
+
+
+@admin.register(POCostCard)
+class POCostCardAdmin(admin.ModelAdmin):
+    list_display = [
+        'poid', 'costcardno', 'our_style_no',
+        'vendor', 'final_amount', 'active',
+    ]
+    list_filter = ['active']
+    inlines = [POCostCardLineInline]
+
+
+@admin.register(POCostCardLine)
+class POCostCardLineAdmin(admin.ModelAdmin):
+    list_display = [
+        'po_costcard', 'etype', 'stone',
+        'shape', 'pcs', 'cts', 'rate', 'amount',
+    ]
+    list_filter = ['etype', 'active']

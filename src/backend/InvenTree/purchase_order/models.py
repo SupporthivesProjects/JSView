@@ -1,8 +1,17 @@
+from decimal import Decimal
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from company.models import Company
-from master.models import Stamp, ACExecutive, Terms
+from master.models import (
+    JewelryCategory,
+    JewelrySubCategory,
+    MetalPurity,
+    Stamp,
+    ACExecutive,
+    Terms,
+)
 
 
 class POFieldsMixin(models.Model):
@@ -344,3 +353,433 @@ class PurchaseOrderLine(POFieldsMixin):
 
     def __str__(self):
         return f'PO {self.poid} - {self.styleno}'
+
+    def save(self, *args, **kwargs):
+        """Save the line, then create a frozen POCostCard snapshot (ORDER only)."""
+        super().save(*args, **kwargs)
+
+        # Import inside function to avoid circular imports
+        from .utils import create_po_costcard_snapshot
+
+        create_po_costcard_snapshot(self)
+
+
+class POCostCard(POFieldsMixin):
+    """Frozen snapshot of a cards.CostCard header attached to a Purchase Order.
+
+    Maps to tbpocostcard1 in the legacy client database. Snapshot rows are
+    created automatically when a PurchaseOrderLine is saved for an ORDER-type
+    PO (Purchase REQUESTs use the original CostCard directly).
+    """
+
+    poid = models.ForeignKey(
+        PurchaseOrder,
+        on_delete=models.CASCADE,
+        related_name='po_costcards',
+        verbose_name=_('Purchase Order'),
+        help_text=_('Purchase order this snapshot belongs to.'),
+    )
+
+    costcard = models.ForeignKey(
+        'cards.CostCard',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_snapshots',
+        verbose_name=_('Original Cost Card'),
+        help_text=_('Original CostCard reference (may be deleted later).'),
+    )
+
+    # ---- Frozen header fields (copied from CostCard at snapshot time) ----
+    costcardno = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_('Cost Card No'),
+        help_text=_('Snapshot of the original cost card number.'),
+    )
+    our_style_no = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_('Our Style No'),
+        help_text=_('Snapshot of the internal style number.'),
+    )
+    vendor_style_no = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name=_('Vendor Style No'),
+        help_text=_('Snapshot of the vendor style number.'),
+    )
+    vendor = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_costcard_vendors',
+        verbose_name=_('Vendor'),
+        help_text=_('Snapshot vendor for this piece.'),
+    )
+    customer = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_costcard_customers',
+        verbose_name=_('Customer'),
+        help_text=_('Snapshot customer for this piece.'),
+    )
+    karat = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_('Kt'),
+        help_text=_('Snapshot karat value, e.g. 14KT, 18KT.'),
+    )
+    metal_grams = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Metal Grams'),
+        help_text=_('Snapshot weight of metal used, in grams.'),
+    )
+    net_weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        verbose_name=_('Net Weight'),
+        help_text=_('Snapshot net weight of the piece.'),
+    )
+    gross_weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        verbose_name=_('Gross Weight'),
+        help_text=_('Snapshot gross weight of the piece.'),
+    )
+    troy_ounce_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Troy Ounce Price'),
+        help_text=_('Snapshot metal price per troy ounce.'),
+    )
+    finding_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Finding Price'),
+        help_text=_('Snapshot finding price.'),
+    )
+
+    # ---- Frozen cost tab fields ----
+    metal_loss_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Metal Loss %'),
+        help_text=_('Snapshot metal loss percentage.'),
+    )
+    metal_loss_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Metal Loss Amount'),
+        help_text=_('Snapshot metal loss amount.'),
+    )
+    metal_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Metal Amount'),
+        help_text=_('Snapshot metal amount.'),
+    )
+    dia_pcs = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        verbose_name=_('Dia. Pcs'),
+        help_text=_('Snapshot total diamond piece count.'),
+    )
+    dia_cts = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Dia. Cts'),
+        help_text=_('Snapshot total diamond carat weight.'),
+    )
+    dia_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Dia. Amount'),
+        help_text=_('Snapshot total diamond cost.'),
+    )
+    col_pcs = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        verbose_name=_('Col. Pcs'),
+        help_text=_('Snapshot total color stone piece count.'),
+    )
+    col_cts = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Col. Cts'),
+        help_text=_('Snapshot total color stone carat weight.'),
+    )
+    col_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Col. Amount'),
+        help_text=_('Snapshot total color stone cost.'),
+    )
+    stone_pcs = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        verbose_name=_('Tot. Stone Pcs'),
+        help_text=_('Snapshot combined stone piece count.'),
+    )
+    stone_cts = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Tot. Stone Cts'),
+        help_text=_('Snapshot combined stone carat weight.'),
+    )
+    stone_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Tot. Stone Amount'),
+        help_text=_('Snapshot combined stone cost.'),
+    )
+    labour_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Labour Amount'),
+        help_text=_('Snapshot total labour cost.'),
+    )
+    dia_handling_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Dia. Handl. Charges %'),
+        help_text=_('Snapshot diamond handling percentage.'),
+    )
+    dia_handling_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Dia. Handl. Amount'),
+        help_text=_('Snapshot diamond handling amount.'),
+    )
+    col_handling_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Col. Handl. Charges %'),
+        help_text=_('Snapshot color stone handling percentage.'),
+    )
+    col_handling_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Col. Handl. Amount'),
+        help_text=_('Snapshot color stone handling amount.'),
+    )
+    vendor_markup_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Vendor Markup %'),
+        help_text=_('Snapshot vendor markup percentage.'),
+    )
+    vendor_markup_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Vendor Markup Amount'),
+        help_text=_('Snapshot vendor markup amount.'),
+    )
+    fob = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('F.O.B'),
+        help_text=_('Snapshot free-on-board amount.'),
+    )
+    duty_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Duty %'),
+        help_text=_('Snapshot duty percentage.'),
+    )
+    duty_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Duty Amount'),
+        help_text=_('Snapshot duty amount.'),
+    )
+    margin_pct = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Margin %'),
+        help_text=_('Snapshot profit margin percentage.'),
+    )
+    margin_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Margin Amount'),
+        help_text=_('Snapshot profit margin amount.'),
+    )
+    final_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        blank=True,
+        verbose_name=_('Final Amount'),
+        help_text=_('Snapshot final computed cost.'),
+    )
+
+    # ---- Frozen classification FKs (SET_NULL so snapshot survives) ----
+    category = models.ForeignKey(
+        JewelryCategory,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_costcards',
+        verbose_name=_('Jewelry Category'),
+        help_text=_('Snapshot jewelry category.'),
+    )
+    sub_category = models.ForeignKey(
+        JewelrySubCategory,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_costcards',
+        verbose_name=_('Jewelry Sub Category'),
+        help_text=_('Snapshot jewelry sub-category.'),
+    )
+    metal_purity = models.ForeignKey(
+        MetalPurity,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_costcards',
+        verbose_name=_('Metal Purity'),
+        help_text=_('Snapshot metal purity grade.'),
+    )
+
+    stnoauto = models.IntegerField(
+        default=0,
+        verbose_name=_('Stone No Auto'),
+        help_text=_('Auto-generated stone sequence number copied from the PO line.'),
+    )
+
+    class Meta:
+        ordering = ['poid', 'id']
+        verbose_name = _('PO Cost Card')
+        verbose_name_plural = _('PO Cost Cards')
+        unique_together = ['poid', 'costcard']
+        indexes = [
+            models.Index(fields=['active']),
+            models.Index(fields=['poid']),
+            models.Index(fields=['costcard']),
+        ]
+
+    def __str__(self):
+        return f'{self.poid} - {self.costcardno or self.our_style_no}'
+
+
+class POCostCardLine(POFieldsMixin):
+    """Frozen snapshot of a stone/finish line — maps to tbpocostcard2.
+
+    Stores NAME strings rather than FKs: even if the original property
+    record is deleted later, the snapshot must retain the data.
+    For FINISHTYPE lines, the finish type name is stored in ``stone``.
+    """
+
+    ETYPE_CHOICES = [
+        ('DIAMOND', _('Diamond')),
+        ('COLOURSTONE', _('Colour Stone')),
+        ('FINISHTYPE', _('Finish Type')),
+    ]
+
+    po_costcard = models.ForeignKey(
+        POCostCard,
+        on_delete=models.CASCADE,
+        related_name='lines',
+        verbose_name=_('PO Cost Card'),
+        help_text=_('PO cost card snapshot this line belongs to.'),
+    )
+    etype = models.CharField(
+        max_length=20,
+        choices=ETYPE_CHOICES,
+        verbose_name=_('Line Type'),
+        help_text=_('Which tab this frozen line came from: DIAMOND, COLOURSTONE or FINISHTYPE.'),
+    )
+
+    # ---- Frozen property names (strings, not FKs) ----
+    stone = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Stone'), help_text=_('Frozen stone name (finish type name for FINISHTYPE lines).'))
+    shape = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Shape'), help_text=_('Frozen shape name.'))
+    cut = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Cut'), help_text=_('Frozen cut name.'))
+    colour = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Colour'), help_text=_('Frozen colour name.'))
+    quality = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Quality'), help_text=_('Frozen quality name.'))
+    mm_size = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('MM Size'), help_text=_('Frozen size name.'))
+    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Frozen sieve size.'))
+    setting = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Setting'), help_text=_('Frozen setting name.'))
+    stone_place = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Stone Place'), help_text=_('Frozen stone placement name.'))
+
+    # ---- Frozen numeric values ----
+    pointer = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True, verbose_name=_('Pointer'), help_text=_('Frozen pointer value.'))
+    pcs = models.PositiveIntegerField(default=0, verbose_name=_('Pcs'), help_text=_('Frozen piece count.'))
+    cts = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0'), blank=True, verbose_name=_('Cts'), help_text=_('Frozen carat weight.'))
+    rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), blank=True, verbose_name=_('Rate'), help_text=_('Frozen rate applied.'))
+    pc = models.CharField(max_length=1, choices=[('P', _('Per Piece')), ('C', _('Per Carat'))], default='C', verbose_name=_('P/C'), help_text=_('Frozen rate unit: P = Per Piece, C = Per Carat.'))
+    amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Amount'), help_text=_('Frozen line amount.'))
+    labour_rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), blank=True, verbose_name=_('L.Rate'), help_text=_('Frozen labour rate.'))
+    labour_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('L.Amount'), help_text=_('Frozen labour amount.'))
+    default_rate = models.BooleanField(default=True, verbose_name=_('D.R.'), help_text=_('Frozen D.R. flag (rate pulled from rate table).'))
+
+    class Meta:
+        ordering = ['po_costcard', 'id']
+        verbose_name = _('PO Cost Card Line')
+        verbose_name_plural = _('PO Cost Card Lines')
+        indexes = [
+            models.Index(fields=['active']),
+            models.Index(fields=['po_costcard']),
+            models.Index(fields=['etype']),
+        ]
+
+    def __str__(self):
+        return f'{self.po_costcard} - {self.get_etype_display()}: {self.stone or self.shape or ""}'
