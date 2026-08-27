@@ -35,14 +35,14 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
       title: t`Dashboard`,
       icon: <IconDashboard />,
     },
-    {
-      name: "part",
-      title: t`Parts`,
-      icon: <IconBox />,
-      visible:
-        user.hasViewRole(UserRoles.part) ||
-        user.hasViewRole(UserRoles.part_category),
-    },
+    // {
+    //   name: "part",
+    //   title: t`Parts`,
+    //   icon: <IconBox />,
+    //   visible:
+    //     user.hasViewRole(UserRoles.part) ||
+    //     user.hasViewRole(UserRoles.part_category),
+    // },
     {
       name: "diamond-properties",
       title: t`Diamond Properties`,
@@ -61,37 +61,37 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
       icon: <IconAtom2 />,
       visible: user.hasViewRole(UserRoles.part),
     },
-    {
-      name: "stock",
-      title: t`Stock`,
-      icon: <IconPackages />,
-      visible:
-        user.hasViewRole(UserRoles.stock) ||
-        user.hasViewRole(UserRoles.stock_location) ||
-        (globalSettings.isSet("TRANSFERORDER_ENABLED") &&
-          user.hasViewRole(UserRoles.transfer_order)),
-    },
-    {
-      name: "manufacturing",
-      title: t`Manufacturing`,
-      icon: <IconBuildingFactory2 />,
-      visible: user.hasViewRole(UserRoles.build),
-    },
-    {
-      name: "purchasing",
-      title: t`Purchasing`,
-      icon: <IconShoppingCart />,
-      visible: user.hasViewRole(UserRoles.purchase_order),
-    },
-    {
-      name: "sales",
-      title: t`Sales`,
-      icon: <IconTruckDelivery />,
-      visible:
-        user.hasViewRole(UserRoles.sales_order) ||
-        (globalSettings.isSet("RETURNORDER_ENABLED") &&
-          user.hasViewRole(UserRoles.return_order)),
-    },
+    // {
+    //   name: "stock",
+    //   title: t`Stock`,
+    //   icon: <IconPackages />,
+    //   visible:
+    //     user.hasViewRole(UserRoles.stock) ||
+    //     user.hasViewRole(UserRoles.stock_location) ||
+    //     (globalSettings.isSet("TRANSFERORDER_ENABLED") &&
+    //       user.hasViewRole(UserRoles.transfer_order)),
+    // },
+    // {
+    //   name: "manufacturing",
+    //   title: t`Manufacturing`,
+    //   icon: <IconBuildingFactory2 />,
+    //   visible: user.hasViewRole(UserRoles.build),
+    // },
+    // {
+    //   name: "purchasing",
+    //   title: t`Purchasing`,
+    //   icon: <IconShoppingCart />,
+    //   visible: user.hasViewRole(UserRoles.purchase_order),
+    // },
+    // {
+    //   name: "sales",
+    //   title: t`Sales`,
+    //   icon: <IconTruckDelivery />,
+    //   visible:
+    //     user.hasViewRole(UserRoles.sales_order) ||
+    //     (globalSettings.isSet("RETURNORDER_ENABLED") &&
+    //       user.hasViewRole(UserRoles.return_order)),
+    // },
   ];
 
   return navTabs.filter((tab) => {
