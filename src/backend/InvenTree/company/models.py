@@ -231,6 +231,34 @@ class Company(
         help_text=_('Person or source that referred the company.'),
     )
 
+    default_stone_rate = models.BooleanField(
+        default=False,
+        verbose_name=_('Default Stone Rate'),
+        help_text=_(
+            'Whether this company uses the default '
+            'stone rate (maps to tbledger.defaultstonerate).'
+        ),
+    )
+
+    lab_setting = models.BooleanField(
+        default=False,
+        verbose_name=_('Lab Setting'),
+        help_text=_(
+            'Whether lab setting applies to this company '
+            '(maps to tbledger.labsetting).'
+        ),
+    )
+
+    group_id = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Group ID'),
+        help_text=_(
+            'Group identifier for this company '
+            '(maps to tbledger.groupid).'
+        ),
+    )
+
     @staticmethod
     def get_api_url():
         """Return the API URL associated with the Company model."""

@@ -6,8 +6,10 @@ plus frozen POCostCard snapshot creation (mirrors legacy tbpocostcard1/2).
 
 from datetime import date
 
-from django.db import connection, transaction
+from django.db import transaction
 from django.db.models import Max
+
+from company.models import Company
 
 from .models import PurchaseOrder
 
@@ -34,17 +36,13 @@ def generate_po_number(
     Returns:
         Tuple of (pono: str, npono: int)
     """
-    # Get ccode from tbledger via raw SQL
+    # Get ccode from Company model
     ccode = 'UNK'
     if customerid is not None:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                'SELECT ccode FROM tbledger WHERE ledgerid = %s',
-                [customerid],
-            )
-            row = cursor.fetchone()
-            if row and row[0]:
-                ccode = row[0]
+        try:
+            ccode = Company.objects.get(pk=customerid).code or 'UNK'
+        except Company.DoesNotExist:
+            ccode = 'UNK'
 
     # Determine the year from podate
     nyear = podate.year if podate else date.today().year

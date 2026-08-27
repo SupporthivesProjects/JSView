@@ -15,7 +15,7 @@ from .models import (
 
 class POCostCardSnapshotTests(TestCase):
     def setUp(self):
-        # Pre-set pono to avoid generate_po_number's tbledger lookup
+        # Pre-set pono to avoid generate_po_number's lookup
         self.order = PurchaseOrder.objects.create(
             potype='ORDER',
             podate='2026-08-26',
