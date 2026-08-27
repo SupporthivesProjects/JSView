@@ -23,8 +23,16 @@ import {
 } from "../../../hooks/UseForm";
 import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+const STONE_RATE_LOOKUP_QUERY_KEYS = [
+  ["stone-shape-lookup"],
+  ["stone-size-lookup"],
+  ["stone-stone-lookup"],
+  ["stone-color-lookup"],
+  ["stone-cut-lookup"],
+  ["stone-quality-lookup"],
+];
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
  */
@@ -33,8 +41,15 @@ export default function ColorStoneRateTable() {
 
   const api = useApi();
   const user = useUserState();
+  const queryClient = useQueryClient();
 
-  // Stone Shape 
+  const refreshLookupTables = useCallback(() => {
+    STONE_RATE_LOOKUP_QUERY_KEYS.forEach((queryKey) => {
+      queryClient.invalidateQueries({ queryKey });
+    });
+  }, [queryClient]);
+
+  // Stone Shape
   const stoneShapeQuery = useQuery({
     queryKey: ["stone-shape-lookup"],
     queryFn: () =>
@@ -42,11 +57,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_shape_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneShapeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -64,11 +77,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_size_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneSizeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -88,11 +99,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_type_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneStoneNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -103,7 +112,7 @@ export default function ColorStoneRateTable() {
 
     return map;
   }, [stoneStoneQuery.data]);
-  
+
   // Stone Color
   const stoneColorQuery = useQuery({
     queryKey: ["stone-color-lookup"],
@@ -112,11 +121,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_color_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneColorNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -136,11 +143,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_cut_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneCutNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -160,11 +165,9 @@ export default function ColorStoneRateTable() {
         .get(apiUrl(ApiEndpoints.color_stone_quality_list), {
           params: { limit: 1000 },
         })
-        .then(
-          (response) =>
-            response.data?.results ?? response.data ?? [],
-        ),
+        .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
   const stoneQualityNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
@@ -205,7 +208,8 @@ export default function ColorStoneRateTable() {
         accessor: "color",
         sortable: true,
         switchable: false,
-        render: (record: any) => stoneColorNameByPk[record.color] ?? record.color,
+        render: (record: any) =>
+          stoneColorNameByPk[record.color] ?? record.color,
       },
       {
         accessor: "cut",
@@ -217,7 +221,8 @@ export default function ColorStoneRateTable() {
         accessor: "quality",
         sortable: true,
         switchable: false,
-        render: (record: any) => stoneQualityNameByPk[record.quality] ?? record.quality,
+        render: (record: any) =>
+          stoneQualityNameByPk[record.quality] ?? record.quality,
       },
       {
         accessor: "pointer",
@@ -255,7 +260,14 @@ export default function ColorStoneRateTable() {
         switchable: true,
       },
     ];
-  }, [stoneShapeNameByPk, stoneSizeNameByPk, stoneStoneNameByPk, stoneColorNameByPk, stoneCutNameByPk, stoneQualityNameByPk]);
+  }, [
+    stoneShapeNameByPk,
+    stoneSizeNameByPk,
+    stoneStoneNameByPk,
+    stoneColorNameByPk,
+    stoneCutNameByPk,
+    stoneQualityNameByPk,
+  ]);
 
   // --- Create modal ----------------------------------------------------
   const newStoneRate = useCreateApiFormModal({
@@ -263,6 +275,9 @@ export default function ColorStoneRateTable() {
     title: t`Add Stone Rate`,
     fields: colorStoneRateFields(),
     table: table,
+    onFormSuccess: () => {
+      refreshLookupTables();
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -276,6 +291,9 @@ export default function ColorStoneRateTable() {
     title: t`Edit Stone Rate`,
     fields: colorStoneRateFields(),
     table: table,
+    onFormSuccess: () => {
+      refreshLookupTables();
+    },
   });
 
   const deleteStoneRate = useDeleteApiFormModal({

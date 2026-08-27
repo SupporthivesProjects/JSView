@@ -22,6 +22,7 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
@@ -30,6 +31,7 @@ export default function ColorStoneSizeTable() {
   const table = useTable("stone-size");
 
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -70,6 +72,9 @@ export default function ColorStoneSizeTable() {
     title: t`Add Stone Size`,
     fields: colorStoneSizeFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stone-size-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -83,6 +88,9 @@ export default function ColorStoneSizeTable() {
     title: t`Edit Stone Size`,
     fields: colorStoneSizeFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stone-size-lookup"] });
+    },
   });
 
   const deleteStoneSize = useDeleteApiFormModal({

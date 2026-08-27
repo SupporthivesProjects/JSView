@@ -22,6 +22,7 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Table for displaying, creating, editing and deleting Metal Type records
@@ -30,6 +31,7 @@ export default function ColorStoneColorTable() {
   const table = useTable("stone-color");
 
   const user = useUserState();
+  const queryClient = useQueryClient();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -64,6 +66,9 @@ export default function ColorStoneColorTable() {
     title: t`Add Stone Color`,
     fields: colorStoneColorFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stone-color-lookup"] });
+    },
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -77,6 +82,9 @@ export default function ColorStoneColorTable() {
     title: t`Edit Stone Color`,
     fields: colorStoneColorFields(),
     table: table,
+    onFormSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stone-color-lookup"] });
+    },
   });
 
   const deleteStoneColor = useDeleteApiFormModal({
