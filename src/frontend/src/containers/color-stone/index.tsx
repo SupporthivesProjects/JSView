@@ -1,25 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
-import { IconAtom2 } from "@tabler/icons-react";
 import { useMemo } from "react";
 
 import {
-  IconBrush,
-  IconBuildingStore,
-  IconCertificate,
-  IconCoin,
-  IconComponents,
-  IconDiamond,
-  IconFileDescription,
-  IconHammer,
-  IconReceiptTax,
+  IconSparkles,
+  IconScissors,
+  IconCategory,
+  IconColorFilter,
+  IconRuler2,
+  IconAward,
   IconScale,
-  IconSettings,
-  IconTag,
-  IconTrendingUp,
-  IconTruckDelivery,
-  IconUserCheck,
-  IconUsers,
 } from "@tabler/icons-react";
 
 import { UserRoles } from "@lib/enums/Roles";
@@ -28,22 +18,6 @@ import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
-import MetalTypeTable from "@components/tables/metal/MetalTypeTable";
-import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
-import MetalRateTable from "@components/tables/metal/MetalRateTable";
-import FindingTypeTable from "@components/tables/metal/FindingTypeTable";
-import FinishTypeTable from "@components/tables/metal/FinishTypeTable";
-import ListDutyTable from "@components/tables/metal/ListDutyTable";
-import MasterTermsTable from "@components/tables/metal/MasterTermsTable";
-import MasterExecutiveTable from "@components/tables/metal/MasterExecutiveTable";
-import CourierServiceTable from "@components/tables/metal/CourierServiceTable";
-import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
-import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
-import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
-import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
-import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
-import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
-import StampTable from "@components/tables/metal/StampTable";
 import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
 import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
 import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
@@ -55,53 +29,52 @@ import ColorStoneRateTable from "@components/tables/colorStone/ColorStoneRateTab
 export default function ColorStonePropertiesIndex() {
   const user = useUserState();
 
- const panels: PanelType[] = useMemo(() => {
-  return [
-    {
-      name: "stone-types",
-      label: t`Stone`,
-      icon: <IconDiamond />,
-      content: <ColorStoneTable />,
-    },
-    {
-      name: "stone-cut",
-      label: t`Cut`,
-      icon: <IconDiamond />,
-      content: <ColorStoneCutTable />,
-
-    },
-    {
-      name: "stone-shape",
-      label: t`Shape`,
-      icon: <IconDiamond />,
-      content: <ColorStoneShapeTable />,
-    },
-    {
-      name: "stone-color",
-      label: t`Color`,
-      icon: <IconDiamond />,
-      content: <ColorStoneColorTable />,
-    },
-    {
-      name: "stone-size",
-      label: t`Size`,
-      icon: <IconDiamond />,
-      content: <ColorStoneSizeTable />,
-    },
-    {
-      name: "stone-quality",
-      label: t`Quality`,
-      icon: <IconDiamond />,
-      content: <ColorStoneQualityTable />,
-    },
-    {
-      name: "stone-rate",
-      label: t`Weight / Rate Per Stone`,
-      icon: <IconDiamond />,
-      content: <ColorStoneRateTable />,
-    },
-  ];
-}, []);
+  const panels: PanelType[] = useMemo(() => {
+    return [
+      {
+        name: "stone-types",
+        label: t`Stone`,
+        icon: <IconSparkles />,
+        content: <ColorStoneTable />,
+      },
+      {
+        name: "stone-cut",
+        label: t`Cut`,
+        icon: <IconScissors />,
+        content: <ColorStoneCutTable />,
+      },
+      {
+        name: "stone-shape",
+        label: t`Shape`,
+        icon: <IconCategory />,
+        content: <ColorStoneShapeTable />,
+      },
+      {
+        name: "stone-color",
+        label: t`Color`,
+        icon: <IconColorFilter />,
+        content: <ColorStoneColorTable />,
+      },
+      {
+        name: "stone-size",
+        label: t`Size`,
+        icon: <IconRuler2 />,
+        content: <ColorStoneSizeTable />,
+      },
+      {
+        name: "stone-quality",
+        label: t`Quality`,
+        icon: <IconAward />,
+        content: <ColorStoneQualityTable />,
+      },
+      {
+        name: "stone-rate",
+        label: t`Weight / Rate Per Stone`,
+        icon: <IconScale />,
+        content: <ColorStoneRateTable />,
+      },
+    ];
+  }, []);
 
   if (!user.hasViewRole(UserRoles.part)) {
     return <PermissionDenied />;
