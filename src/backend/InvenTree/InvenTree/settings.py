@@ -327,7 +327,6 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'machine.apps.MachineConfig',
     'data_exporter.apps.DataExporterConfig',
-    'data_importer.apps.DataImporterConfig',
     'importer.apps.ImporterConfig',
     'web',
     'generic',
