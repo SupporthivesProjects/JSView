@@ -4,6 +4,8 @@ from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
 
+from importer.registry import register_importer
+
 from .models import (
     CostCard,
     CostCardColorStoneLine,
@@ -12,11 +14,8 @@ from .models import (
     StonePlace,
 )
 
-# ---------------------------------------------------------------------------
-# Master-like reference data
-# ---------------------------------------------------------------------------
 
-
+@register_importer()
 class StonePlaceSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the StonePlace model."""
 
@@ -25,12 +24,7 @@ class StonePlaceSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
         fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
 
 
-# ---------------------------------------------------------------------------
-# Standalone line serializers - used by the dedicated line endpoints
-# (list all lines for a cost card, edit/delete a single existing row).
-# ---------------------------------------------------------------------------
-
-
+@register_importer()
 class CostCardDiamondLineSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the CostCardDiamondLine model (standalone endpoint)."""
 
@@ -44,6 +38,7 @@ class CostCardDiamondLineSerializer(DataExportSerializerMixin, InvenTreeModelSer
         ]
 
 
+@register_importer()
 class CostCardColorStoneLineSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the CostCardColorStoneLine model (standalone endpoint)."""
 
@@ -57,21 +52,13 @@ class CostCardColorStoneLineSerializer(DataExportSerializerMixin, InvenTreeModel
         ]
 
 
+@register_importer()
 class CostCardFinishLineSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the CostCardFinishLine model (standalone endpoint)."""
 
     class Meta:
         model = CostCardFinishLine
         fields = ['pk', 'cost_card', 'finish_type', 'rate', 'active', 'created_at', 'updated_at']
-
-
-# ---------------------------------------------------------------------------
-# Nested line serializers - embedded inside CostCardSerializer only.
-# No 'cost_card' field (it's implied by the parent), and 'id' is optional
-# so an update payload can mix: existing rows to edit (send id), new rows
-# to add (omit id), and rows that were removed on the tab simply aren't
-# included and get deleted server-side.
-# ---------------------------------------------------------------------------
 
 
 class NestedDiamondLineSerializer(drf_serializers.ModelSerializer):
@@ -112,11 +99,7 @@ class NestedFinishLineSerializer(drf_serializers.ModelSerializer):
         fields = ['id', 'finish_type', 'rate', 'active']
 
 
-# ---------------------------------------------------------------------------
-# Main Cost Card serializer
-# ---------------------------------------------------------------------------
-
-
+@register_importer()
 class CostCardSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """
     Serializer for the CostCard model.
@@ -140,18 +123,14 @@ class CostCardSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
         model = CostCard
         fields = [
             'pk',
-            # General
             'cost_card_no', 'our_style_no', 'vendor_style_no', 'vendor', 'customer',
             'category', 'sub_category', 'metal_purity', 'karat', 'metal_grams',
             'finding_type', 'finding_price', 'gross_weight', 'net_weight', 'troy_ounce_price',
             'height_mm', 'height_inch', 'length_mm', 'length_inch', 'width_mm', 'width_inch',
             'shank_size_mm', 'shank_size_inch', 'drape_length_mm', 'drape_length_inch',
             'design_note', 'special_note', 'remarks',
-            # Images (read-only here; use the dedicated image upload endpoint to write)
             'front_view', 'side_view', 'back_view',
-            # Labour Details
             'labour_finish_amount', 'labour_diamond_amount', 'labour_colorstone_amount',
-            # Cost
             'metal_loss_pct', 'metal_loss_amount', 'metal_amount',
             'dia_pcs', 'dia_cts', 'dia_amount',
             'col_pcs', 'col_cts', 'col_amount',
@@ -164,14 +143,11 @@ class CostCardSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
             'duty_pct', 'duty_amount',
             'margin_pct', 'margin_amount',
             'final_amount',
-            # Remarks (detail tab)
             'remarks_full',
-            # Nested tabs
             'diamond_lines', 'colorstone_lines', 'finish_lines',
-            # Common
             'active', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['cost_card_no','front_view', 'side_view', 'back_view']
+        read_only_fields = ['cost_card_no', 'front_view', 'side_view', 'back_view']
 
     def create(self, validated_data):
         diamond_lines_data = validated_data.pop('diamond_lines', [])
@@ -195,9 +171,6 @@ class CostCardSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Only touch a tab's lines if that tab's data was actually included
-        # in the payload - this lets the frontend PATCH e.g. just the
-        # Diamond tab without wiping Color Stone / Finish Type rows.
         if diamond_lines_data is not None:
             self._sync_lines(instance, CostCardDiamondLine, 'diamond_lines', diamond_lines_data)
         if colorstone_lines_data is not None:
