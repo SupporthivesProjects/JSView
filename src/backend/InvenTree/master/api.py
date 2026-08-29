@@ -31,15 +31,11 @@ from .models import (
 
 
 class MasterPagination(LimitOffsetPagination):
-    """Default pagination for master app list endpoints."""
-
     default_limit = 10
     max_limit = 100
 
 
 class MetalTypeList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating MetalType objects."""
-
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
     pagination_class = MasterPagination
@@ -52,16 +48,12 @@ class MetalTypeList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
 
 
 class MetalTypeDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single MetalType object."""
-
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
     permission_classes = [MasterDataPermission]
 
 
-class MetalPurityList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating MetalPurity objects."""
-
+class MetalPurityList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
     pagination_class = MasterPagination
@@ -74,16 +66,12 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
 
 
 class MetalPurityDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single MetalPurity object."""
-
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
     permission_classes = [MasterDataPermission]
 
 
-class MetalRateList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating MetalRate objects."""
-
+class MetalRateList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
     pagination_class = MasterPagination
@@ -95,16 +83,12 @@ class MetalRateList(DataExportViewMixin, ListCreateAPI):
 
 
 class MetalRateDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single MetalRate object."""
-
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
     permission_classes = [MasterDataPermission]
 
 
-class FindingTypeList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating FindingType objects."""
-
+class FindingTypeList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
     pagination_class = MasterPagination
@@ -117,16 +101,12 @@ class FindingTypeList(DataExportViewMixin, ListCreateAPI):
 
 
 class FindingTypeDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single FindingType object."""
-
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
     permission_classes = [MasterDataPermission]
 
 
-class FinishTypeList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating FinishType objects."""
-
+class FinishTypeList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
     pagination_class = MasterPagination
@@ -139,16 +119,12 @@ class FinishTypeList(DataExportViewMixin, ListCreateAPI):
 
 
 class FinishTypeDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single FinishType object."""
-
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
     permission_classes = [MasterDataPermission]
 
 
-class SettingList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Setting objects."""
-
+class SettingList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = Setting.objects.all()
     serializer_class = master_serializers.SettingSerializer
     pagination_class = MasterPagination
@@ -161,16 +137,12 @@ class SettingList(DataExportViewMixin, ListCreateAPI):
 
 
 class SettingDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Setting object."""
-
     queryset = Setting.objects.all()
     serializer_class = master_serializers.SettingSerializer
     permission_classes = [MasterDataPermission]
 
 
-class LabourSettingList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating LabourSetting objects."""
-
+class LabourSettingList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = LabourSetting.objects.all()
     serializer_class = master_serializers.LabourSettingSerializer
     pagination_class = MasterPagination
@@ -183,16 +155,12 @@ class LabourSettingList(DataExportViewMixin, ListCreateAPI):
 
 
 class LabourSettingDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single LabourSetting object."""
-
     queryset = LabourSetting.objects.all()
     serializer_class = master_serializers.LabourSettingSerializer
     permission_classes = [MasterDataPermission]
 
 
-class DutyList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Duty objects."""
-
+class DutyList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
     pagination_class = MasterPagination
@@ -205,16 +173,12 @@ class DutyList(DataExportViewMixin, ListCreateAPI):
 
 
 class DutyDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Duty object."""
-
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
     permission_classes = [MasterDataPermission]
 
 
-class StampList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Stamp objects."""
-
+class StampList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
     pagination_class = MasterPagination
@@ -227,16 +191,12 @@ class StampList(DataExportViewMixin, ListCreateAPI):
 
 
 class StampDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Stamp object."""
-
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
     permission_classes = [MasterDataPermission]
 
 
-class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating ACExecutive objects."""
-
+class ACExecutiveList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
     pagination_class = MasterPagination
@@ -249,16 +209,12 @@ class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
 
 
 class ACExecutiveDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single ACExecutive object."""
-
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
     permission_classes = [MasterDataPermission]
 
 
-class TermsList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Terms objects."""
-
+class TermsList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
     pagination_class = MasterPagination
@@ -271,16 +227,12 @@ class TermsList(DataExportViewMixin, ListCreateAPI):
 
 
 class TermsDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Terms object."""
-
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
     permission_classes = [MasterDataPermission]
 
 
-class CourierServiceList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating CourierService objects."""
-
+class CourierServiceList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
     pagination_class = MasterPagination
@@ -293,16 +245,12 @@ class CourierServiceList(DataExportViewMixin, ListCreateAPI):
 
 
 class CourierServiceDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single CourierService object."""
-
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
     permission_classes = [MasterDataPermission]
 
 
-class JewelryCategoryList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating JewelryCategory objects."""
-
+class JewelryCategoryList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = JewelryCategory.objects.all()
     serializer_class = master_serializers.JewelryCategorySerializer
     pagination_class = MasterPagination
@@ -315,16 +263,12 @@ class JewelryCategoryList(DataExportViewMixin, ListCreateAPI):
 
 
 class JewelryCategoryDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single JewelryCategory object."""
-
     queryset = JewelryCategory.objects.all()
     serializer_class = master_serializers.JewelryCategorySerializer
     permission_classes = [MasterDataPermission]
 
 
-class JewelrySubCategoryList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating JewelrySubCategory objects."""
-
+class JewelrySubCategoryList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = JewelrySubCategory.objects.all()
     serializer_class = master_serializers.JewelrySubCategorySerializer
     pagination_class = MasterPagination
@@ -337,17 +281,12 @@ class JewelrySubCategoryList(DataExportViewMixin, ListCreateAPI):
 
 
 class JewelrySubCategoryDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single JewelrySubCategory object."""
-
     queryset = JewelrySubCategory.objects.all()
     serializer_class = master_serializers.JewelrySubCategorySerializer
     permission_classes = [MasterDataPermission]
 
 
-
-class TemplatesList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating Templates objects."""
-
+class TemplatesList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = Templates.objects.all()
     serializer_class = master_serializers.TemplatesSerializer
     pagination_class = MasterPagination
@@ -360,16 +299,12 @@ class TemplatesList(DataExportViewMixin, ListCreateAPI):
 
 
 class TemplatesDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single Templates object."""
-
     queryset = Templates.objects.all()
     serializer_class = master_serializers.TemplatesSerializer
     permission_classes = [MasterDataPermission]
 
 
-class POMailList(DataExportViewMixin, ListCreateAPI):
-    """API endpoint for listing / creating POMail objects."""
-
+class POMailList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     queryset = POMail.objects.all()
     serializer_class = master_serializers.POMailSerializer
     pagination_class = MasterPagination
@@ -382,8 +317,6 @@ class POMailList(DataExportViewMixin, ListCreateAPI):
 
 
 class POMailDetail(RetrieveUpdateDestroyAPI):
-    """API endpoint for detail view of a single POMail object."""
-
     queryset = POMail.objects.all()
     serializer_class = master_serializers.POMailSerializer
     permission_classes = [MasterDataPermission]
@@ -451,13 +384,13 @@ master_api_urls = [
     ])),
 
     path('jewelry-category/', include([
-        path( '<int:pk>/', JewelryCategoryDetail.as_view(),name='api-jewelry-category-detail',),
-        path('',JewelryCategoryList.as_view(),name='api-jewelry-category-list',),
+        path('<int:pk>/', JewelryCategoryDetail.as_view(), name='api-jewelry-category-detail'),
+        path('', JewelryCategoryList.as_view(), name='api-jewelry-category-list'),
     ])),
 
     path('jewelry-sub-category/', include([
-        path('<int:pk>/',JewelrySubCategoryDetail.as_view(),name='api-jewelry-sub-category-detail',),
-        path('',JewelrySubCategoryList.as_view(),name='api-jewelry-sub-category-list',),
+        path('<int:pk>/', JewelrySubCategoryDetail.as_view(), name='api-jewelry-sub-category-detail'),
+        path('', JewelrySubCategoryList.as_view(), name='api-jewelry-sub-category-list'),
     ])),
 
     path('templates/', include([
