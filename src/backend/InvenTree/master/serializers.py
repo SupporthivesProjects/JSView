@@ -22,7 +22,10 @@ from .models import (
     Terms,
 )
 
-class MetalTypeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+from data_importer.mixins import DataImportSerializerMixin
+
+
+class MetalTypeSerializer(DataImportSerializerMixin, DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the MetalType model."""
 
     class Meta:

@@ -3,6 +3,7 @@
 from django.urls import include, path
 
 from data_exporter.mixins import DataExportViewMixin
+from data_importer.mixins import DataImportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework.pagination import LimitOffsetPagination
@@ -36,7 +37,7 @@ class MasterPagination(LimitOffsetPagination):
     max_limit = 100
 
 
-class MetalTypeList(DataExportViewMixin, ListCreateAPI):
+class MetalTypeList(DataImportViewMixin, DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating MetalType objects."""
 
     queryset = MetalType.objects.all()

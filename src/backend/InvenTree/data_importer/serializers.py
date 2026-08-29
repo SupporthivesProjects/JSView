@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 import InvenTree.exceptions
-from common.models import DataImportSession
+from data_importer.models import DataImportSession
 from plugin import PluginMixinEnum, registry
 
 

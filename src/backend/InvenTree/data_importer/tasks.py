@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 import structlog
 
-from common.models import DataImportSession
+from data_importer.models import DataImportSession
 
 logger = structlog.get_logger('inventree')
 
