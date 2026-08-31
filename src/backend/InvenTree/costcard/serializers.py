@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 
 from rest_framework import serializers as drf_serializers
@@ -320,12 +322,34 @@ class CostCardSerializer(
             'updated_at',
         ]
 
-    def to_internal_value(self, data):
-        data = data.copy()
+    @staticmethod
+    def _normalize_nested_payload(value):
+        if value is None:
+            return None
 
-        diamond_lines = data.pop('diamond_lines', None)
-        colorstone_lines = data.pop('colorstone_lines', None)
-        finish_lines = data.pop('finish_lines', None)
+        if isinstance(value, (list, tuple)) and len(value) == 1 and isinstance(value[0], str):
+            value = value[0]
+
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except (TypeError, ValueError):
+                return value
+
+        if isinstance(value, dict):
+            value = [value]
+
+        return value
+
+    def to_internal_value(self, data):
+        if hasattr(data, 'copy'):
+            data = data.copy()
+        else:
+            data = dict(data)
+
+        diamond_lines = self._normalize_nested_payload(data.pop('diamond_lines', None))
+        colorstone_lines = self._normalize_nested_payload(data.pop('colorstone_lines', None))
+        finish_lines = self._normalize_nested_payload(data.pop('finish_lines', None))
 
         validated_data = super().to_internal_value(data)
 
