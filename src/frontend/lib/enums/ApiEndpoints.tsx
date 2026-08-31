@@ -147,6 +147,9 @@ export enum ApiEndpoints {
   master_stamp = "master/stamp/",
   stone_place = "cards/stone-place/",
 
+  // Cost Card API endpoints
+  cost_card = "costcard/cost-card/",
+
   // Color Stone API endpoints
   color_stone_type_list = "properties/colorstone/",
   color_stone_cut_list = "properties/colorstone-cut/",
