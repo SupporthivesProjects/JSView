@@ -4,7 +4,6 @@ from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
 
-from importer.mixins import DataImportSerializerMixin
 from importer.registry import register_importer
 
 from .models import (
@@ -17,11 +16,8 @@ from .models import (
 
 
 @register_importer()
-class StonePlaceSerializer(
-    DataImportSerializerMixin,
-    DataExportSerializerMixin,
-    InvenTreeModelSerializer,
-):
+class StonePlaceSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+
     class Meta:
         model = StonePlace
         fields = [
@@ -36,10 +32,10 @@ class StonePlaceSerializer(
 
 @register_importer()
 class CostCardDiamondLineSerializer(
-    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
+
     class Meta:
         model = CostCardDiamondLine
         fields = [
@@ -72,10 +68,10 @@ class CostCardDiamondLineSerializer(
 
 @register_importer()
 class CostCardColorStoneLineSerializer(
-    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
+
     class Meta:
         model = CostCardColorStoneLine
         fields = [
@@ -108,10 +104,10 @@ class CostCardColorStoneLineSerializer(
 
 @register_importer()
 class CostCardFinishLineSerializer(
-    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
+
     class Meta:
         model = CostCardFinishLine
         fields = [
@@ -125,9 +121,8 @@ class CostCardFinishLineSerializer(
         ]
 
 
-class NestedDiamondLineSerializer(
-    drf_serializers.ModelSerializer
-):
+class NestedDiamondLineSerializer(drf_serializers.ModelSerializer):
+
     id = drf_serializers.IntegerField(required=False)
 
     class Meta:
@@ -157,9 +152,8 @@ class NestedDiamondLineSerializer(
         ]
 
 
-class NestedColorStoneLineSerializer(
-    drf_serializers.ModelSerializer
-):
+class NestedColorStoneLineSerializer(drf_serializers.ModelSerializer):
+
     id = drf_serializers.IntegerField(required=False)
 
     class Meta:
@@ -189,9 +183,8 @@ class NestedColorStoneLineSerializer(
         ]
 
 
-class NestedFinishLineSerializer(
-    drf_serializers.ModelSerializer
-):
+class NestedFinishLineSerializer(drf_serializers.ModelSerializer):
+
     id = drf_serializers.IntegerField(required=False)
 
     class Meta:
@@ -206,10 +199,10 @@ class NestedFinishLineSerializer(
 
 @register_importer()
 class CostCardSerializer(
-    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
+
     diamond_lines = NestedDiamondLineSerializer(
         many=True,
         required=False,
@@ -289,7 +282,6 @@ class CostCardSerializer(
             'margin_amount',
             'final_amount',
             'remarks_full',
-            'parent',
             'diamond_lines',
             'colorstone_lines',
             'finish_lines',
@@ -306,24 +298,11 @@ class CostCardSerializer(
         ]
 
     def create(self, validated_data):
-        diamond_lines_data = validated_data.pop(
-            'diamond_lines',
-            [],
-        )
+        diamond_lines_data = validated_data.pop('diamond_lines', [])
+        colorstone_lines_data = validated_data.pop('colorstone_lines', [])
+        finish_lines_data = validated_data.pop('finish_lines', [])
 
-        colorstone_lines_data = validated_data.pop(
-            'colorstone_lines',
-            [],
-        )
-
-        finish_lines_data = validated_data.pop(
-            'finish_lines',
-            [],
-        )
-
-        cost_card = CostCard.objects.create(
-            **validated_data
-        )
+        cost_card = CostCard.objects.create(**validated_data)
 
         self._sync_lines(
             cost_card,
@@ -413,6 +392,8 @@ class CostCardSerializer(
         seen_ids = set()
 
         for line_data in lines_data:
+            line_data = dict(line_data)
+
             line_id = line_data.pop(
                 'id',
                 None,
@@ -429,7 +410,6 @@ class CostCardSerializer(
                     )
 
                 line_instance.save()
-
                 seen_ids.add(line_id)
 
             else:
@@ -443,9 +423,8 @@ class CostCardSerializer(
                 line_instance.delete()
 
 
-class CostCardImageSerializer(
-    InvenTreeModelSerializer,
-):
+class CostCardImageSerializer(InvenTreeModelSerializer):
+
     class Meta:
         model = CostCard
         fields = [
