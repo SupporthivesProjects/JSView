@@ -385,11 +385,11 @@ class CostCardSerializer(
                         if char.isdigit()
                     )
                 )
-                return f"CC-{number + 1:05d}"
+                return f"{number + 1:05d}"
             except (ValueError, TypeError):
                 pass
 
-        return "CC-00001"
+        return "00001"
 
     def _scalar_fields(self, validated_data):
         return {
