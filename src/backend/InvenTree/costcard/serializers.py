@@ -5,6 +5,7 @@ from rest_framework import serializers as drf_serializers
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
+from importer.mixins import DataImportSerializerMixin
 from importer.registry import register_importer
 
 from .models import (
@@ -18,6 +19,7 @@ from .models import (
 
 @register_importer()
 class StonePlaceSerializer(
+    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
@@ -35,6 +37,7 @@ class StonePlaceSerializer(
 
 @register_importer()
 class CostCardDiamondLineSerializer(
+    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
@@ -70,6 +73,7 @@ class CostCardDiamondLineSerializer(
 
 @register_importer()
 class CostCardColorStoneLineSerializer(
+    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
@@ -105,6 +109,7 @@ class CostCardColorStoneLineSerializer(
 
 @register_importer()
 class CostCardFinishLineSerializer(
+    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
@@ -205,6 +210,7 @@ class NestedFinishLineSerializer(drf_serializers.ModelSerializer):
 
 @register_importer()
 class CostCardSerializer(
+    DataImportSerializerMixin,
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
@@ -355,11 +361,11 @@ class CostCardSerializer(
                         if char.isdigit()
                     )
                 )
-                return f"{number + 1:05d}"
+                return f"CC-{number + 1:05d}"
             except (ValueError, TypeError):
                 pass
 
-        return "00001"
+        return "CC-00001"
 
     def _scalar_fields(self, validated_data):
         return {
