@@ -29,7 +29,7 @@ export default function CostCardTable() {
   const table = useTable("cost-card");
   const user = useUserState();
 
-  // --- Table columns -------------------------------------------------
+  // --- new Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
@@ -148,7 +148,7 @@ export default function CostCardTable() {
 
   const handleImageChange = useCallback((file: File | null) => {
     setPreviewImage((prev) => {
-      if (prev) URL.revokeObjectURL(prev); 
+      if (prev) URL.revokeObjectURL(prev);
       return file ? URL.createObjectURL(file) : undefined;
     });
   }, []);
