@@ -1,9 +1,10 @@
+from django.db import transaction
+
 from rest_framework import serializers as drf_serializers
 
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
-
 from importer.registry import register_importer
 
 from .models import (
@@ -16,8 +17,10 @@ from .models import (
 
 
 @register_importer()
-class StonePlaceSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-
+class StonePlaceSerializer(
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = StonePlace
         fields = [
@@ -35,7 +38,6 @@ class CostCardDiamondLineSerializer(
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
-
     class Meta:
         model = CostCardDiamondLine
         fields = [
@@ -71,7 +73,6 @@ class CostCardColorStoneLineSerializer(
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
-
     class Meta:
         model = CostCardColorStoneLine
         fields = [
@@ -107,7 +108,6 @@ class CostCardFinishLineSerializer(
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
-
     class Meta:
         model = CostCardFinishLine
         fields = [
@@ -122,8 +122,10 @@ class CostCardFinishLineSerializer(
 
 
 class NestedDiamondLineSerializer(drf_serializers.ModelSerializer):
-
-    id = drf_serializers.IntegerField(required=False)
+    id = drf_serializers.IntegerField(
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = CostCardDiamondLine
@@ -153,8 +155,10 @@ class NestedDiamondLineSerializer(drf_serializers.ModelSerializer):
 
 
 class NestedColorStoneLineSerializer(drf_serializers.ModelSerializer):
-
-    id = drf_serializers.IntegerField(required=False)
+    id = drf_serializers.IntegerField(
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = CostCardColorStoneLine
@@ -184,8 +188,10 @@ class NestedColorStoneLineSerializer(drf_serializers.ModelSerializer):
 
 
 class NestedFinishLineSerializer(drf_serializers.ModelSerializer):
-
-    id = drf_serializers.IntegerField(required=False)
+    id = drf_serializers.IntegerField(
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = CostCardFinishLine
@@ -202,7 +208,6 @@ class CostCardSerializer(
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
-
     diamond_lines = NestedDiamondLineSerializer(
         many=True,
         required=False,
@@ -291,85 +296,88 @@ class CostCardSerializer(
         ]
 
         read_only_fields = [
+            'pk',
             'cost_card_no',
             'front_view',
             'side_view',
             'back_view',
+            'created_at',
+            'updated_at',
         ]
 
+    @transaction.atomic
     def create(self, validated_data):
-        diamond_lines_data = validated_data.pop('diamond_lines', [])
-        colorstone_lines_data = validated_data.pop('colorstone_lines', [])
-        finish_lines_data = validated_data.pop('finish_lines', [])
+        diamond_lines = validated_data.pop('diamond_lines', None)
+        colorstone_lines = validated_data.pop('colorstone_lines', None)
+        finish_lines = validated_data.pop('finish_lines', None)
 
         cost_card = CostCard.objects.create(**validated_data)
 
-        self._sync_lines(
-            cost_card,
-            CostCardDiamondLine,
-            'diamond_lines',
-            diamond_lines_data,
-        )
+        if diamond_lines is not None:
+            self._sync_lines(
+                cost_card,
+                CostCardDiamondLine,
+                'diamond_lines',
+                diamond_lines,
+                False,
+            )
 
-        self._sync_lines(
-            cost_card,
-            CostCardColorStoneLine,
-            'colorstone_lines',
-            colorstone_lines_data,
-        )
+        if colorstone_lines is not None:
+            self._sync_lines(
+                cost_card,
+                CostCardColorStoneLine,
+                'colorstone_lines',
+                colorstone_lines,
+                False,
+            )
 
-        self._sync_lines(
-            cost_card,
-            CostCardFinishLine,
-            'finish_lines',
-            finish_lines_data,
-        )
+        if finish_lines is not None:
+            self._sync_lines(
+                cost_card,
+                CostCardFinishLine,
+                'finish_lines',
+                finish_lines,
+                False,
+            )
 
         return cost_card
 
+    @transaction.atomic
     def update(self, instance, validated_data):
-        diamond_lines_data = validated_data.pop(
-            'diamond_lines',
-            None,
-        )
-
-        colorstone_lines_data = validated_data.pop(
-            'colorstone_lines',
-            None,
-        )
-
-        finish_lines_data = validated_data.pop(
-            'finish_lines',
-            None,
-        )
+        diamond_lines = validated_data.pop('diamond_lines', None)
+        colorstone_lines = validated_data.pop('colorstone_lines', None)
+        finish_lines = validated_data.pop('finish_lines', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
 
-        if diamond_lines_data is not None:
+        if diamond_lines is not None:
             self._sync_lines(
                 instance,
                 CostCardDiamondLine,
                 'diamond_lines',
-                diamond_lines_data,
+                diamond_lines,
+                True,
             )
 
-        if colorstone_lines_data is not None:
+        if colorstone_lines is not None:
             self._sync_lines(
                 instance,
                 CostCardColorStoneLine,
                 'colorstone_lines',
-                colorstone_lines_data,
+                colorstone_lines,
+                True,
             )
 
-        if finish_lines_data is not None:
+        if finish_lines is not None:
             self._sync_lines(
                 instance,
                 CostCardFinishLine,
                 'finish_lines',
-                finish_lines_data,
+                finish_lines,
+                True,
             )
 
         return instance
@@ -380,6 +388,7 @@ class CostCardSerializer(
         model_cls,
         related_name,
         lines_data,
+        allow_delete,
     ):
         existing = {
             obj.pk: obj
@@ -391,40 +400,46 @@ class CostCardSerializer(
 
         seen_ids = set()
 
-        for line_data in lines_data:
-            line_data = dict(line_data)
+        for raw_data in lines_data:
+            data = dict(raw_data)
 
-            line_id = line_data.pop(
-                'id',
-                None,
-            )
+            line_id = data.pop('id', None)
+            data.pop('cost_card', None)
 
-            if line_id and line_id in existing:
-                line_instance = existing[line_id]
+            if line_id is not None:
+                line_instance = existing.get(line_id)
 
-                for attr, value in line_data.items():
-                    setattr(
-                        line_instance,
-                        attr,
-                        value,
+                if line_instance is None:
+                    raise drf_serializers.ValidationError(
+                        {
+                            'id': (
+                                f'{model_cls.__name__} with id '
+                                f'{line_id} does not belong to '
+                                f'CostCard {cost_card.pk}.'
+                            )
+                        }
                     )
 
+                for attr, value in data.items():
+                    setattr(line_instance, attr, value)
+
+                line_instance.cost_card = cost_card
                 line_instance.save()
                 seen_ids.add(line_id)
 
             else:
                 model_cls.objects.create(
                     cost_card=cost_card,
-                    **line_data,
+                    **data,
                 )
 
-        for line_id, line_instance in existing.items():
-            if line_id not in seen_ids:
-                line_instance.delete()
+        if allow_delete:
+            for line_id, line_instance in existing.items():
+                if line_id not in seen_ids:
+                    line_instance.delete()
 
 
 class CostCardImageSerializer(InvenTreeModelSerializer):
-
     class Meta:
         model = CostCard
         fields = [
