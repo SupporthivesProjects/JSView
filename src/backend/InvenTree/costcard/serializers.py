@@ -387,7 +387,6 @@ class CostCardSerializer(
         )
 
         for line_data in diamond_lines:
-            line_data = dict(line_data)
             line_data.pop('id', None)
 
             CostCardDiamondLine.objects.create(
@@ -396,7 +395,6 @@ class CostCardSerializer(
             )
 
         for line_data in colorstone_lines:
-            line_data = dict(line_data)
             line_data.pop('id', None)
 
             CostCardColorStoneLine.objects.create(
@@ -405,7 +403,6 @@ class CostCardSerializer(
             )
 
         for line_data in finish_lines:
-            line_data = dict(line_data)
             line_data.pop('id', None)
 
             CostCardFinishLine.objects.create(
@@ -470,9 +467,7 @@ class CostCardSerializer(
 
         seen_ids = set()
 
-        for raw_data in lines_data:
-            data = dict(raw_data)
-
+        for data in lines_data:
             line_id = data.pop('id', None)
             data.pop('cost_card', None)
 
