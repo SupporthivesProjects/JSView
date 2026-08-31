@@ -34,6 +34,14 @@ export function metalTypeFields(): ApiFormFieldSet {
   };
 }
 
+export function stonePlaceFields(): ApiFormFieldSet {
+  return {
+    name: {},
+    description: {},
+    active: {},
+  };
+}
+
 export function metalPurityFields(): ApiFormFieldSet {
   return {
     metal_type: {

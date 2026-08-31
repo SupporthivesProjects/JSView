@@ -44,6 +44,7 @@ import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
 import StampTable from "@components/tables/metal/StampTable";
+import StonePlaceTable from "@components/tables/metal/StonePlaceTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -145,6 +146,12 @@ export default function MetalTypeIndex() {
         label: t`Courier Service`,
         icon: <IconTruckDelivery />,
         content: <CourierServiceTable />,
+      },
+      {
+        name: "stone-place",
+        label: t`Stone Place`,
+        icon: <IconTruckDelivery />,
+        content: <StonePlaceTable />,
       },
     ];
   }, []);
