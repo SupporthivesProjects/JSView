@@ -223,6 +223,15 @@ class CostCardSerializer(
         required=False,
     )
 
+    NESTED_LINE_FIELDS = (
+        'diamond_lines',
+        'colorstone_lines',
+        'finish_lines',
+    )
+
+    def skip_create_fields(self):
+        return [*super().skip_create_fields(), *self.NESTED_LINE_FIELDS]
+
     class Meta:
         model = CostCard
         fields = [
@@ -305,39 +314,97 @@ class CostCardSerializer(
             'updated_at',
         ]
 
-    @transaction.atomic
-    def create(self, validated_data):
-        diamond_lines = validated_data.pop('diamond_lines', None)
-        colorstone_lines = validated_data.pop('colorstone_lines', None)
-        finish_lines = validated_data.pop('finish_lines', None)
+    def to_internal_value(self, data):
+        data = data.copy()
 
-        cost_card = CostCard.objects.create(**validated_data)
+        diamond_lines = data.pop('diamond_lines', None)
+        colorstone_lines = data.pop('colorstone_lines', None)
+        finish_lines = data.pop('finish_lines', None)
+
+        validated_data = super().to_internal_value(data)
 
         if diamond_lines is not None:
-            self._sync_lines(
-                cost_card,
-                CostCardDiamondLine,
-                'diamond_lines',
-                diamond_lines,
-                False,
-            )
+            validated_data['diamond_lines'] = NestedDiamondLineSerializer(
+                many=True
+            ).to_internal_value(diamond_lines)
 
         if colorstone_lines is not None:
-            self._sync_lines(
-                cost_card,
-                CostCardColorStoneLine,
-                'colorstone_lines',
-                colorstone_lines,
-                False,
-            )
+            validated_data['colorstone_lines'] = NestedColorStoneLineSerializer(
+                many=True
+            ).to_internal_value(colorstone_lines)
 
         if finish_lines is not None:
-            self._sync_lines(
-                cost_card,
-                CostCardFinishLine,
-                'finish_lines',
-                finish_lines,
-                False,
+            validated_data['finish_lines'] = NestedFinishLineSerializer(
+                many=True
+            ).to_internal_value(finish_lines)
+
+        if self.instance is None:
+            validated_data['cost_card_no'] = self._generate_cost_card_no()
+
+        return validated_data
+
+    def _generate_cost_card_no(self):
+        last_card = CostCard.objects.order_by('-id').first()
+
+        if last_card and last_card.cost_card_no:
+            try:
+                number = int(
+                    ''.join(
+                        char
+                        for char in last_card.cost_card_no
+                        if char.isdigit()
+                    )
+                )
+                return f"{number + 1:05d}"
+            except (ValueError, TypeError):
+                pass
+
+        return "00001"
+
+    def _scalar_fields(self, validated_data):
+        return {
+            key: value
+            for key, value in validated_data.items()
+            if key not in self.NESTED_LINE_FIELDS
+        }
+
+    @transaction.atomic
+    def create(self, validated_data):
+        diamond_lines = validated_data.pop('diamond_lines', [])
+        colorstone_lines = validated_data.pop('colorstone_lines', [])
+        finish_lines = validated_data.pop('finish_lines', [])
+
+        validated_data['cost_card_no'] = self._generate_cost_card_no()
+
+        cost_card = CostCard.objects.create(
+            **self._scalar_fields(validated_data)
+        )
+
+        for line_data in diamond_lines:
+            line_data = dict(line_data)
+            line_data.pop('id', None)
+
+            CostCardDiamondLine.objects.create(
+                cost_card=cost_card,
+                **line_data,
+            )
+
+        for line_data in colorstone_lines:
+            line_data = dict(line_data)
+            line_data.pop('id', None)
+
+            CostCardColorStoneLine.objects.create(
+                cost_card=cost_card,
+                **line_data,
+            )
+
+        for line_data in finish_lines:
+            line_data = dict(line_data)
+            line_data.pop('id', None)
+
+            CostCardFinishLine.objects.create(
+                cost_card=cost_card,
+                **line_data,
             )
 
         return cost_card
@@ -348,7 +415,9 @@ class CostCardSerializer(
         colorstone_lines = validated_data.pop('colorstone_lines', None)
         finish_lines = validated_data.pop('finish_lines', None)
 
-        for attr, value in validated_data.items():
+        validated_data.pop('cost_card_no', None)
+
+        for attr, value in self._scalar_fields(validated_data).items():
             setattr(instance, attr, value)
 
         instance.save()
@@ -357,7 +426,6 @@ class CostCardSerializer(
             self._sync_lines(
                 instance,
                 CostCardDiamondLine,
-                'diamond_lines',
                 diamond_lines,
                 True,
             )
@@ -366,7 +434,6 @@ class CostCardSerializer(
             self._sync_lines(
                 instance,
                 CostCardColorStoneLine,
-                'colorstone_lines',
                 colorstone_lines,
                 True,
             )
@@ -375,7 +442,6 @@ class CostCardSerializer(
             self._sync_lines(
                 instance,
                 CostCardFinishLine,
-                'finish_lines',
                 finish_lines,
                 True,
             )
@@ -386,16 +452,14 @@ class CostCardSerializer(
     def _sync_lines(
         cost_card,
         model_cls,
-        related_name,
         lines_data,
         allow_delete,
     ):
         existing = {
             obj.pk: obj
-            for obj in getattr(
-                cost_card,
-                related_name,
-            ).all()
+            for obj in model_cls.objects.filter(
+                cost_card=cost_card
+            )
         }
 
         seen_ids = set()
@@ -423,8 +487,8 @@ class CostCardSerializer(
                 for attr, value in data.items():
                     setattr(line_instance, attr, value)
 
-                line_instance.cost_card = cost_card
                 line_instance.save()
+
                 seen_ids.add(line_id)
 
             else:
