@@ -57,10 +57,22 @@ export default function CostCardTable() {
     staleTime: 5 * 60 * 1000,
     refetchOnMount: "always",
   });
-  const companyNameByPk = useMemo(() => {
+  const customerNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
     (companyQuery.data ?? []).forEach((company: any) => {
-      map[company.pk] = company.name;
+      if (company.is_customer) {
+        map[company.pk] = company.name;
+      }
+    });
+    return map;
+  }, [companyQuery.data]);
+
+  const vendorNameByPk = useMemo(() => {
+    const map: Record<number, string> = {};
+    (companyQuery.data ?? []).forEach((company: any) => {
+      if (company.is_supplier) {
+        map[company.pk] = company.name;
+      }
     });
     return map;
   }, [companyQuery.data]);
@@ -146,7 +158,7 @@ export default function CostCardTable() {
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          companyNameByPk[record.customer] ?? record.customer,
+          customerNameByPk[record.customer] ?? record.customer,
       },
       {
         accessor: "vendor",
@@ -154,7 +166,7 @@ export default function CostCardTable() {
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          companyNameByPk[record.vendor] ?? record.vendor,
+          vendorNameByPk[record.vendor] ?? record.vendor,
       },
       {
         accessor: "category",
@@ -194,7 +206,12 @@ export default function CostCardTable() {
         switchable: true,
       },
     ];
-  }, [companyNameByPk, jewelCategoryNameByPk, jewelSubCategoryNameByPk]);
+  }, [
+    customerNameByPk,
+    vendorNameByPk,
+    jewelCategoryNameByPk,
+    jewelSubCategoryNameByPk,
+  ]);
 
   // --- Create modal ----------------------------------------------------
 
