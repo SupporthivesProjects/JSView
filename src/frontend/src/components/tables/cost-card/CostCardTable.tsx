@@ -121,17 +121,31 @@ export default function CostCardTable() {
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "front_view",
-        title: t`Front View`,
+        accessor: "image",
+        title: t`Image`,
         sortable: false,
         switchable: true,
         render: (record: any) => (
-          <Thumbnail
-            src={record.front_view}
-            alt={record.our_style_no}
-            size={24}
-            hover
-          />
+          <Group gap="xs" wrap="nowrap">
+            <Thumbnail
+              src={record.front_view}
+              alt={t`Front View`}
+              size={24}
+              hover
+            />
+            <Thumbnail
+              src={record.back_view}
+              alt={t`Back View`}
+              size={24}
+              hover
+            />
+            <Thumbnail
+              src={record.side_view}
+              alt={t`Side View`}
+              size={24}
+              hover
+            />
+          </Group>
         ),
       },
       {
