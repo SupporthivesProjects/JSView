@@ -405,12 +405,36 @@ export function costCardGeneralFields(): ApiFormFieldSet {
     vendor_style_no: {},
     vendor: {},
     customer: {},
-    category: {},
-    sub_category: {},
-    metal_purity: {},
+    category: {
+      api_url: `${apiUrl(ApiEndpoints.jewellery_category)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    sub_category: {
+      api_url: `${apiUrl(ApiEndpoints.jewellery_sub_category)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    metal_purity: {
+      api_url: `${apiUrl(ApiEndpoints.metal_purity_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
     karat: {},
     metal_grams: {},
-    finding_type: {},
+    finding_type: {
+      api_url: `${apiUrl(ApiEndpoints.finding_type)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
     finding_price: {},
     gross_weight: {},
     net_weight: {},
