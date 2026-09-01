@@ -195,6 +195,14 @@ export interface ApiFormProps {
   navigate?: NavigateFunction;
   keepOpenOption?: boolean;
   onKeepOpenChange?: (keepOpen: boolean) => void;
+  /**
+   * Optional column count to lay the form's fields out in a responsive grid
+   * instead of the default single-column stack. Accepts the same shape as
+   * Mantine's <SimpleGrid cols>: a fixed number, or per-breakpoint counts.
+   */
+  gridColumns?:
+    | number
+    | Partial<Record<'base' | 'xs' | 'sm' | 'md' | 'lg' | 'xl', number>>;
 }
 
 /**

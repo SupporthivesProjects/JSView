@@ -393,90 +393,200 @@ export function stampFields(
   return fields;
 }
 
-export function costCardFields(
-  includeImage: boolean = true,
-  onImageChange?: (file: File | null) => void,
-): ApiFormFieldSet {
-  const fields: ApiFormFieldSet = {
-    active: {},
-    back_view: {},
-    category: {},
-    col_amount: {},
-    col_cts: {},
-    col_handling_amount: {},
-    col_handling_pct: {},
-    col_pcs: {},
-    colorstone_lines: {},
-    cost_card_no: {},
-    created_at: {},
-    customer: {},
-    design_note: {},
-    dia_amount: {},
-    dia_cts: {},
-    dia_handling_amount: {},
-    dia_handling_pct: {},
-    dia_pcs: {},
-    diamond_lines: {},
-    drape_length_inch: {},
-    drape_length_mm: {},
-    duty_amount: {},
-    duty_pct: {},
-    final_amount: {},
-    finding_price: {},
-    finding_type: {},
-    finish_lines: {},
-    fob: {},
-    front_view: {},
-    gross_weight: {},
-    height_inch: {},
-    height_mm: {},
-    karat: {},
-    labour_amount: {},
-    labour_colorstone_amount: {},
-    labour_diamond_amount: {},
-    labour_finish_amount: {},
-    length_inch: {},
-    length_mm: {},
-    margin_amount: {},
-    margin_pct: {},
-    metal_amount: {},
-    metal_grams: {},
-    metal_loss_amount: {},
-    metal_loss_pct: {},
-    metal_purity: {},
-    net_weight: {},
+// Cost Card is edited as a full page with a tab per section (see
+// containers/cost-card-detail) rather than a single modal, so its fields are
+// split into one set per tab instead of one flat costCardFields() blob.
+
+/** General tab — core identity, party, and measurement fields. */
+export function costCardGeneralFields(): ApiFormFieldSet {
+  return {
+    cost_card_no: { read_only: true },
     our_style_no: {},
-    pk: {},
-    remarks: {},
-    remarks_full: {},
-    shank_size_inch: {},
-    shank_size_mm: {},
-    side_view: {},
-    special_note: {},
-    stone_amount: {},
-    stone_cts: {},
-    stone_pcs: {},
-    sub_category: {},
-    troy_ounce_price: {},
-    updated_at: {},
-    vendor: {},
-    vendor_markup_amount: {},
-    vendor_markup_pct: {},
     vendor_style_no: {},
-    width_inch: {},
+    vendor: {},
+    customer: {},
+    category: {},
+    sub_category: {},
+    metal_purity: {},
+    karat: {},
+    metal_grams: {},
+    finding_type: {},
+    finding_price: {},
+    gross_weight: {},
+    net_weight: {},
+    troy_ounce_price: {},
+    height_mm: {},
+    height_inch: {},
+    length_mm: {},
+    length_inch: {},
     width_mm: {},
+    width_inch: {},
+    shank_size_mm: {},
+    shank_size_inch: {},
+    drape_length_mm: {},
+    drape_length_inch: {},
+    design_note: {},
+    special_note: {},
+    remarks: {},
+    active: {},
+  };
+}
+
+/** Labour Details tab — read-only rollups from the Finish / Diamond / Color Stone tabs. */
+export function costCardLabourFields(): ApiFormFieldSet {
+  return {
+    labour_finish_amount: { read_only: true },
+    labour_diamond_amount: { read_only: true },
+    labour_colorstone_amount: { read_only: true },
+  };
+}
+
+/** Cost tab — editable percentages plus their computed (read-only) amounts. */
+export function costCardCostFields(): ApiFormFieldSet {
+  return {
+    metal_loss_pct: {},
+    metal_loss_amount: { read_only: true },
+    metal_amount: { read_only: true },
+    dia_pcs: { read_only: true },
+    dia_cts: { read_only: true },
+    dia_amount: { read_only: true },
+    col_pcs: { read_only: true },
+    col_cts: { read_only: true },
+    col_amount: { read_only: true },
+    stone_pcs: { read_only: true },
+    stone_cts: { read_only: true },
+    stone_amount: { read_only: true },
+    labour_amount: { read_only: true },
+    finding_price: { read_only: true },
+    dia_handling_pct: {},
+    dia_handling_amount: { read_only: true },
+    col_handling_pct: {},
+    col_handling_amount: { read_only: true },
+    vendor_markup_pct: {},
+    vendor_markup_amount: { read_only: true },
+    fob: { read_only: true },
+    duty_pct: {},
+    duty_amount: { read_only: true },
+    margin_pct: {},
+    margin_amount: { read_only: true },
+    final_amount: { read_only: true },
+  };
+}
+
+/** Remarks tab — the detailed remarks field (distinct from the short General-tab remarks). */
+export function costCardRemarksFields(): ApiFormFieldSet {
+  return {
+    remarks_full: {},
+  };
+}
+
+/** Shared dropdown field definitions for a diamond/color-stone cost card line. */
+function costCardStoneLineFields(
+  stoneEndpoint: ApiEndpoints,
+  shapeEndpoint: ApiEndpoints,
+  sizeEndpoint: ApiEndpoints,
+  colorEndpoint: ApiEndpoints,
+  cutEndpoint: ApiEndpoints,
+  qualityEndpoint: ApiEndpoints,
+): ApiFormFieldSet {
+  const nameRenderer = (arg: any) => {
+    const instance = arg?.instance ?? arg;
+    return instance?.name ?? "";
   };
 
-  if (includeImage) {
-    fields.image = {
-      field_type: "file upload",
-      onValueChange: (value: any) => {
-        onImageChange?.(value instanceof File ? value : null);
-      },
-    };
-  }
+  return {
+    stone: {
+      api_url: `${apiUrl(stoneEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    shape: {
+      api_url: `${apiUrl(shapeEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    mm_size: {
+      api_url: `${apiUrl(sizeEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    color: {
+      api_url: `${apiUrl(colorEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    cut: {
+      api_url: `${apiUrl(cutEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    quality: {
+      api_url: `${apiUrl(qualityEndpoint)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    setting: {
+      api_url: `${apiUrl(ApiEndpoints.master_setting)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    stone_place: {
+      api_url: `${apiUrl(ApiEndpoints.stone_place)}?active=true`,
+      modelRenderer: nameRenderer,
+    },
+    pointer: {},
+    sieve_size: {},
+    pcs: {},
+    cts: {},
+    default_rate: {},
+    pc: {},
+    rate: {},
+    amount: {},
+    labour_rate: {},
+    labour_amount: {},
+    active: {},
+  };
+}
 
-  return fields;
+/** Diamond tab line fields — one row per diamond entry on the cost card. */
+export function costCardDiamondLineFields(costCardId: number): ApiFormFieldSet {
+  return {
+    cost_card: { hidden: true, value: costCardId },
+    ...costCardStoneLineFields(
+      ApiEndpoints.diamond_stone_list,
+      ApiEndpoints.diamond_shape_list,
+      ApiEndpoints.diamond_size_list,
+      ApiEndpoints.diamond_color_list,
+      ApiEndpoints.diamond_cut_list,
+      ApiEndpoints.diamond_quality_list,
+    ),
+  };
+}
+
+/** Color Stone tab line fields — one row per color stone entry on the cost card. */
+export function costCardColorStoneLineFields(
+  costCardId: number,
+): ApiFormFieldSet {
+  return {
+    cost_card: { hidden: true, value: costCardId },
+    ...costCardStoneLineFields(
+      ApiEndpoints.color_stone_type_list,
+      ApiEndpoints.color_stone_shape_list,
+      ApiEndpoints.color_stone_size_list,
+      ApiEndpoints.color_stone_color_list,
+      ApiEndpoints.color_stone_cut_list,
+      ApiEndpoints.color_stone_quality_list,
+    ),
+  };
+}
+
+/** Finish Type tab line fields — one row per finish applied to the cost card. */
+export function costCardFinishLineFields(costCardId: number): ApiFormFieldSet {
+  return {
+    cost_card: { hidden: true, value: costCardId },
+    finish_type: {
+      api_url: `${apiUrl(ApiEndpoints.finish_type)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    rate: {},
+    active: {},
+  };
 }
 
 export function DiamondStoneFields(): ApiFormFieldSet {

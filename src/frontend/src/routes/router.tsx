@@ -52,6 +52,10 @@ export const MasterIndex = Loadable(lazy(() => import("@containers/master")));
 
 export const CostCardIndex = Loadable(lazy(() => import("@containers/cost-card")));
 
+export const CostCardDetail = Loadable(
+  lazy(() => import("@containers/cost-card-detail")),
+);
+
 export const ColorStoneIndex = Loadable(lazy(() => import("@containers/color-stone")));
 
 export const DiamondPropertiesIndex = Loadable(
@@ -195,6 +199,7 @@ export const routes = (
       </Route>
       <Route path="cards/">
         <Route index element={<Navigate to="cost-card/" />} />
+        <Route path="cost-card/:id" element={<CostCardDetail />} />
         <Route path="*" element={<CostCardIndex />} />
       </Route>
       <Route path="color-stone/">

@@ -145,10 +145,15 @@ export enum ApiEndpoints {
   jewellery_category = "master/jewelry-category/",
   jewellery_sub_category = "master/jewelry-sub-category/",
   master_stamp = "master/stamp/",
-  stone_place = "cards/stone-place/",
+  stone_place = "costcard/stone-place/",
 
   // Cost Card API endpoints
   cost_card = "costcard/cost-card/",
+  cost_card_images = "costcard/cost-card/:id/images/",
+  cost_card_duplicate = "costcard/cost-card/:id/duplicate/",
+  cost_card_diamond_line = "costcard/cost-card-diamond-line/",
+  cost_card_colorstone_line = "costcard/cost-card-colorstone-line/",
+  cost_card_finish_line = "costcard/cost-card-finish-line/",
 
   // Color Stone API endpoints
   color_stone_type_list = "properties/colorstone/",

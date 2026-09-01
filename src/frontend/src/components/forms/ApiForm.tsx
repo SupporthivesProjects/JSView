@@ -6,6 +6,7 @@ import {
   Group,
   LoadingOverlay,
   Paper,
+  SimpleGrid,
   Stack,
   Text
 } from '@mantine/core';
@@ -722,9 +723,9 @@ export function ApiForm({
               </Boundary>
               <Boundary label={`ApiForm-${id}-FormContent`}>
                 <FormProvider {...form}>
-                  <Stack gap='xs'>
-                    {Object.entries(fields).map(([fieldName, field]) => {
-                      return (
+                  {(() => {
+                    const fieldElements = Object.entries(fields).map(
+                      ([fieldName, field]) => (
                         <ApiFormField
                           key={fieldName}
                           fieldName={fieldName}
@@ -735,9 +736,17 @@ export function ApiForm({
                           setFields={setFields}
                           onKeyDown={onFieldKeyDown}
                         />
-                      );
-                    })}
-                  </Stack>
+                      )
+                    );
+
+                    return props.gridColumns ? (
+                      <SimpleGrid cols={props.gridColumns} spacing='sm'>
+                        {fieldElements}
+                      </SimpleGrid>
+                    ) : (
+                      <Stack gap='xs'>{fieldElements}</Stack>
+                    );
+                  })()}
                 </FormProvider>
               </Boundary>
               <Boundary label={`ApiForm-${id}-PostFormContent`}>

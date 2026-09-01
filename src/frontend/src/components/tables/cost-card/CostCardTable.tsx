@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
 import {
@@ -13,37 +14,20 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
-import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
+import { BooleanColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { costCardFields, stampFields } from "../../forms/CommonForms";
-import {
-  useCreateApiFormModal,
-  useDeleteApiFormModal,
-  useEditApiFormModal,
-} from "../../../hooks/UseForm";
+import { useDeleteApiFormModal } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
 import { Thumbnail } from "@components/shared/images/Thumbnail";
-import { Button, Group } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { useApi } from "@context/ApiContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
-const COST_CARD_LOOKUP_QUERY_KEYS = [
-  ["cost-card-customer-lookup"],
-  ["cost-card-jewel-category-lookup"],
-  ["cost-card-jewel-sub-category-lookup"],
-];
+import { useQuery } from "@tanstack/react-query";
 
 export default function CostCardTable() {
   const table = useTable("cost-card");
   const user = useUserState();
   const api = useApi();
-  const queryClient = useQueryClient();
-
-  const refreshLookupTables = useCallback(() => {
-    COST_CARD_LOOKUP_QUERY_KEYS.forEach((queryKey) => {
-      queryClient.invalidateQueries({ queryKey });
-    });
-  }, [queryClient]);
+  const navigate = useNavigate();
 
   // Customer / Vendor (both are Company records)
   const companyQuery = useQuery({
@@ -227,90 +211,14 @@ export default function CostCardTable() {
     jewelSubCategoryNameByPk,
   ]);
 
-  // --- Create modal ----------------------------------------------------
-
-  const [createPreviewImage, setCreatePreviewImage] = useState<
-    string | undefined
-  >(undefined);
-
-  const handleCreateImageChange = useCallback((file: File | null) => {
-    setCreatePreviewImage((prev) => {
-      if (prev) URL.revokeObjectURL(prev); // free the old blob url
-      return file ? URL.createObjectURL(file) : undefined;
-    });
-  }, []);
-  const newStamp = useCreateApiFormModal({
-    url: ApiEndpoints.cost_card,
-    title: t`Add Stamp`,
-    fields: costCardFields(true, handleCreateImageChange), // allow to create image hence true
-    table: table,
-    preFormContent: (
-      <Group justify="center" mb="sm">
-        <Thumbnail src={createPreviewImage} alt={t`New Stamp`} size={60} />
-      </Group>
-    ),
-    onClose: () => {
-      setCreatePreviewImage((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return undefined;
-      });
-    },
-    onFormSuccess: () => {
-      refreshLookupTables();
-    },
-  });
-
-  // --- Edit / Delete modals --------------------------------------------
-  const [selectedStamp, setSelectedStamp] = useState<any | undefined>(
+  // --- Delete modal ------------------------------------------------------
+  // Create and edit now happen on a dedicated tabbed page (see
+  // containers/cost-card-detail) rather than in a modal, since a cost card
+  // has line items (finish/diamond/color stone) and images that need their
+  // own endpoints. Delete remains a modal since it's a single confirmation.
+  const [selectedStamp, setSelectedStamp] = useState<number | undefined>(
     undefined,
   );
-  const [changeImage, setChangeImage] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | undefined>(
-    undefined,
-  );
-
-  const handleImageChange = useCallback((file: File | null) => {
-    setPreviewImage((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return file ? URL.createObjectURL(file) : undefined;
-    });
-  }, []);
-
-  const editStamp = useEditApiFormModal({
-    url: ApiEndpoints.cost_card,
-    pk: selectedStamp?.pk,
-    title: t`Edit Stamp`,
-    fields: costCardFields(changeImage, handleImageChange),
-    table: table,
-    preFormContent: (
-      <Group justify="space-between" mb="sm">
-        <Thumbnail
-          src={previewImage ?? selectedStamp?.image}
-          alt={selectedStamp?.name}
-          size={60}
-        />
-        {!changeImage && (
-          <Button
-            variant="subtle"
-            size="xs"
-            onClick={() => setChangeImage(true)}
-          >
-            {t`Change Image`}
-          </Button>
-        )}
-      </Group>
-    ),
-    onClose: () => {
-      setChangeImage(false);
-      setPreviewImage((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return undefined;
-      });
-    },
-    onFormSuccess: () => {
-      refreshLookupTables();
-    },
-  });
 
   const deleteStamp = useDeleteApiFormModal({
     url: ApiEndpoints.cost_card,
@@ -326,10 +234,7 @@ export default function CostCardTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setChangeImage(false);
-            setPreviewImage(undefined);
-            setSelectedStamp(record);
-            editStamp.open();
+            navigate(`/cards/cost-card/${record.pk}`);
           },
         }),
         RowDeleteAction({
@@ -341,7 +246,7 @@ export default function CostCardTable() {
         }),
       ];
     },
-    [user],
+    [user, navigate],
   );
 
   // --- Table-level filters ----------------------------------------------
@@ -361,17 +266,15 @@ export default function CostCardTable() {
     return [
       <AddItemButton
         key="add-stamp"
-        onClick={() => newStamp.open()}
+        onClick={() => navigate("/cards/cost-card/new")}
         tooltip={t`Add Stamp`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
-  }, [user]);
+  }, [user, navigate]);
 
   return (
     <>
-      {newStamp.modal}
-      {editStamp.modal}
       {deleteStamp.modal}
       <InvenTreeTable
         url={apiUrl(ApiEndpoints.cost_card)}
@@ -382,6 +285,8 @@ export default function CostCardTable() {
           tableActions: tableActions,
           tableFilters: tableFilters,
           enableDownload: true,
+          onRowClick: (record: any) =>
+            navigate(`/cards/cost-card/${record.pk}`),
         }}
       />
     </>
