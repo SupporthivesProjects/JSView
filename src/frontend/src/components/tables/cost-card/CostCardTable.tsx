@@ -24,10 +24,86 @@ import {
 import { useUserState } from "@store/UserState";
 import { Thumbnail } from "@components/shared/images/Thumbnail";
 import { Button, Group } from "@mantine/core";
+import { useApi } from "@context/ApiContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const COST_CARD_LOOKUP_QUERY_KEYS = [
+  ["cost-card-customer-lookup"],
+  ["cost-card-jewel-category-lookup"],
+  ["cost-card-jewel-sub-category-lookup"],
+];
 
 export default function CostCardTable() {
   const table = useTable("cost-card");
   const user = useUserState();
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  const refreshLookupTables = useCallback(() => {
+    COST_CARD_LOOKUP_QUERY_KEYS.forEach((queryKey) => {
+      queryClient.invalidateQueries({ queryKey });
+    });
+  }, [queryClient]);
+
+  // Customer / Vendor (both are Company records)
+  const companyQuery = useQuery({
+    queryKey: ["cost-card-customer-lookup"],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.master_vendor_customer), {
+          params: { limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+  });
+  const companyNameByPk = useMemo(() => {
+    const map: Record<number, string> = {};
+    (companyQuery.data ?? []).forEach((company: any) => {
+      map[company.pk] = company.name;
+    });
+    return map;
+  }, [companyQuery.data]);
+
+  // Jewel Category
+  const jewelCategoryQuery = useQuery({
+    queryKey: ["cost-card-jewel-category-lookup"],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.jewellery_category), {
+          params: { limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+  });
+  const jewelCategoryNameByPk = useMemo(() => {
+    const map: Record<number, string> = {};
+    (jewelCategoryQuery.data ?? []).forEach((category: any) => {
+      map[category.pk] = category.name;
+    });
+    return map;
+  }, [jewelCategoryQuery.data]);
+
+  // Jewel Sub Category
+  const jewelSubCategoryQuery = useQuery({
+    queryKey: ["cost-card-jewel-sub-category-lookup"],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.jewellery_sub_category), {
+          params: { limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+  });
+  const jewelSubCategoryNameByPk = useMemo(() => {
+    const map: Record<number, string> = {};
+    (jewelSubCategoryQuery.data ?? []).forEach((subCategory: any) => {
+      map[subCategory.pk] = subCategory.name;
+    });
+    return map;
+  }, [jewelSubCategoryQuery.data]);
 
   // --- new Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -69,28 +145,36 @@ export default function CostCardTable() {
         title: t`Customer`,
         sortable: true,
         switchable: false,
+        render: (record: any) =>
+          companyNameByPk[record.customer] ?? record.customer,
       },
       {
         accessor: "vendor",
         title: t`Vendor`,
         sortable: true,
         switchable: false,
+        render: (record: any) =>
+          companyNameByPk[record.vendor] ?? record.vendor,
       },
       {
         accessor: "category",
         title: t`Jewel Category`,
         sortable: true,
         switchable: false,
+        render: (record: any) =>
+          jewelCategoryNameByPk[record.category] ?? record.category,
       },
       {
         accessor: "sub_category",
         title: t`Sub Category`,
         sortable: true,
         switchable: false,
+        render: (record: any) =>
+          jewelSubCategoryNameByPk[record.sub_category] ?? record.sub_category,
       },
       {
         accessor: "karat",
-        title: t`Karat`,
+        title: t`Metal`,
         sortable: true,
         switchable: false,
       },
@@ -110,7 +194,7 @@ export default function CostCardTable() {
         switchable: true,
       },
     ];
-  }, []);
+  }, [companyNameByPk, jewelCategoryNameByPk, jewelSubCategoryNameByPk]);
 
   // --- Create modal ----------------------------------------------------
 
@@ -139,6 +223,9 @@ export default function CostCardTable() {
         if (prev) URL.revokeObjectURL(prev);
         return undefined;
       });
+    },
+    onFormSuccess: () => {
+      refreshLookupTables();
     },
   });
 
@@ -188,6 +275,9 @@ export default function CostCardTable() {
         if (prev) URL.revokeObjectURL(prev);
         return undefined;
       });
+    },
+    onFormSuccess: () => {
+      refreshLookupTables();
     },
   });
 
