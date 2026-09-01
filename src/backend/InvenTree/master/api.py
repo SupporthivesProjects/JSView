@@ -58,7 +58,7 @@ class MetalPurityList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type', 'active']
-    search_fields = ['name']
+    search_fields = ['name', 'metal_type__name']
     ordering_fields = ['metal_type', 'name', 'purity']
     ordering = 'name'
 
@@ -76,6 +76,7 @@ class MetalRateList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type', 'active']
+    search_fields = ['metal_type__name']
     ordering_fields = ['date', 'rate']
     ordering = '-date'
 
@@ -92,9 +93,9 @@ class FindingTypeList(ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
-    search_fields = ['name', 'description']
-    ordering_fields = ['name', 'active']
+    filterset_fields = ['type', 'active']
+    search_fields = ['name', 'type', 'metal', 'description']
+    ordering_fields = ['name', 'type', 'weight', 'price', 'active']
     ordering = 'name'
 
 
@@ -147,7 +148,7 @@ class LabourSettingList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['setting', 'charge_type', 'active']
-    search_fields = ['name']
+    search_fields = ['name', 'setting__name']
     ordering_fields = ['name', 'charge_type', 'rate', 'active']
     ordering = 'name'
 
@@ -165,7 +166,7 @@ class DutyList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['description']
+    search_fields = ['description', 'metal_type__name']
     ordering_fields = ['metal_type', 'duty', 'markup']
     ordering = 'metal_type'
 
@@ -183,7 +184,7 @@ class StampList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'customers__name']
     ordering_fields = ['name', 'active']
     ordering = 'name'
 
@@ -201,7 +202,7 @@ class ACExecutiveList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['name', 'code', 'email']
+    search_fields = ['name', 'code', 'email', 'phone']
     ordering_fields = ['name', 'active']
     ordering = 'name'
 
@@ -219,7 +220,7 @@ class TermsList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'vendors__name']
     ordering_fields = ['name', 'days']
     ordering = 'name'
 
@@ -237,7 +238,7 @@ class CourierServiceList(ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['name', 'contact_person']
+    search_fields = ['name', 'contact_person', 'email', 'phone']
     ordering_fields = ['name', 'active']
     ordering = 'name'
 
