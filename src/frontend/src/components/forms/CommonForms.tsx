@@ -393,6 +393,92 @@ export function stampFields(
   return fields;
 }
 
+export function costCardFields(
+  includeImage: boolean = true,
+  onImageChange?: (file: File | null) => void,
+): ApiFormFieldSet {
+  const fields: ApiFormFieldSet = {
+    active: {},
+    back_view: {},
+    category: {},
+    col_amount: {},
+    col_cts: {},
+    col_handling_amount: {},
+    col_handling_pct: {},
+    col_pcs: {},
+    colorstone_lines: {},
+    cost_card_no: {},
+    created_at: {},
+    customer: {},
+    design_note: {},
+    dia_amount: {},
+    dia_cts: {},
+    dia_handling_amount: {},
+    dia_handling_pct: {},
+    dia_pcs: {},
+    diamond_lines: {},
+    drape_length_inch: {},
+    drape_length_mm: {},
+    duty_amount: {},
+    duty_pct: {},
+    final_amount: {},
+    finding_price: {},
+    finding_type: {},
+    finish_lines: {},
+    fob: {},
+    front_view: {},
+    gross_weight: {},
+    height_inch: {},
+    height_mm: {},
+    karat: {},
+    labour_amount: {},
+    labour_colorstone_amount: {},
+    labour_diamond_amount: {},
+    labour_finish_amount: {},
+    length_inch: {},
+    length_mm: {},
+    margin_amount: {},
+    margin_pct: {},
+    metal_amount: {},
+    metal_grams: {},
+    metal_loss_amount: {},
+    metal_loss_pct: {},
+    metal_purity: {},
+    net_weight: {},
+    our_style_no: {},
+    pk: {},
+    remarks: {},
+    remarks_full: {},
+    shank_size_inch: {},
+    shank_size_mm: {},
+    side_view: {},
+    special_note: {},
+    stone_amount: {},
+    stone_cts: {},
+    stone_pcs: {},
+    sub_category: {},
+    troy_ounce_price: {},
+    updated_at: {},
+    vendor: {},
+    vendor_markup_amount: {},
+    vendor_markup_pct: {},
+    vendor_style_no: {},
+    width_inch: {},
+    width_mm: {},
+  };
+
+  if (includeImage) {
+    fields.image = {
+      field_type: "file upload",
+      onValueChange: (value: any) => {
+        onImageChange?.(value instanceof File ? value : null);
+      },
+    };
+  }
+
+  return fields;
+}
+
 export function DiamondStoneFields(): ApiFormFieldSet {
   return {
     name: {},

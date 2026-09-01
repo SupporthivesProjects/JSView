@@ -15,7 +15,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { stampFields } from "../../forms/CommonForms";
+import { costCardFields, stampFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -33,28 +33,33 @@ export default function CostCardTable() {
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "image",
-        title: t`Image`,
+        accessor: "front_view",
+        title: t`Front View`,
         sortable: false,
         switchable: true,
         render: (record: any) => (
-          <Thumbnail src={record.image} alt={record.name} size={24} hover />
+          <Thumbnail
+            src={record.front_view}
+            alt={record.our_style_no}
+            size={24}
+            hover
+          />
         ),
       },
       {
-        accessor: "cost-card-number",
+        accessor: "cost_card_no",
         title: t`Cost Card Number`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "style-number",
+        accessor: "our_style_no",
         title: t`Our Style Number`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "vendor-style-number",
+        accessor: "vendor_style_no",
         title: t`Vendor Style Number`,
         sortable: true,
         switchable: false,
@@ -72,20 +77,20 @@ export default function CostCardTable() {
         switchable: false,
       },
       {
-        accessor: "jewel-category",
+        accessor: "category",
         title: t`Jewel Category`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "sub-category",
+        accessor: "sub_category",
         title: t`Sub Category`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "metal",
-        title: t`Metal`,
+        accessor: "karat",
+        title: t`Karat`,
         sortable: true,
         switchable: false,
       },
@@ -122,7 +127,7 @@ export default function CostCardTable() {
   const newStamp = useCreateApiFormModal({
     url: ApiEndpoints.cost_card,
     title: t`Add Stamp`,
-    fields: stampFields(true, handleCreateImageChange), // allow to create image hence true
+    fields: costCardFields(true, handleCreateImageChange), // allow to create image hence true
     table: table,
     preFormContent: (
       <Group justify="center" mb="sm">
@@ -157,7 +162,7 @@ export default function CostCardTable() {
     url: ApiEndpoints.cost_card,
     pk: selectedStamp?.pk,
     title: t`Edit Stamp`,
-    fields: stampFields(changeImage, handleImageChange),
+    fields: costCardFields(changeImage, handleImageChange),
     table: table,
     preFormContent: (
       <Group justify="space-between" mb="sm">
