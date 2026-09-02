@@ -34,3 +34,4 @@ def annotate_on_order_quantity():
         Decimal(0),
         output_field=DecimalField(),
     )
+
