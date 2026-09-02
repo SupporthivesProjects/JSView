@@ -128,7 +128,7 @@ export enum ApiEndpoints {
   related_part_list = "part/related/",
   part_test_template_list = "part/test-template/",
 
-  // Metals API endpoints
+  // Master API endpoints
   metal_type_list = "master/metal-type/",
   metal_purity_list = "master/metal-purity/",
   metal_rate = "master/metal-rate/",
@@ -141,6 +141,28 @@ export enum ApiEndpoints {
   master_setting = "master/setting/",
   labour_setting = "master/labour-setting/",
   master_vendor_customer = "company/",
+  master_vendor_customer_contact = "company/contact/",
+  jewellery_category = "master/jewelry-category/",
+  jewellery_sub_category = "master/jewelry-sub-category/",
+  master_stamp = "master/stamp/",
+
+  // Color Stone API endpoints
+  color_stone_type_list = "properties/colorstone/",
+  color_stone_cut_list = "properties/colorstone-cut/",
+  color_stone_shape_list = "properties/colorstone-shape/",
+  color_stone_color_list = "properties/colorstone-color/",
+  color_stone_size_list = "properties/colorstone-size/",
+  color_stone_quality_list = "properties/colorstone-quality/",
+  color_stone_rate_list = "properties/colorstone-rate/",
+
+  //Diamond API endpoints
+  diamond_stone_list = "properties/diamond-stone/",
+  diamond_cut_list = "properties/diamond-cut/",
+  diamond_shape_list = "properties/diamond-shape/",
+  diamond_color_list = "properties/diamond-color/",
+  diamond_size_list = "properties/diamond-size/",
+  diamond_quality_list = "properties/diamond-quality/",
+  diamond_rate_list = "properties/diamond-stone-rate/",
 
   // Company API endpoints
   company_list = "company/",

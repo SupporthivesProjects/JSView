@@ -92,6 +92,24 @@ def annotate_latest_metal_rate(reference: str = '') -> QuerySet:
     )
 
 
+def annotate_duty_count(reference: str = '') -> QuerySet:
+    """Count Duty entries for a MetalType."""
+    subquery = master.models.Duty.objects.filter(
+        metal_type=OuterRef(f'{reference}pk')
+    )
+
+    return Coalesce(
+        Subquery(
+            subquery
+            .annotate(total=Func(F('pk'), function='COUNT', output_field=IntegerField()))
+            .values('total')
+            .order_by()
+        ),
+        0,
+        output_field=IntegerField(),
+    )
+
+
 def annotate_subcategory_count(reference: str = '') -> QuerySet:
     """Count JewelrySubCategory entries for a JewelryCategory."""
     subquery = master.models.JewelrySubCategory.objects.filter(

@@ -3,6 +3,25 @@ import { Stack } from "@mantine/core";
 import { IconAtom2 } from "@tabler/icons-react";
 import { useMemo } from "react";
 
+import {
+  IconBrush,
+  IconBuildingStore,
+  IconCertificate,
+  IconCoin,
+  IconComponents,
+  IconDiamond,
+  IconFileDescription,
+  IconHammer,
+  IconReceiptTax,
+  IconScale,
+  IconSettings,
+  IconTag,
+  IconTrendingUp,
+  IconTruckDelivery,
+  IconUserCheck,
+  IconUsers,
+} from "@tabler/icons-react";
+
 import { UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
@@ -22,6 +41,9 @@ import MasterSettingsTable from "@components/tables/metal/MasterSettingsTable";
 import LabourSettingTable from "@components/tables/metal/LabourSettingsTable";
 import MasterVendorTable from "@components/tables/metal/MasterVendorTable";
 import MasterCustomerTable from "@components/tables/metal/MasterCustomerTable";
+import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
+import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
+import StampTable from "@components/tables/metal/StampTable";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -31,80 +53,98 @@ export default function MetalTypeIndex() {
       {
         name: "metal-types",
         label: t`Metal Types`,
-        icon: <IconAtom2 />,
+        icon: <IconCoin />,
         content: <MetalTypeTable />,
       },
       {
         name: "metal-purity",
         label: t`Metal Purity`,
-        icon: <IconAtom2 />,
+        icon: <IconScale />,
         content: <MetalPurityTable />,
       },
       {
-        name: "metal-rate",
-        label: t`Metal Rate`,
-        icon: <IconAtom2 />,
-        content: <MetalRateTable />,
+        name: "jewellery-category",
+        label: t`Jewel Category`,
+        icon: <IconDiamond />,
+        content: <JewelleryCategoryTable />,
       },
       {
-        name: "finding-type",
-        label: t`Finding Type`,
-        icon: <IconAtom2 />,
-        content: <FindingTypeTable />,
-      },
-      {
-        name: "finish-type",
-        label: t`Finish Type`,
-        icon: <IconAtom2 />,
-        content: <FinishTypeTable />,
-      },
-      {
-        name: "duty-list",
-        label: t`Duty`,
-        icon: <IconAtom2 />,
-        content: <ListDutyTable />,
-      },
-      {
-        name: "master-terms",
-        label: t`Terms`,
-        icon: <IconAtom2 />,
-        content: <MasterTermsTable />,
-      },
-      {
-        name: "master-executive",
-        label: t`A/C Executive`,
-        icon: <IconAtom2 />,
-        content: <MasterExecutiveTable />,
-      },
-      {
-        name: "courier-service",
-        label: t`Courier Service`,
-        icon: <IconAtom2 />,
-        content: <CourierServiceTable />,
+        name: "jewellery-sub-category",
+        label: t`Jewel Sub Category`,
+        icon: <IconTag />,
+        content: <JewellerySubCategoryTable />,
       },
       {
         name: "settings",
         label: t`Settings`,
-        icon: <IconAtom2 />,
+        icon: <IconSettings />,
         content: <MasterSettingsTable />,
       },
       {
         name: "labour-setting",
         label: t`Labour Settings`,
-        icon: <IconAtom2 />,
+        icon: <IconHammer />,
         content: <LabourSettingTable />,
       },
       {
-        name: "master-vendor",
-        label: t`Vendor`,
-        icon: <IconAtom2 />,
-        content: <MasterVendorTable />,
+        name: "metal-rate",
+        label: t`Metal Rate`,
+        icon: <IconTrendingUp />,
+        content: <MetalRateTable />,
+      },
+      {
+        name: "finding-type",
+        label: t`Finding Type`,
+        icon: <IconComponents />,
+        content: <FindingTypeTable />,
       },
       {
         name: "master-customer",
         label: t`Customer`,
-        icon: <IconAtom2 />,
+        icon: <IconUsers />,
         content: <MasterCustomerTable />,
+      },
+      {
+        name: "master-vendor",
+        label: t`Vendor`,
+        icon: <IconBuildingStore />,
+        content: <MasterVendorTable />,
+      },
+      {
+        name: "finish-type",
+        label: t`Finish Type`,
+        icon: <IconBrush />,
+        content: <FinishTypeTable />,
+      },
+      {
+        name: "duty-list",
+        label: t`Duty`,
+        icon: <IconReceiptTax />,
+        content: <ListDutyTable />,
+      },
+      {
+        name: "stamp",
+        label: t`Stamp`,
+        icon: <IconCertificate />,
+        content: <StampTable />,
+      },
+      {
+        name: "master-executive",
+        label: t`A/C Executive`,
+        icon: <IconUserCheck />,
+        content: <MasterExecutiveTable />,
+      },
+      {
+        name: "master-terms",
+        label: t`Terms`,
+        icon: <IconFileDescription />,
+        content: <MasterTermsTable />,
+      },
+      {
+        name: "courier-service",
+        label: t`Courier Service`,
+        icon: <IconTruckDelivery />,
+        content: <CourierServiceTable />,
       },
     ];
   }, []);
