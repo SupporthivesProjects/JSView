@@ -4,12 +4,12 @@ from django.db.models import F, Func, IntegerField, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
 
-import cards.models
+import costcard.models
 
 
 def annotate_diamond_line_count(reference: str = '') -> QuerySet:
     """Count CostCardDiamondLine entries for a CostCard."""
-    subquery = cards.models.CostCardDiamondLine.objects.filter(
+    subquery = costcard.models.CostCardDiamondLine.objects.filter(
         cost_card=OuterRef(f'{reference}pk')
     )
 
@@ -27,7 +27,7 @@ def annotate_diamond_line_count(reference: str = '') -> QuerySet:
 
 def annotate_colorstone_line_count(reference: str = '') -> QuerySet:
     """Count CostCardColorStoneLine entries for a CostCard."""
-    subquery = cards.models.CostCardColorStoneLine.objects.filter(
+    subquery = costcard.models.CostCardColorStoneLine.objects.filter(
         cost_card=OuterRef(f'{reference}pk')
     )
 
@@ -45,7 +45,7 @@ def annotate_colorstone_line_count(reference: str = '') -> QuerySet:
 
 def annotate_finish_line_count(reference: str = '') -> QuerySet:
     """Count CostCardFinishLine entries for a CostCard."""
-    subquery = cards.models.CostCardFinishLine.objects.filter(
+    subquery = costcard.models.CostCardFinishLine.objects.filter(
         cost_card=OuterRef(f'{reference}pk')
     )
 
@@ -63,7 +63,7 @@ def annotate_finish_line_count(reference: str = '') -> QuerySet:
 
 def annotate_stone_place_diamond_usage_count(reference: str = '') -> QuerySet:
     """Count CostCardDiamondLine entries using a given StonePlace."""
-    subquery = cards.models.CostCardDiamondLine.objects.filter(
+    subquery = costcard.models.CostCardDiamondLine.objects.filter(
         stone_place=OuterRef(f'{reference}pk')
     )
 
@@ -81,7 +81,7 @@ def annotate_stone_place_diamond_usage_count(reference: str = '') -> QuerySet:
 
 def annotate_stone_place_colorstone_usage_count(reference: str = '') -> QuerySet:
     """Count CostCardColorStoneLine entries using a given StonePlace."""
-    subquery = cards.models.CostCardColorStoneLine.objects.filter(
+    subquery = costcard.models.CostCardColorStoneLine.objects.filter(
         stone_place=OuterRef(f'{reference}pk')
     )
 

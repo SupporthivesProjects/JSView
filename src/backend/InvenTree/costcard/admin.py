@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from cards import models
+from costcard import models
 
 
 @admin.register(models.StonePlace)

@@ -88,7 +88,7 @@ class JewelrySubCategory(MasterFieldsMixin):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry sub-category.'))
     description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry sub-category.'))
-    category = models.ForeignKey(JewelryCategory, on_delete=models.CASCADE, related_name='subcategories', verbose_name=_('Category'), help_text=_('Jewelry category associated with this sub-category.'))
+    category = models.ForeignKey( JewelryCategory,on_delete=models.SET_NULL,null=True, blank=True,related_name='subcategories', verbose_name=_('Category'), help_text=_('Optional jewelry category associated with this sub-category.'))
 
     class Meta:
         verbose_name = _('Jewelry Sub Category')
@@ -179,22 +179,28 @@ class MetalRate(MasterFieldsMixin):
 
 
 class FindingType(MasterFieldsMixin):
-    """Jewelry finding type (e.g. Clasp, Hook, Jump Ring)."""
+    """Jewelry finding type (e.g. Chain, Clasp, Hook, Jump Ring)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry finding type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finding type.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Finding Item'), help_text=_('Name of the jewelry finding item.'))
+    type = models.CharField(max_length=100, blank=True, null=True, verbose_name=_('Type'), help_text=_('Type or specification of the finding, e.g. CABLE - 30.'))
+    weight = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Wt.'), help_text=_('Weight of the finding in grams.'))
+    metal = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal of the finding, e.g. 14 KT Gold.'))
+    price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Price'), help_text=_('Price of the finding.'))
+    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finding.'))
 
     class Meta:
         verbose_name = _('Finding Type')
         verbose_name_plural = _('Finding Types')
         ordering = ['name']
         indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['type']),
             models.Index(fields=['active']),
         ]
 
     def __str__(self):
         return self.name
-
+    
 
 class FinishType(MasterFieldsMixin):
     """Surface finish type (e.g. Matte, Glossy, Antique)."""
@@ -239,8 +245,9 @@ class Stamp(MasterFieldsMixin):
     """Hallmark / stamp type (e.g. BIS Hallmark, 916)."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the hallmark or stamp.'))
-    image = models.ImageField(upload_to=stamp_image, blank=True,null=True,verbose_name=_('Image'),help_text=_('Optional image representing the hallmark or stamp.'))
+    image = models.ImageField(upload_to=stamp_image, blank=True, null=True, verbose_name=_('Image'), help_text=_('Optional image representing the hallmark or stamp.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the stamp.'))
+    customers = models.ManyToManyField( Company,blank=True,related_name='stamps',verbose_name=_('Customers'),help_text=_('Customers assigned to this stamp.'))
 
     class Meta:
         verbose_name = _('Stamp')
@@ -252,7 +259,6 @@ class Stamp(MasterFieldsMixin):
 
     def __str__(self):
         return self.name
-
 
 class ACExecutive(MasterFieldsMixin):
     """Accounts executive responsible for customer/vendor accounts."""
@@ -276,10 +282,11 @@ class ACExecutive(MasterFieldsMixin):
 
 
 class Terms(MasterFieldsMixin):
-    """Payment terms (e.g. Net 30)."""
+    """Payment terms (e.g. Net 30) assigned to vendors."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the payment terms.'))
     days = models.PositiveIntegerField(default=0, verbose_name=_('Days'), help_text=_('Number of days allowed under these payment terms.'))
+    vendors = models.ManyToManyField(Company, blank=True, related_name='payment_terms', verbose_name=_('Vendors'), help_text=_('Vendors to whom these payment terms apply.'))
     description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the payment terms.'))
 
     class Meta:
@@ -292,7 +299,7 @@ class Terms(MasterFieldsMixin):
 
     def __str__(self):
         return self.name
-
+    
 
 class CourierService(MasterFieldsMixin):
     """Courier / shipping service provider."""

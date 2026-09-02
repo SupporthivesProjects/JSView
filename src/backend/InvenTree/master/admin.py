@@ -9,8 +9,8 @@ from master import models
 class MetalTypeAdmin(admin.ModelAdmin):
     """Admin class for the MetalType model."""
 
-    list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'description')
+    list_display = ('name', 'code', 'description', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'code', 'description')
     list_filter = ('active',)
 
 
@@ -19,7 +19,7 @@ class MetalPurityAdmin(admin.ModelAdmin):
     """Admin class for the MetalPurity model."""
 
     list_display = ('metal_type', 'name', 'purity', 'active', 'created_at', 'updated_at')
-    search_fields = ('name',)
+    search_fields = ('name', 'metal_type__name')
     autocomplete_fields = ('metal_type',)
     list_filter = ('active',)
 
@@ -57,9 +57,9 @@ class MetalRateAdmin(admin.ModelAdmin):
 class FindingTypeAdmin(admin.ModelAdmin):
     """Admin class for the FindingType model."""
 
-    list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'description')
-    list_filter = ('active',)
+    list_display = ('name', 'type', 'weight', 'metal', 'price', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'type', 'metal', 'description')
+    list_filter = ('type', 'active')
 
 
 @admin.register(models.FinishType)
@@ -86,7 +86,8 @@ class StampAdmin(admin.ModelAdmin):
     """Admin class for the Stamp model."""
 
     list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'description')
+    search_fields = ('name', 'description', 'customers__name')
+    filter_horizontal = ('customers',)
     list_filter = ('active',)
 
 
@@ -104,7 +105,8 @@ class TermsAdmin(admin.ModelAdmin):
     """Admin class for the Terms model."""
 
     list_display = ('name', 'days', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'description')
+    search_fields = ('name', 'description', 'vendors__name')
+    filter_horizontal = ('vendors',)
     list_filter = ('active',)
 
 
@@ -112,7 +114,7 @@ class TermsAdmin(admin.ModelAdmin):
 class CourierServiceAdmin(admin.ModelAdmin):
     """Admin class for the CourierService model."""
 
-    list_display = ('name', 'contact_person', 'phone', 'email', 'active', 'created_at', 'updated_at')
+    list_display = ('name', 'contact_person', 'phone', 'email', 'tracking_url', 'active', 'created_at', 'updated_at')
     search_fields = ('name', 'contact_person', 'phone', 'email')
     list_filter = ('active',)
 

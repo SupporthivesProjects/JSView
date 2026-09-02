@@ -6,7 +6,9 @@ import {
   IconCopy,
   IconDots,
   IconEdit,
-  IconTrash
+  IconTrash,
+  IconAddressBook,
+  IconPlus
 } from '@tabler/icons-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { cancelEvent } from '../functions/Events';
@@ -46,6 +48,26 @@ export function RowEditAction(props: RowAction): RowAction {
     title: t`Edit`,
     color: 'blue',
     icon: <IconEdit />
+  };
+}
+
+// Component for editing a row in a table
+export function RowContactAction(props: RowAction): RowAction {
+  return {
+    ...props,
+    title: t`Contact`,
+    color: 'green',
+    icon: <IconAddressBook />
+  };
+}
+
+// Component for editing a row in a table
+export function RowAddContactAction(props: RowAction): RowAction {
+  return {
+    ...props,
+    title: t`Add Contact`,
+    color: 'yellow',
+    icon: <IconPlus />
   };
 }
 

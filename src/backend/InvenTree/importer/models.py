@@ -4,6 +4,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.exceptions import FieldDoesNotExist
@@ -237,8 +238,16 @@ class DataImportSession(models.Model):
 
             # Extract a "default" value for the field, if one exists
             # Skip if one has already been provided by the user
+            # if field not in self.field_defaults and 'default' in field_def:
+            #     self.field_defaults[field] = field_def['default']
+
             if field not in self.field_defaults and 'default' in field_def:
-                self.field_defaults[field] = field_def['default']
+                default_value = field_def['default']
+
+                if isinstance(default_value, Decimal):
+                    default_value = float(default_value)
+
+                self.field_defaults[field] = default_value
 
             # Generate a list of possible column names for this field
             field_options = [
