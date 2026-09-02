@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('cards', '0002_costcard_parent'),
+        ('costcard', '0001_initial'),
         ('company', '0081_company_city_company_code_company_country_and_more'),
         ('master', '0001_initial'),
     ]
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                 ('size', models.CharField(blank=True, help_text='Comma-separated list of sizes (e.g. "7,8,9").', max_length=255, verbose_name='Size')),
                 ('spcs', models.CharField(blank=True, help_text='Comma-separated list of pieces per size (e.g. "100,200,300").', max_length=255, verbose_name='Size Pieces')),
                 ('stnoauto', models.IntegerField(default=0, help_text='Auto-generated stone sequence number.', verbose_name='Stone No Auto')),
-                ('costcardid', models.ForeignKey(blank=True, help_text='Cost card associated with this line item.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='po_lines', to='cards.costcard', verbose_name='Cost Card')),
+                ('costcardid', models.ForeignKey(blank=True, help_text='Cost card associated with this line item.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='po_lines', to='costcard.costcard', verbose_name='Cost Card')),
                 ('poid', models.ForeignKey(help_text='Purchase order this line belongs to.', on_delete=django.db.models.deletion.CASCADE, related_name='lines', to='purchase_order.purchaseorder', verbose_name='Purchase Order')),
                 ('vendorid', models.ForeignKey(blank=True, help_text='Vendor for this specific line item (overrides PO-level vendor).', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='po_line_vendors', to='company.company', verbose_name='Vendor')),
             ],

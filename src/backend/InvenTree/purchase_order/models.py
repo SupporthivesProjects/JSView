@@ -281,7 +281,7 @@ class PurchaseOrderLine(POFieldsMixin):
     )
 
     costcardid = models.ForeignKey(
-        'cards.CostCard',
+        'costcard.CostCard',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -381,7 +381,7 @@ class POCostCard(POFieldsMixin):
     )
 
     costcard = models.ForeignKey(
-        'cards.CostCard',
+        'costcard.CostCard',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

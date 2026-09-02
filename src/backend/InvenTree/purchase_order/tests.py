@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from cards.models import CostCard, CostCardFinishLine
+from costcard.models import CostCard, CostCardFinishLine
 from company.models import Company
 from master.models import FinishType
 from properties.models import DiamondShape, DiamondStone
@@ -39,7 +39,7 @@ class POCostCardSnapshotTests(TestCase):
         shape, _ = DiamondShape.objects.get_or_create(name='Round')
         finish, _ = FinishType.objects.get_or_create(name='Matte')
 
-        from cards.models import CostCardDiamondLine
+        from costcard.models import CostCardDiamondLine
 
         CostCardDiamondLine.objects.create(
             cost_card=self.card,

@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("cards", "0002_costcard_parent"),
+        ("costcard", "0001_initial"),
         ("company", "0081_company_city_company_code_company_country_and_more"),
         ("master", "0001_initial"),
         ("purchase_order", "0001_initial"),
@@ -440,7 +440,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="po_snapshots",
-                        to="cards.costcard",
+                        to="costcard.costcard",
                         verbose_name="Original Cost Card",
                     ),
                 ),
