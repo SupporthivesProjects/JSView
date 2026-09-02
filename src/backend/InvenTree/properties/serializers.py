@@ -1,8 +1,12 @@
 """DRF serializers for the 'properties' app."""
 
+from rest_framework import serializers
+
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
+
+from company.models import Company
 
 from .models import (
     ColorStone,
@@ -127,7 +131,58 @@ class ColorStoneQualitySerializer(DataExportSerializerMixin, InvenTreeModelSeria
         fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
 
 
-class DiamondStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+class RateCustomerBriefSerializer(serializers.ModelSerializer):
+    """Minimal customer payload for rate dropdowns and nested detail."""
+
+    class Meta:
+        model = Company
+        fields = ['pk', 'name', 'code', 'active']
+
+
+class RateCustomerMixin(serializers.Serializer):
+    """Shared customer multi-select fields for diamond / color-stone rates."""
+
+    customers = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Company.objects.filter(is_customer=True),
+        required=False,
+        allow_empty=True,
+        help_text='Company PKs (is_customer=True) this rate applies to.',
+    )
+    customers_detail = RateCustomerBriefSerializer(
+        source='customers', many=True, read_only=True
+    )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        all_customers = attrs.get(
+            'all_customers',
+            getattr(self.instance, 'all_customers', False),
+        )
+        if all_customers:
+            attrs['customers'] = []
+        return attrs
+
+    def create(self, validated_data):
+        customers = validated_data.pop('customers', [])
+        instance = super().create(validated_data)
+        if not instance.all_customers and customers:
+            instance.customers.set(customers)
+        return instance
+
+    def update(self, instance, validated_data):
+        customers = validated_data.pop('customers', serializers.empty)
+        instance = super().update(instance, validated_data)
+        if instance.all_customers:
+            instance.customers.clear()
+        elif customers is not serializers.empty:
+            instance.customers.set(customers)
+        return instance
+
+
+class DiamondStoneRateSerializer(
+    RateCustomerMixin, DataExportSerializerMixin, InvenTreeModelSerializer
+):
     """Serializer for the DiamondStoneRate model."""
 
     shape_detail = DiamondShapeSerializer(read_only=True, source='shape')
@@ -142,7 +197,8 @@ class DiamondStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerial
         fields = [
             'pk',
             'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
-            'pointer', 'rate', 'pc', 'customer_id',
+            'pointer', 'rate', 'pc',
+            'customers', 'customers_detail', 'all_customers',
             'active', 'created_at', 'updated_at',
             'shape_detail', 'mm_size_detail', 'stone_detail',
             'color_detail', 'cut_detail', 'quality_detail',
@@ -150,7 +206,9 @@ class DiamondStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerial
         read_only_fields = ['pk', 'created_at', 'updated_at']
 
 
-class ColorStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+class ColorStoneRateSerializer(
+    RateCustomerMixin, DataExportSerializerMixin, InvenTreeModelSerializer
+):
     """Serializer for the ColorStoneRate model."""
 
     shape_detail = ColorStoneShapeSerializer(read_only=True, source='shape')
@@ -165,7 +223,8 @@ class ColorStoneRateSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
         fields = [
             'pk',
             'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
-            'pointer', 'rate', 'pc', 'customer_id',
+            'pointer', 'rate', 'pc',
+            'customers', 'customers_detail', 'all_customers',
             'active', 'created_at', 'updated_at',
             'shape_detail', 'mm_size_detail', 'stone_detail',
             'color_detail', 'cut_detail', 'quality_detail',

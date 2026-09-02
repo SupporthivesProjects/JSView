@@ -290,23 +290,28 @@ class DiamondStoneRate(PropertiesFieldsMixin):
         default='C', verbose_name=_('P/C'),
         help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
     )
-    customer_id = models.IntegerField(
-        null=True, blank=True,
-        verbose_name=_('Customer ID'),
-        help_text=_('Optional customer-specific rate override.'),
+    customers = models.ManyToManyField(
+        'company.Company',
+        blank=True,
+        related_name='diamond_stone_rates',
+        limit_choices_to={'is_customer': True},
+        verbose_name=_('Customers'),
+        help_text=_('Customers this rate applies to. Leave empty when All Customers is selected.'),
+    )
+    all_customers = models.BooleanField(
+        default=False,
+        verbose_name=_('All Customers'),
+        help_text=_('If set, this rate applies to every customer (Select All Customers).'),
     )
 
     class Meta:
-        unique_together = [
-            'shape', 'mm_size', 'stone', 'color',
-            'cut', 'quality', 'pointer', 'customer_id',
-        ]
         ordering = ['shape', 'mm_size', 'pointer']
         verbose_name = _('Diamond Stone Rate')
         verbose_name_plural = _('Diamond Stone Rates')
         indexes = [
             models.Index(fields=['active']),
             models.Index(fields=['shape', 'mm_size', 'pointer']),
+            models.Index(fields=['all_customers']),
         ]
 
     def __str__(self):
@@ -371,23 +376,28 @@ class ColorStoneRate(PropertiesFieldsMixin):
         default='C', verbose_name=_('P/C'),
         help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
     )
-    customer_id = models.IntegerField(
-        null=True, blank=True,
-        verbose_name=_('Customer ID'),
-        help_text=_('Optional customer-specific rate override.'),
+    customers = models.ManyToManyField(
+        'company.Company',
+        blank=True,
+        related_name='color_stone_rates',
+        limit_choices_to={'is_customer': True},
+        verbose_name=_('Customers'),
+        help_text=_('Customers this rate applies to. Leave empty when All Customers is selected.'),
+    )
+    all_customers = models.BooleanField(
+        default=False,
+        verbose_name=_('All Customers'),
+        help_text=_('If set, this rate applies to every customer (Select All Customers).'),
     )
 
     class Meta:
-        unique_together = [
-            'shape', 'mm_size', 'stone', 'color',
-            'cut', 'quality', 'pointer', 'customer_id',
-        ]
         ordering = ['shape', 'mm_size', 'pointer']
         verbose_name = _('Color Stone Rate')
         verbose_name_plural = _('Color Stone Rates')
         indexes = [
             models.Index(fields=['active']),
             models.Index(fields=['shape', 'mm_size', 'pointer']),
+            models.Index(fields=['all_customers']),
         ]
 
     def __str__(self):

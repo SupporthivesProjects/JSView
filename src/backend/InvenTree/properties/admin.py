@@ -119,9 +119,11 @@ class DiamondStoneRateAdmin(admin.ModelAdmin):
 
     list_display = (
         'shape', 'mm_size', 'stone', 'color',
-        'cut', 'quality', 'pointer', 'rate', 'pc', 'active',
+        'cut', 'quality', 'pointer', 'rate', 'pc',
+        'all_customers', 'active',
     )
-    list_filter = ['stone', 'color', 'cut', 'pc', 'active']
+    list_filter = ['stone', 'color', 'cut', 'pc', 'all_customers', 'active']
+    filter_horizontal = ('customers',)
 
 
 @admin.register(models.ColorStoneRate)
@@ -130,6 +132,8 @@ class ColorStoneRateAdmin(admin.ModelAdmin):
 
     list_display = (
         'shape', 'mm_size', 'stone', 'color',
-        'cut', 'quality', 'pointer', 'rate', 'pc', 'active',
+        'cut', 'quality', 'pointer', 'rate', 'pc',
+        'all_customers', 'active',
     )
-    list_filter = ['stone', 'color', 'cut', 'pc', 'active']
+    list_filter = ['stone', 'color', 'cut', 'pc', 'all_customers', 'active']
+    filter_horizontal = ('customers',)
