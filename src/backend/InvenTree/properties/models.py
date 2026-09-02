@@ -203,10 +203,11 @@ class ColorStoneColor(PropertiesFieldsMixin):
 
 
 class ColorStoneSize(PropertiesFieldsMixin):
-    """Color stone size (in mm)."""
+    """Color stone size (in mm) and optional sieve size."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone size.'))
     mm_size = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Color stone size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this color stone size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone size.'))
 
     class Meta:

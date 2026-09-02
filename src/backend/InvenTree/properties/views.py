@@ -265,9 +265,9 @@ class ColorStoneSizeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = PropertiesPagination
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
-    search_fields = ['name']
-    ordering_fields = ['name', 'created_at']
+    filterset_fields = ['active', 'sieve_size']
+    search_fields = ['name', 'sieve_size', 'description']
+    ordering_fields = ['name', 'mm_size', 'sieve_size', 'created_at']
     ordering = 'name'
 
 

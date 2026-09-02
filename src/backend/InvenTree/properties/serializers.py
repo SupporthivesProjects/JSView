@@ -120,7 +120,16 @@ class ColorStoneSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
 
     class Meta:
         model = ColorStoneSize
-        fields = ['pk', 'name', 'mm_size', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'mm_size',
+            'sieve_size',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
 class ColorStoneQualitySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
