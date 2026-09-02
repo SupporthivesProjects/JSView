@@ -17,4 +17,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            /home/jsview/deploy-staging.sh
+            echo "SSH connection successful!"
+            echo "Connected to: $(hostname)"
+            echo "Logged in as: $(whoami)"
+            echo "Current directory: $(pwd)"
+         
