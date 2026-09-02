@@ -45,8 +45,8 @@ class DiamondColorAdmin(admin.ModelAdmin):
 class DiamondSizeAdmin(admin.ModelAdmin):
     """Admin class for the DiamondSize model."""
 
-    list_display = ('name', 'active', 'created_at')
-    search_fields = ('name',)
+    list_display = ('name', 'mm_size', 'sieve_size', 'active', 'created_at')
+    search_fields = ('name', 'sieve_size')
     list_filter = ('active',)
 
 

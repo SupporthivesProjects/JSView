@@ -93,10 +93,11 @@ class DiamondColor(PropertiesFieldsMixin):
 
 
 class DiamondSize(PropertiesFieldsMixin):
-    """Diamond size (in mm)."""
+    """Diamond size (in mm) and optional sieve size."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond size.'))
     mm_size = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Diamond size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this diamond size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond size.'))
 
     class Meta:

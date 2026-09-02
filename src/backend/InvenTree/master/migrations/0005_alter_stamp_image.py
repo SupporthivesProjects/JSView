@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('master', '0004_setting_laboursetting'),
+        ('master', '0002_findingtype_metal_findingtype_price_findingtype_type_and_more'),
     ]
 
     operations = [

@@ -59,7 +59,16 @@ class DiamondSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer)
 
     class Meta:
         model = DiamondSize
-        fields = ['pk', 'name', 'mm_size', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'mm_size',
+            'sieve_size',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
 class DiamondQualitySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
