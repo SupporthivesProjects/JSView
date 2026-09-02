@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to staging server
+      - name: Test SSH connection
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -21,4 +21,3 @@ jobs:
             echo "Connected to: $(hostname)"
             echo "Logged in as: $(whoami)"
             echo "Current directory: $(pwd)"
-         
