@@ -108,7 +108,7 @@ src/backend/InvenTree/plugins/
 
 # Compiled translation files
 *.mo
-# messages.ts
+messages.ts
 
 # Generated API schema file
 api.yaml
