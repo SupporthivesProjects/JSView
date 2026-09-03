@@ -413,7 +413,7 @@ export function costCardGeneralFields(): ApiFormFieldSet {
       api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_customer=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
-        return instance?.code ?? (instance?.name ? `#${instance.name}` : "");
+        return instance?.code ?? (instance?.code ? `#${instance.code}` : "");
       },
     },
     category: {
@@ -723,7 +723,8 @@ export function diamondRateFields(): ApiFormFieldSet {
     pc: {
       default: "C",
     },
-    customer_id: {},
+    customers: {},
+    all_customers: {},
     active: {},
   };
 }
