@@ -148,12 +148,15 @@ class RateCustomerBriefSerializer(serializers.ModelSerializer):
         fields = ['pk', 'name', 'code', 'active']
 
 
-class RateCustomerMixin:
+class RateCustomerMixin(metaclass=serializers.SerializerMetaclass):
     """Shared customer multi-select fields for diamond / color-stone rates.
 
     InvenTreeModelSerializer.run_validation instantiates the model with
     ``Model(**validated_data)``. M2M values cannot be passed there, so
     ``customers`` is stripped before validation/create and applied via .set().
+
+    SerializerMetaclass is required so ``customers`` / ``customers_detail``
+    are treated as declared serializer fields, not model fields.
     """
 
     customers = serializers.PrimaryKeyRelatedField(
