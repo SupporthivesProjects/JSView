@@ -148,8 +148,13 @@ class RateCustomerBriefSerializer(serializers.ModelSerializer):
         fields = ['pk', 'name', 'code', 'active']
 
 
-class RateCustomerMixin(serializers.Serializer):
-    """Shared customer multi-select fields for diamond / color-stone rates."""
+class RateCustomerMixin:
+    """Shared customer multi-select fields for diamond / color-stone rates.
+
+    InvenTreeModelSerializer.run_validation instantiates the model with
+    ``Model(**validated_data)``. M2M values cannot be passed there, so
+    ``customers`` is stripped before validation/create and applied via .set().
+    """
 
     customers = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -162,6 +167,12 @@ class RateCustomerMixin(serializers.Serializer):
         source='customers', many=True, read_only=True
     )
 
+    def skip_create_fields(self):
+        fields = list(super().skip_create_fields())
+        if 'customers' not in fields:
+            fields.append('customers')
+        return fields
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
         all_customers = attrs.get(
@@ -169,19 +180,24 @@ class RateCustomerMixin(serializers.Serializer):
             getattr(self.instance, 'all_customers', False),
         )
         if all_customers:
-            attrs['customers'] = []
+            self._rate_customers = []
+            attrs.pop('customers', None)
+        else:
+            self._rate_customers = attrs.pop('customers', serializers.empty)
         return attrs
 
     def create(self, validated_data):
-        customers = validated_data.pop('customers', [])
+        validated_data.pop('customers', None)
         instance = super().create(validated_data)
-        if not instance.all_customers and customers:
+        customers = getattr(self, '_rate_customers', serializers.empty)
+        if not instance.all_customers and customers not in (serializers.empty, None):
             instance.customers.set(customers)
         return instance
 
     def update(self, instance, validated_data):
-        customers = validated_data.pop('customers', serializers.empty)
+        validated_data.pop('customers', None)
         instance = super().update(instance, validated_data)
+        customers = getattr(self, '_rate_customers', serializers.empty)
         if instance.all_customers:
             instance.customers.clear()
         elif customers is not serializers.empty:
