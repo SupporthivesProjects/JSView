@@ -306,6 +306,7 @@ export function colorStoneSizeFields(): ApiFormFieldSet {
   return {
     name: {},
     mm_size: {},
+    sieve_size: {},
     description: {},
     active: {},
   };
@@ -649,6 +650,7 @@ export function diamondSizeFields(): ApiFormFieldSet {
   return {
     name: {},
     mm_size: {},
+    sieve_size: {},
     description: {},
     active: {},
   };
