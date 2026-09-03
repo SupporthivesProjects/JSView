@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconMailForward, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -248,9 +248,14 @@ export function ContactsPanel({
                       {c.role && <Badge variant="light">{c.role}</Badge>}
                     </Group>
                     {c.email && (
+                      <Group gap="2px">
                       <Anchor size="sm" href={`mailto:${c.email}`}>
-                        {c.email}
+                        {c.email} 
                       </Anchor>
+                      <Anchor size="sm" href={`mailto:${c.email}`} display="flex">
+                        <IconMailForward stroke={1} width={18} />
+                      </Anchor>
+                      </Group>
                     )}
                     {c.phone && (
                       <Text size="sm" c="dimmed">

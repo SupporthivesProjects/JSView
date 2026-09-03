@@ -708,7 +708,9 @@ export function diamondRateFields(): ApiFormFieldSet {
     },
     pointer: {},
     rate: {},
-    pc: {},
+    pc: {
+      default: "C",
+    },
     customer_id: {},
     active: {},
   };
