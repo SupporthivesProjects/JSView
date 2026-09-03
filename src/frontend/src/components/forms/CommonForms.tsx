@@ -404,8 +404,18 @@ export function costCardGeneralFields(): ApiFormFieldSet {
     cost_card_no: { read_only: true },
     our_style_no: {},
     vendor_style_no: {},
-    vendor: {},
-    customer: {},
+    vendor: {api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_supplier=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? (instance?.code ? `#${instance.code}` : "");
+      },},
+    customer: {
+      api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_customer=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
     category: {
       api_url: `${apiUrl(ApiEndpoints.jewellery_category)}?active=true`,
       modelRenderer: (arg: any) => {
