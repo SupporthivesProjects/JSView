@@ -1,9 +1,14 @@
 """API views for the 'properties' app."""
 
+from django.db.models import Q
+
 from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework.pagination import LimitOffsetPagination
+
+import django_filters.rest_framework.filters as rest_filters
+from django_filters.rest_framework.filterset import FilterSet
 
 from . import serializers as properties_serializers
 from .models import (
@@ -128,9 +133,9 @@ class DiamondSizeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = PropertiesPagination
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
-    search_fields = ['name']
-    ordering_fields = ['name', 'created_at']
+    filterset_fields = ['active', 'sieve_size']
+    search_fields = ['name', 'sieve_size', 'description']
+    ordering_fields = ['name', 'mm_size', 'sieve_size', 'created_at']
     ordering = 'name'
 
 
@@ -260,9 +265,9 @@ class ColorStoneSizeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = PropertiesPagination
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
-    search_fields = ['name']
-    ordering_fields = ['name', 'created_at']
+    filterset_fields = ['active', 'sieve_size']
+    search_fields = ['name', 'sieve_size', 'description']
+    ordering_fields = ['name', 'mm_size', 'sieve_size', 'created_at']
     ordering = 'name'
 
 
@@ -296,19 +301,62 @@ class ColorStoneQualityDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [PropertiesDataPermission]
 
 
+class StoneRateCustomerFilter(FilterSet):
+    """Shared filters for diamond / color-stone rate list endpoints."""
+
+    customer = rest_filters.NumberFilter(
+        method='filter_customer',
+        label='Customer PK — matches rates for that customer or All Customers',
+    )
+
+    def filter_customer(self, queryset, name, value):
+        return queryset.filter(Q(all_customers=True) | Q(customers__pk=value)).distinct()
+
+
+class DiamondStoneRateFilter(StoneRateCustomerFilter):
+    class Meta:
+        model = DiamondStoneRate
+        fields = [
+            'active',
+            'shape',
+            'mm_size',
+            'stone',
+            'color',
+            'cut',
+            'quality',
+            'pc',
+            'all_customers',
+        ]
+
+
+class ColorStoneRateFilter(StoneRateCustomerFilter):
+    class Meta:
+        model = ColorStoneRate
+        fields = [
+            'active',
+            'shape',
+            'mm_size',
+            'stone',
+            'color',
+            'cut',
+            'quality',
+            'pc',
+            'all_customers',
+        ]
+
+
 class DiamondStoneRateList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating DiamondStoneRate objects."""
 
-    queryset = DiamondStoneRate.objects.all()
+    queryset = DiamondStoneRate.objects.select_related(
+        'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+    ).prefetch_related('customers').all()
     serializer_class = properties_serializers.DiamondStoneRateSerializer
     pagination_class = PropertiesPagination
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = [
-        'active', 'shape', 'mm_size', 'stone',
-        'color', 'cut', 'quality', 'pc', 'customer_id',
-    ]
-    search_fields = ['stone__name', 'shape__name']
+    filterset_class = DiamondStoneRateFilter
+    search_fields = ['stone__name', 'shape__name', 'customers__name']
     ordering_fields = ['shape', 'mm_size', 'pointer', 'rate', 'created_at']
     ordering = ['shape', 'mm_size', 'pointer']
 
@@ -316,7 +364,9 @@ class DiamondStoneRateList(DataExportViewMixin, ListCreateAPI):
 class DiamondStoneRateDetail(RetrieveUpdateDestroyAPI):
     """API endpoint for detail view of a single DiamondStoneRate object."""
 
-    queryset = DiamondStoneRate.objects.all()
+    queryset = DiamondStoneRate.objects.select_related(
+        'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+    ).prefetch_related('customers').all()
     serializer_class = properties_serializers.DiamondStoneRateSerializer
     permission_classes = [PropertiesDataPermission]
 
@@ -324,16 +374,15 @@ class DiamondStoneRateDetail(RetrieveUpdateDestroyAPI):
 class ColorStoneRateList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating ColorStoneRate objects."""
 
-    queryset = ColorStoneRate.objects.all()
+    queryset = ColorStoneRate.objects.select_related(
+        'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+    ).prefetch_related('customers').all()
     serializer_class = properties_serializers.ColorStoneRateSerializer
     pagination_class = PropertiesPagination
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = [
-        'active', 'shape', 'mm_size', 'stone',
-        'color', 'cut', 'quality', 'pc', 'customer_id',
-    ]
-    search_fields = ['stone__name', 'shape__name']
+    filterset_class = ColorStoneRateFilter
+    search_fields = ['stone__name', 'shape__name', 'customers__name']
     ordering_fields = ['shape', 'mm_size', 'pointer', 'rate', 'created_at']
     ordering = ['shape', 'mm_size', 'pointer']
 
@@ -341,6 +390,8 @@ class ColorStoneRateList(DataExportViewMixin, ListCreateAPI):
 class ColorStoneRateDetail(RetrieveUpdateDestroyAPI):
     """API endpoint for detail view of a single ColorStoneRate object."""
 
-    queryset = ColorStoneRate.objects.all()
+    queryset = ColorStoneRate.objects.select_related(
+        'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
+    ).prefetch_related('customers').all()
     serializer_class = properties_serializers.ColorStoneRateSerializer
     permission_classes = [PropertiesDataPermission]

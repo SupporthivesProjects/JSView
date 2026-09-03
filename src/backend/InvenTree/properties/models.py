@@ -93,10 +93,11 @@ class DiamondColor(PropertiesFieldsMixin):
 
 
 class DiamondSize(PropertiesFieldsMixin):
-    """Diamond size (in mm)."""
+    """Diamond size (in mm) and optional sieve size."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond size.'))
     mm_size = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Diamond size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this diamond size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond size.'))
 
     class Meta:
@@ -202,10 +203,11 @@ class ColorStoneColor(PropertiesFieldsMixin):
 
 
 class ColorStoneSize(PropertiesFieldsMixin):
-    """Color stone size (in mm)."""
+    """Color stone size (in mm) and optional sieve size."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone size.'))
     mm_size = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Color stone size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this color stone size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone size.'))
 
     class Meta:
@@ -289,23 +291,28 @@ class DiamondStoneRate(PropertiesFieldsMixin):
         default='C', verbose_name=_('P/C'),
         help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
     )
-    customer_id = models.IntegerField(
-        null=True, blank=True,
-        verbose_name=_('Customer ID'),
-        help_text=_('Optional customer-specific rate override.'),
+    customers = models.ManyToManyField(
+        'company.Company',
+        blank=True,
+        related_name='diamond_stone_rates',
+        limit_choices_to={'is_customer': True},
+        verbose_name=_('Customers'),
+        help_text=_('Customers this rate applies to. Leave empty when All Customers is selected.'),
+    )
+    all_customers = models.BooleanField(
+        default=False,
+        verbose_name=_('All Customers'),
+        help_text=_('If set, this rate applies to every customer (Select All Customers).'),
     )
 
     class Meta:
-        unique_together = [
-            'shape', 'mm_size', 'stone', 'color',
-            'cut', 'quality', 'pointer', 'customer_id',
-        ]
         ordering = ['shape', 'mm_size', 'pointer']
         verbose_name = _('Diamond Stone Rate')
         verbose_name_plural = _('Diamond Stone Rates')
         indexes = [
             models.Index(fields=['active']),
             models.Index(fields=['shape', 'mm_size', 'pointer']),
+            models.Index(fields=['all_customers']),
         ]
 
     def __str__(self):
@@ -370,23 +377,28 @@ class ColorStoneRate(PropertiesFieldsMixin):
         default='C', verbose_name=_('P/C'),
         help_text=_('Rate unit: P = Per Piece, C = Per Carat.'),
     )
-    customer_id = models.IntegerField(
-        null=True, blank=True,
-        verbose_name=_('Customer ID'),
-        help_text=_('Optional customer-specific rate override.'),
+    customers = models.ManyToManyField(
+        'company.Company',
+        blank=True,
+        related_name='color_stone_rates',
+        limit_choices_to={'is_customer': True},
+        verbose_name=_('Customers'),
+        help_text=_('Customers this rate applies to. Leave empty when All Customers is selected.'),
+    )
+    all_customers = models.BooleanField(
+        default=False,
+        verbose_name=_('All Customers'),
+        help_text=_('If set, this rate applies to every customer (Select All Customers).'),
     )
 
     class Meta:
-        unique_together = [
-            'shape', 'mm_size', 'stone', 'color',
-            'cut', 'quality', 'pointer', 'customer_id',
-        ]
         ordering = ['shape', 'mm_size', 'pointer']
         verbose_name = _('Color Stone Rate')
         verbose_name_plural = _('Color Stone Rates')
         indexes = [
             models.Index(fields=['active']),
             models.Index(fields=['shape', 'mm_size', 'pointer']),
+            models.Index(fields=['all_customers']),
         ]
 
     def __str__(self):
