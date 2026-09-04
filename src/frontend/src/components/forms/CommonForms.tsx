@@ -723,7 +723,13 @@ export function diamondRateFields(): ApiFormFieldSet {
     pc: {
       default: "C",
     },
-    customers: {},
+    customers: {
+      api_url: apiUrl(ApiEndpoints.company_list), // Replace with your customer/company API endpoint
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
     all_customers: {},
     active: {},
   };
