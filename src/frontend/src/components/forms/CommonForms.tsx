@@ -105,6 +105,10 @@ export function findingTypeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
+    type: {},
+    weight: {},
+    metal: {},
+    price: {},
     active: {},
   };
 }
