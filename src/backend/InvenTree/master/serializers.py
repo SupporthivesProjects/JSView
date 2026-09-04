@@ -209,7 +209,12 @@ class StampSerializer(
         if data is not empty and hasattr(data, 'items'):
             data = data.copy() if hasattr(data, 'copy') else dict(data)
             if 'customers' in data:
-                extra_m2m['customers'] = data.pop('customers')
+                # old: extra_m2m['customers'] = data.pop('customers')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
+                if hasattr(data, 'getlist'):
+                    extra_m2m['customers'] = data.getlist('customers')
+                    del data['customers']
+                else:
+                    extra_m2m['customers'] = data.pop('customers')
 
         validated_data = super().run_validation(data)
         validated_data.update(extra_m2m)
@@ -276,7 +281,12 @@ class TermsSerializer(
         if data is not empty and hasattr(data, 'items'):
             data = data.copy() if hasattr(data, 'copy') else dict(data)
             if 'vendors' in data:
-                extra_m2m['vendors'] = data.pop('vendors')
+                # old: extra_m2m['vendors'] = data.pop('vendors')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
+                if hasattr(data, 'getlist'):
+                    extra_m2m['vendors'] = data.getlist('vendors')
+                    del data['vendors']
+                else:
+                    extra_m2m['vendors'] = data.pop('vendors')
 
         validated_data = super().run_validation(data)
         validated_data.update(extra_m2m)
