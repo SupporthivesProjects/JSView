@@ -241,7 +241,7 @@ export default function DiamondRateTable() {
         switchable: false,
       },
       {
-        accessor: "customer_id",
+        accessor: "customers",
         sortable: true,
         switchable: false,
       },
