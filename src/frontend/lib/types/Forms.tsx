@@ -46,6 +46,7 @@ export type ApiFormFieldHeader = {
  * @param api_url : The API endpoint to fetch data from (for related fields)
  * @param pk_field : The primary key field for the related field (default = "pk")
  * @param model : The model to use for related fields
+ * @param multiple : Whether a 'related field' allows selecting more than one value (renders as a multi-select, and the field value / onChange deal in arrays of primary keys)
  * @param custom_model : Optional custom model name (plugins may register renderers for custom models)
  * @param modelRenderer : Optional function to render the related model instance (for related fields)
  * @param filters : Optional API filters to apply to related fields
@@ -104,6 +105,7 @@ export type ApiFormFieldType = {
   api_url?: string;
   pk_field?: string;
   model?: ModelType;
+  multiple?: boolean;
   custom_model?: string;
   modelRenderer?: (instance: any) => ReactNode;
   filters?: any;

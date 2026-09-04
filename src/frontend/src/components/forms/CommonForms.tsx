@@ -728,10 +728,14 @@ export function diamondRateFields(): ApiFormFieldSet {
       default: "C",
     },
     customers: {
-      api_url: apiUrl(ApiEndpoints.company_list), // Replace with your customer/company API endpoint
+      field_type: "related field",
+      model: ModelType.company,
+      multiple: true,
+      api_url: apiUrl(ApiEndpoints.company_list),
+      filters: { is_customer: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
-        return instance?.name ?? "";
+        return instance?.code ?? "";
       },
     },
     all_customers: {},

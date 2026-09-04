@@ -242,8 +242,18 @@ export default function DiamondRateTable() {
       },
       {
         accessor: "customers",
-        sortable: true,
+        title: t`Customers`,
+        sortable: false,
         switchable: false,
+        render: (record: any) => {
+          if (record.all_customers) {
+            return t`All Customers`;
+          }
+          const codes = (record.customers_detail ?? [])
+            .map((customer: any) => customer.code)
+            .filter(Boolean);
+          return codes.length > 0 ? codes.join(", ") : "-";
+        },
       },
       BooleanColumn({
         accessor: "active",

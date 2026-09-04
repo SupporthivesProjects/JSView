@@ -70,6 +70,9 @@ function RelatedModelFieldComponent({
 
   const form = useFormContext();
 
+  // Whether this field allows selecting more than one value
+  const isMulti = !!definition.multiple;
+
   // Keep track of the primary key value for this field
   const [pk, setPk] = useState<number | null>(null);
 
@@ -79,11 +82,12 @@ function RelatedModelFieldComponent({
 
   // Handle condition where the form is rebuilt dynamically
   useEffect(() => {
+    if (isMulti) return;
     const value = field.value || pk;
     if (value && value != form.getValues()[fieldName]) {
       form.setValue(fieldName, value);
     }
-  }, [pk, field.value]);
+  }, [pk, field.value, isMulti]);
 
   const [offset, setOffset] = useState<number>(0);
 
@@ -164,6 +168,10 @@ function RelatedModelFieldComponent({
 
   // Determine whether an add button should be added for this field
   const addButton = useMemo(() => {
+    if (isMulti) {
+      // Inline creation replaces the whole selection - not supported for multi-select fields
+      return false;
+    }
     if (!modelInfo) {
       return false;
     }
@@ -171,10 +179,14 @@ function RelatedModelFieldComponent({
       return true;
     }
     return false;
-  }, [definition.addCreateFields, modelInfo]);
+  }, [definition.addCreateFields, modelInfo, isMulti]);
 
   // Determine whether a barcode field should be added
   const addBarcodeField: boolean = useMemo(() => {
+    if (isMulti) {
+      // Barcode scan replaces the whole selection - not supported for multi-select fields
+      return false;
+    }
     if (!modelInfo || !modelInfo.supports_barcode) {
       return false;
     }
@@ -221,6 +233,11 @@ function RelatedModelFieldComponent({
 
   // Auto-fill the field with data from the API
   useEffect(() => {
+    // Auto-fill does not make sense for multi-select fields
+    if (isMulti) {
+      return;
+    }
+
     // If there is *no value defined*, and autoFill is enabled, then fetch data from the API
     if (!definition.autoFill || !definition.api_url) {
       return;
@@ -278,6 +295,7 @@ function RelatedModelFieldComponent({
         }
       });
   }, [
+    isMulti,
     autoFilled,
     definition.autoFill,
     definition.api_url,
@@ -295,6 +313,8 @@ function RelatedModelFieldComponent({
 
   // If an initial value is provided, load from the API
   useEffect(() => {
+    if (isMulti) return;
+
     // If the value is unchanged, do nothing
     if (field.value === pk) return;
 
@@ -309,11 +329,89 @@ function RelatedModelFieldComponent({
       setPk(null);
     }
   }, [
+    isMulti,
     definition.api_url,
     definition.filters,
     definition.pk_field,
     field.value
   ]);
+
+  // --- Multi-select support ---------------------------------------------
+  // For 'multiple' fields, the field value / onChange deal in arrays of
+  // primary keys rather than a single value. Selected options are tracked
+  // separately from the paginated search `data`, since a selected item may
+  // not be part of the currently loaded search results/page.
+  const [multiPks, setMultiPks] = useState<Array<number | string>>([]);
+  const multiDataRef = useRef<any[]>([]);
+  const requestedMultiIdsRef = useRef<Set<number | string>>(new Set());
+
+  // Sync incoming field value (array of primary keys) when in multi mode,
+  // fetching full instance data for any selected id we don't already have.
+  useEffect(() => {
+    if (!isMulti) return;
+
+    const incoming: Array<number | string> = Array.isArray(field.value)
+      ? field.value
+      : [];
+    setMultiPks(incoming);
+
+    if (!definition.api_url) return;
+    const pk_field = definition.pk_field ?? 'pk';
+
+    incoming.forEach((id) => {
+      if (id === null || id === undefined || id === '') return;
+
+      const alreadyKnown =
+        dataRef.current.some((x) => x.value === id) ||
+        multiDataRef.current.some((x) => x.value === id);
+
+      if (alreadyKnown || requestedMultiIdsRef.current.has(id)) return;
+      requestedMultiIdsRef.current.add(id);
+
+      const url = `${definition.api_url}${id}/`;
+      api
+        .get(url, { params: definition?.filters ?? {} })
+        .then((response) => {
+          const instance = response.data;
+          if (instance?.[pk_field] === undefined) return;
+
+          multiDataRef.current = [
+            ...multiDataRef.current,
+            { value: instance[pk_field], data: instance }
+          ];
+          // Force a re-render now that new option data is available
+          setMultiPks((prev) => [...prev]);
+        });
+    });
+  }, [isMulti, field.value, definition.api_url, definition.filters, definition.pk_field]);
+
+  // Resolve the current multi-select value (list of options) from the
+  // selected primary keys, looking them up in either the search results
+  // or the separately-fetched initial/selected data.
+  const multiCurrentValue = useMemo(() => {
+    if (!isMulti) return [];
+    const known = [...data, ...multiDataRef.current];
+    return multiPks
+      .map((id) => known.find((item) => item.value === id))
+      .filter(Boolean);
+  }, [isMulti, multiPks, data]);
+
+  // Update form values when the multi-select value changes
+  const onMultiChange = useCallback(
+    (values: any) => {
+      const options = values ?? [];
+      const ids = options.map((option: any) => option.value);
+
+      field.onChange(ids);
+      setMultiPks(ids);
+
+      definition.onValueChange?.(
+        ids,
+        options.map((option: any) => option.data)
+      );
+    },
+    [field.onChange, definition]
+  );
 
   const [filters, setFilters] = useState<any>({});
 
@@ -521,14 +619,15 @@ function RelatedModelFieldComponent({
           <Select
             id={fieldId}
             aria-label={`related-field-${field.name}`}
-            value={currentValue}
+            isMulti={isMulti}
+            value={isMulti ? multiCurrentValue : currentValue}
             ref={field.ref}
             options={data}
             filterOption={null}
             onInputChange={(value: any) => {
               setValue(value);
             }}
-            onChange={onChange}
+            onChange={isMulti ? onMultiChange : onChange}
             onMenuScrollToBottom={() => setOffset(offset + limit)}
             onMenuOpen={() => {
               setIsOpen(true);
