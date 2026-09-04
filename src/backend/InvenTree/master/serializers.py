@@ -1,5 +1,7 @@
 """DRF serializers for the 'master' app."""
 
+from rest_framework.fields import empty
+
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
@@ -194,11 +196,43 @@ class StampSerializer(
             'name',
             'description',
             'image',
+            'all_customers',
             'customers',
             'active',
             'created_at',
             'updated_at',
         ]
+
+    def run_validation(self, data=empty):
+        extra_m2m = {}
+
+        if data is not empty and hasattr(data, 'items'):
+            data = data.copy() if hasattr(data, 'copy') else dict(data)
+            if 'customers' in data:
+                # old: extra_m2m['customers'] = data.pop('customers')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
+                if hasattr(data, 'getlist'):
+                    extra_m2m['customers'] = data.getlist('customers')
+                    del data['customers']
+                else:
+                    extra_m2m['customers'] = data.pop('customers')
+
+        validated_data = super().run_validation(data)
+        validated_data.update(extra_m2m)
+        return validated_data
+
+    def create(self, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().create(validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
+
+    def update(self, instance, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().update(instance, validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
 
 
 @register_importer()
@@ -233,12 +267,44 @@ class TermsSerializer(
             'pk',
             'name',
             'days',
+            'all_vendors',
             'vendors',
             'description',
             'active',
             'created_at',
             'updated_at',
         ]
+
+    def run_validation(self, data=empty):
+        extra_m2m = {}
+
+        if data is not empty and hasattr(data, 'items'):
+            data = data.copy() if hasattr(data, 'copy') else dict(data)
+            if 'vendors' in data:
+                # old: extra_m2m['vendors'] = data.pop('vendors')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
+                if hasattr(data, 'getlist'):
+                    extra_m2m['vendors'] = data.getlist('vendors')
+                    del data['vendors']
+                else:
+                    extra_m2m['vendors'] = data.pop('vendors')
+
+        validated_data = super().run_validation(data)
+        validated_data.update(extra_m2m)
+        return validated_data
+
+    def create(self, validated_data):
+        vendors = validated_data.pop('vendors', None)
+        instance = super().create(validated_data)
+        if vendors is not None:
+            instance.vendors.set(vendors)
+        return instance
+
+    def update(self, instance, validated_data):
+        vendors = validated_data.pop('vendors', None)
+        instance = super().update(instance, validated_data)
+        if vendors is not None:
+            instance.vendors.set(vendors)
+        return instance
 
 
 @register_importer()

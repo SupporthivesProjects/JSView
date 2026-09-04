@@ -104,7 +104,21 @@ class CleanMixin:
         """
         clean_data = {}
 
-        for k, v in data.items():
+        has_getlist = hasattr(data, 'getlist')
+
+        for k in data.keys():
+            if has_getlist:
+                values = data.getlist(k)
+                if len(values) > 1:
+                    clean_data[k] = [
+                        self.clean_string(k, v) if isinstance(v, str) else v
+                        for v in values
+                    ]
+                    continue
+                v = values[0]
+            else:
+                v = data[k]
+
             if k in self.SAFE_FIELDS:
                 ret = v
             elif isinstance(v, str):

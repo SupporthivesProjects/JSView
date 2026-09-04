@@ -85,10 +85,10 @@ class DutyAdmin(admin.ModelAdmin):
 class StampAdmin(admin.ModelAdmin):
     """Admin class for the Stamp model."""
 
-    list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
+    list_display = ('name', 'description', 'all_customers', 'active', 'created_at', 'updated_at')
     search_fields = ('name', 'description', 'customers__name')
     filter_horizontal = ('customers',)
-    list_filter = ('active',)
+    list_filter = ('active', 'all_customers')
 
 
 @admin.register(models.ACExecutive)
@@ -104,10 +104,10 @@ class ACExecutiveAdmin(admin.ModelAdmin):
 class TermsAdmin(admin.ModelAdmin):
     """Admin class for the Terms model."""
 
-    list_display = ('name', 'days', 'active', 'created_at', 'updated_at')
+    list_display = ('name', 'days', 'all_vendors', 'active', 'created_at', 'updated_at')
     search_fields = ('name', 'description', 'vendors__name')
     filter_horizontal = ('vendors',)
-    list_filter = ('active',)
+    list_filter = ('active', 'all_vendors')
 
 
 @admin.register(models.CourierService)
