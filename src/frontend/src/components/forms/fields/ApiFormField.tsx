@@ -2,7 +2,12 @@ import { t } from '@lingui/core/macro';
 import { Alert, FileInput, Stack } from '@mantine/core';
 import { useId } from '@mantine/hooks';
 import { useCallback, useEffect, useMemo } from 'react';
-import { type Control, type FieldValues, useController } from 'react-hook-form';
+import {
+  type Control,
+  type FieldValues,
+  useController,
+  useWatch
+} from 'react-hook-form';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
@@ -74,13 +79,28 @@ export function ApiFormField({
     }
   }, [definition.value, definition.field_type]);
 
+  // Watch the rest of the form (opt-in, via `disableWhen`) so this field can
+  // be force-disabled based on the value of another field (e.g. disable a
+  // 'customers' multi-select while a sibling 'all_customers' toggle is set).
+  // The subscription is skipped entirely for fields that don't need it.
+  const watchedForDisable = useWatch({
+    control,
+    disabled: !definition.disableWhen
+  });
+
+  const disabledByCondition = useMemo(() => {
+    if (!definition.disableWhen) return false;
+    return !!definition.disableWhen(watchedForDisable ?? {});
+  }, [definition.disableWhen, watchedForDisable]);
+
   const fieldDefinition: ApiFormFieldType = useMemo(() => {
     return {
       ...definition,
       label: hideLabels ? undefined : definition.label,
-      description: hideLabels ? undefined : definition.description
+      description: hideLabels ? undefined : definition.description,
+      disabled: definition.disabled || disabledByCondition
     };
-  }, [hideLabels, definition]);
+  }, [hideLabels, definition, disabledByCondition]);
 
   // pull out onValueChange as this can cause strange errors when passing the
   // definition to the input components via spread syntax
