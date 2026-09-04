@@ -141,6 +141,7 @@ export default function StampTable() {
         />
         {!changeImage && (
           <Button
+            type="button"
             variant="subtle"
             size="xs"
             onClick={() => setChangeImage(true)}

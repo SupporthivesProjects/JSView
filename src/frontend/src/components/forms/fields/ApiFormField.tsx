@@ -1,33 +1,33 @@
-import { t } from '@lingui/core/macro';
-import { Alert, FileInput, Stack } from '@mantine/core';
-import { useId } from '@mantine/hooks';
-import { useCallback, useEffect, useMemo } from 'react';
+import { t } from "@lingui/core/macro";
+import { Alert, FileInput, Stack } from "@mantine/core";
+import { useId } from "@mantine/hooks";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   type Control,
   type FieldValues,
   useController,
-  useWatch
-} from 'react-hook-form';
+  useWatch,
+} from "react-hook-form";
 
-import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
-import { ModelType } from '@lib/enums/ModelType';
-import { apiUrl } from '@lib/functions/Api';
-import type { ApiFormFieldSet, ApiFormFieldType } from '@lib/types/Forms';
-import { IconFileUpload } from '@tabler/icons-react';
-import type { NavigateFunction } from 'react-router-dom';
-import DateTimeField from '../DateTimeField';
-import { BooleanField } from './BooleanField';
-import { ChoiceField } from './ChoiceField';
-import DateField from './DateField';
-import { DependentField } from './DependentField';
-import IconField from './IconField';
-import { NestedObjectField } from './NestedObjectField';
-import NumberField from './NumberField';
-import { RelatedModelField } from './RelatedModelField';
-import { TableField } from './TableField';
-import TagsField from './TagsField';
-import TextField from './TextField';
-import { TreeField } from './TreeField';
+import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
+import { ModelType } from "@lib/enums/ModelType";
+import { apiUrl } from "@lib/functions/Api";
+import type { ApiFormFieldSet, ApiFormFieldType } from "@lib/types/Forms";
+import { IconFileUpload } from "@tabler/icons-react";
+import type { NavigateFunction } from "react-router-dom";
+import DateTimeField from "../DateTimeField";
+import { BooleanField } from "./BooleanField";
+import { ChoiceField } from "./ChoiceField";
+import DateField from "./DateField";
+import { DependentField } from "./DependentField";
+import IconField from "./IconField";
+import { NestedObjectField } from "./NestedObjectField";
+import NumberField from "./NumberField";
+import { RelatedModelField } from "./RelatedModelField";
+import { TableField } from "./TableField";
+import TagsField from "./TagsField";
+import TextField from "./TextField";
+import { TreeField } from "./TreeField";
 
 /**
  * Render an individual form field
@@ -40,7 +40,7 @@ export function ApiFormField({
   navigate,
   url,
   setFields,
-  onKeyDown
+  onKeyDown,
 }: Readonly<{
   fieldName: string;
   definition: ApiFormFieldType;
@@ -54,18 +54,18 @@ export function ApiFormField({
   const fieldId = useId();
   const controller = useController({
     name: fieldName,
-    control
+    control,
   });
   const {
     field,
-    fieldState: { error }
+    fieldState: { error },
   } = controller;
   const { value, ref } = field;
 
   useEffect(() => {
     if (
-      definition.field_type === 'nested object' ||
-      definition.field_type === 'dependent field'
+      definition.field_type === "nested object" ||
+      definition.field_type === "dependent field"
     )
       return;
 
@@ -74,7 +74,7 @@ export function ApiFormField({
       field.onChange(
         definition.adjustValue
           ? definition.adjustValue(definition.value)
-          : definition.value
+          : definition.value,
       );
     }
   }, [definition.value, definition.field_type]);
@@ -85,7 +85,7 @@ export function ApiFormField({
   // The subscription is skipped entirely for fields that don't need it.
   const watchedForDisable = useWatch({
     control,
-    disabled: !definition.disableWhen
+    disabled: !definition.disableWhen,
   });
 
   const disabledByCondition = useMemo(() => {
@@ -98,7 +98,7 @@ export function ApiFormField({
       ...definition,
       label: hideLabels ? undefined : definition.label,
       description: hideLabels ? undefined : definition.description,
-      disabled: definition.disabled || disabledByCondition
+      disabled: definition.disabled || disabledByCondition,
     };
   }, [hideLabels, definition, disabledByCondition]);
 
@@ -120,7 +120,7 @@ export function ApiFormField({
       allow_null: undefined,
       read_only: undefined,
       children: undefined,
-      exclude: undefined
+      exclude: undefined,
     };
   }, [fieldDefinition]);
 
@@ -138,7 +138,7 @@ export function ApiFormField({
       // Run custom callback for this field
       definition.onValueChange?.(rtnValue);
     },
-    [fieldName, definition]
+    [fieldName, definition],
   );
 
   // Stable wrapper so the identity passed to leaf field components does not
@@ -147,13 +147,13 @@ export function ApiFormField({
     (value: any) => {
       onKeyDown?.(value);
     },
-    [onKeyDown]
+    [onKeyDown],
   );
 
   // Construct the individual field
   const fieldInstance = useMemo(() => {
     switch (fieldDefinition.field_type) {
-      case 'related field':
+      case "related field":
         if (
           fieldDefinition.api_url === apiUrl(ApiEndpoints.stock_location_list)
         ) {
@@ -164,7 +164,7 @@ export function ApiFormField({
               definition={fieldDefinition}
               fieldName={fieldName}
               endpoint={ApiEndpoints.stock_location_tree}
-              childIdentifier='sublocations'
+              childIdentifier="sublocations"
               genericPlaceholder={t`Select location`}
               model={ModelType.stocklocation}
               navigate={navigate}
@@ -180,7 +180,7 @@ export function ApiFormField({
               definition={fieldDefinition}
               fieldName={fieldName}
               endpoint={ApiEndpoints.category_tree}
-              childIdentifier='subcategories'
+              childIdentifier="subcategories"
               genericPlaceholder={t`Select category`}
               model={ModelType.partcategory}
               navigate={navigate}
@@ -196,9 +196,9 @@ export function ApiFormField({
             />
           );
         }
-      case 'email':
-      case 'url':
-      case 'string':
+      case "email":
+      case "url":
+      case "string":
         return (
           <TextField
             definition={reducedDefinition}
@@ -209,21 +209,21 @@ export function ApiFormField({
             onKeyDown={safeOnKeyDown}
           />
         );
-      case 'password':
+      case "password":
         return (
           <TextField
-            definition={{ ...reducedDefinition, type: 'password' }}
+            definition={{ ...reducedDefinition, type: "password" }}
             controller={controller}
             fieldName={fieldName}
             onChange={onChange}
             onKeyDown={safeOnKeyDown}
           />
         );
-      case 'icon':
+      case "icon":
         return (
           <IconField definition={fieldDefinition} controller={controller} />
         );
-      case 'boolean':
+      case "boolean":
         return (
           <BooleanField
             controller={controller}
@@ -232,18 +232,18 @@ export function ApiFormField({
             onChange={onChange}
           />
         );
-      case 'date':
+      case "date":
         return (
           <DateField controller={controller} definition={fieldDefinition} />
         );
-      case 'datetime':
+      case "datetime":
         return (
           <DateTimeField controller={controller} definition={fieldDefinition} />
         );
-      case 'integer':
-      case 'decimal':
-      case 'float':
-      case 'number':
+      case "integer":
+      case "decimal":
+      case "float":
+      case "number":
         return (
           <NumberField
             controller={controller}
@@ -257,7 +257,7 @@ export function ApiFormField({
             onChange={onChange}
           />
         );
-      case 'choice':
+      case "choice":
         return (
           <ChoiceField
             controller={controller}
@@ -265,7 +265,7 @@ export function ApiFormField({
             definition={fieldDefinition}
           />
         );
-      case 'file upload':
+      case "file upload":
         return (
           <FileInput
             {...reducedDefinition}
@@ -275,13 +275,18 @@ export function ApiFormField({
             leftSection={<IconFileUpload />}
             id={fieldId}
             ref={field.ref}
-            radius='sm'
+            radius="sm"
             value={value}
             error={definition.error ?? error?.message}
-            onChange={(payload: File | null) => onChange(payload)}
+            onChange={(payload: File | File[] | null) => {
+              onChange(payload);
+              requestAnimationFrame(() => {
+                (document.activeElement as HTMLElement | null)?.blur();
+              });
+            }}
           />
         );
-      case 'nested object':
+      case "nested object":
         return (
           <NestedObjectField
             definition={fieldDefinition}
@@ -291,7 +296,7 @@ export function ApiFormField({
             setFields={setFields}
           />
         );
-      case 'dependent field':
+      case "dependent field":
         return (
           <DependentField
             definition={fieldDefinition}
@@ -301,7 +306,7 @@ export function ApiFormField({
             setFields={setFields}
           />
         );
-      case 'table':
+      case "table":
         return (
           <TableField
             definition={fieldDefinition}
@@ -311,13 +316,13 @@ export function ApiFormField({
             error={error}
           />
         );
-      case 'tags':
+      case "tags":
         return (
           <TagsField controller={controller} definition={fieldDefinition} />
         );
       default:
         return (
-          <Alert color='red' title={t`Error`}>
+          <Alert color="red" title={t`Error`}>
             Invalid field type for field '{fieldName}': '
             {fieldDefinition.field_type}'
           </Alert>
@@ -336,7 +341,7 @@ export function ApiFormField({
     reducedDefinition,
     ref,
     setFields,
-    value
+    value,
   ]);
 
   if (fieldDefinition.hidden) {
