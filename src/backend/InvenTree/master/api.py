@@ -183,7 +183,7 @@ class StampList(ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
+    filterset_fields = ['active', 'all_customers']
     search_fields = ['name', 'description', 'customers__name']
     ordering_fields = ['name', 'active']
     ordering = 'name'
@@ -219,7 +219,7 @@ class TermsList(ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['active']
+    filterset_fields = ['active', 'all_vendors']
     search_fields = ['name', 'description', 'vendors__name']
     ordering_fields = ['name', 'days']
     ordering = 'name'

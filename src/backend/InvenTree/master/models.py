@@ -247,6 +247,7 @@ class Stamp(MasterFieldsMixin):
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the hallmark or stamp.'))
     image = models.ImageField(upload_to=stamp_image, blank=True, null=True, verbose_name=_('Image'), help_text=_('Optional image representing the hallmark or stamp.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the stamp.'))
+    all_customers = models.BooleanField(default=False,verbose_name=_('All Customers'),help_text=_('If set, this rate applies to every customer (Select All Customers).'),)
     customers = models.ManyToManyField( Company,blank=True,related_name='stamps',verbose_name=_('Customers'),help_text=_('Customers assigned to this stamp.'))
 
     class Meta:
@@ -286,6 +287,7 @@ class Terms(MasterFieldsMixin):
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the payment terms.'))
     days = models.PositiveIntegerField(default=0, verbose_name=_('Days'), help_text=_('Number of days allowed under these payment terms.'))
+    all_vendors = models.BooleanField(default=False, verbose_name=_('All Vendors'), help_text=_('If set, these terms apply to every vendor (Select All Vendors).'))
     vendors = models.ManyToManyField(Company, blank=True, related_name='payment_terms', verbose_name=_('Vendors'), help_text=_('Vendors to whom these payment terms apply.'))
     description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the payment terms.'))
 
