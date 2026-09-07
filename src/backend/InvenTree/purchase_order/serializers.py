@@ -3,11 +3,18 @@ from rest_framework import serializers as drf_serializers
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
+from importer.mixins import DataImportSerializerMixin
+from importer.registry import register_importer
 
 from .models import PurchaseOrder, PurchaseOrderLine
 
 
-class PurchaseOrderLineSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+@register_importer()
+class PurchaseOrderLineSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     """Serializer for the PurchaseOrderLine model."""
 
     class Meta:
@@ -20,7 +27,12 @@ class PurchaseOrderLineSerializer(DataExportSerializerMixin, InvenTreeModelSeria
         read_only_fields = ['created_at', 'updated_at']
 
 
-class PurchaseOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+@register_importer()
+class PurchaseOrderSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     """
     Serializer for the PurchaseOrder model.
 
