@@ -34,9 +34,11 @@ export default function CostCardDiamondLineTable({
   const table = useTable("cost-card-diamond-line");
   const user = useUserState();
 
-  // One field set per modal - each keeps its own live Amount / L.Amount state.
+  // One field set per modal - each keeps its own live Amount / L.Amount and
+  // MM Size / Sieve Size state, cleared again when its modal closes. Only the
+  // edit modal loads an existing line.
   const newLineFields = useCostCardDiamondLineFields(costCardId);
-  const editLineFields = useCostCardDiamondLineFields(costCardId);
+  const editLineFields = useCostCardDiamondLineFields(costCardId, true);
 
   const { nameByPk: stoneByPk } = useNameLookup(
     ApiEndpoints.diamond_stone_list,
@@ -207,8 +209,9 @@ export default function CostCardDiamondLineTable({
   const newLine = useCreateApiFormModal({
     url: ApiEndpoints.cost_card_diamond_line,
     title: t`Add Diamond Line`,
-    fields: newLineFields,
+    fields: newLineFields.fields,
     processFormData: processCostCardDiamondLineData,
+    onClose: newLineFields.reset,
     table: table,
   });
 
@@ -221,8 +224,9 @@ export default function CostCardDiamondLineTable({
     url: ApiEndpoints.cost_card_diamond_line,
     pk: selectedLine,
     title: t`Edit Diamond Line`,
-    fields: editLineFields,
+    fields: editLineFields.fields,
     processFormData: processCostCardDiamondLineData,
+    onClose: editLineFields.reset,
     table: table,
   });
 

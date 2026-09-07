@@ -1,11 +1,15 @@
 import { IconUsers } from "@tabler/icons-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
 import { ModelType } from "@lib/enums/ModelType";
 import { apiUrl } from "@lib/functions/Api";
-import type { ApiFormFieldSet, ApiFormFieldType } from "@lib/types/Forms";
+import type {
+  ApiFormFieldChoice,
+  ApiFormFieldSet,
+  ApiFormFieldType,
+} from "@lib/types/Forms";
 import type {
   StatusCodeInterface,
   StatusCodeListInterface,
@@ -654,39 +658,57 @@ function costCardStoneLineFields(
 
   return {
     stone: {
-      api_url: `${apiUrl(stoneEndpoint)}?active=true`,
+      api_url: apiUrl(stoneEndpoint),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     shape: {
-      api_url: `${apiUrl(shapeEndpoint)}?active=true`,
+      api_url: apiUrl(shapeEndpoint),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     mm_size: {
-      api_url: `${apiUrl(sizeEndpoint)}?active=true`,
-      modelRenderer: nameRenderer,
+      api_url: apiUrl(sizeEndpoint),
+      filters: { active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.mm_size ?? "";
+      },
     },
     color: {
-      api_url: `${apiUrl(colorEndpoint)}?active=true`,
+      api_url: apiUrl(colorEndpoint),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     cut: {
-      api_url: `${apiUrl(cutEndpoint)}?active=true`,
+      api_url: apiUrl(cutEndpoint),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     quality: {
-      api_url: `${apiUrl(qualityEndpoint)}?active=true`,
+      api_url: apiUrl(qualityEndpoint),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     setting: {
-      api_url: `${apiUrl(ApiEndpoints.master_setting)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.master_setting),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     stone_place: {
-      api_url: `${apiUrl(ApiEndpoints.stone_place)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.stone_place),
+      filters: { active: true },
       modelRenderer: nameRenderer,
     },
     pointer: {},
-    sieve_size: {},
+    sieve_size: {
+      api_url: apiUrl(sizeEndpoint),
+      filters: { active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.sieve_size ?? "";
+      },
+    },
     pcs: {},
     cts: {},
     default_rate: {},
@@ -710,31 +732,197 @@ function roundAmount(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * MM Size and Sieve Size are two views of the same Diamond Size record in
+ * Diamond Properties (each record pairs an mm size with a sieve size), so both
+ * are dropdowns over that master list and each prefills the other.
+ *
+ * The line stores the sieve size as plain text, so Sieve Size is a choice
+ * field over the sieve sizes on those records rather than a related field.
+ *
+ * Pass `loadsExistingLine` on a form that fetches an existing line (the edit
+ * modal), so the stored MM Size arriving on load is not read as the user
+ * picking one and does not overwrite the line's stored Sieve Size.
+ *
+ * This state outlives the modal - the modal unmounts its form on close, but
+ * this hook lives in the table - so wire the returned `reset` up to the
+ * modal's onClose, or the next line opens with the previous one's values.
+ */
 export function useCostCardDiamondLineFields(
   costCardId: number,
-): ApiFormFieldSet {
+  loadsExistingLine: boolean = false,
+): { fields: ApiFormFieldSet; reset: () => void } {
+  const api = useApi();
+
   const [pcs, setPcs] = useState<any>(undefined);
   const [rate, setRate] = useState<any>(undefined);
   const [labourRate, setLabourRate] = useState<any>(undefined);
   const [pc, setPc] = useState<any>(undefined);
 
-  return useMemo(() => {
+  // Values pushed back into the two linked size fields. The seeded sieve size
+  // is remembered separately so a value stored on the line but missing from
+  // the master list still has an option to display.
+  const [mmSize, setMmSize] = useState<any>(undefined);
+  const [sieveSize, setSieveSize] = useState<any>(undefined);
+  const [seededSieveSize, setSeededSieveSize] = useState<any>(undefined);
+
+  // The MM Size dropdown reports its value both when the user picks one and
+  // when it loads an existing selection, so react only to an actual change.
+  const lastMmPk = useRef<any>(undefined);
+  const mmAwaitingSeed = useRef<boolean>(loadsExistingLine);
+
+  const diamondSizesQuery = useQuery({
+    queryKey: ["cost-card-diamond-sizes"],
+    queryFn: async () => {
+      const url = apiUrl(ApiEndpoints.diamond_size_list);
+
+      // The properties endpoints cap a page at 100 records, so walk the pages
+      // rather than asking for one oversized one and silently losing sizes.
+      const pageSize = 100;
+      const maxPages = 20;
+      const collected: any[] = [];
+      let offset = 0;
+
+      for (let page = 0; page < maxPages; page++) {
+        const response = await api.get(url, {
+          params: { active: true, limit: pageSize, offset: offset },
+        });
+
+        const data = response.data;
+        const results = Array.isArray(data) ? data : (data?.results ?? []);
+
+        collected.push(...results);
+
+        const count = Array.isArray(data)
+          ? collected.length
+          : (data?.count ?? collected.length);
+
+        if (results.length === 0 || collected.length >= count) break;
+
+        offset += pageSize;
+      }
+
+      return collected;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const diamondSizes: any[] = useMemo(
+    () => diamondSizesQuery.data ?? [],
+    [diamondSizesQuery.data],
+  );
+
+  const sieveChoices: ApiFormFieldChoice[] = useMemo(() => {
+    const seen = new Set<string>();
+    const choices: ApiFormFieldChoice[] = [];
+
+    for (const size of diamondSizes) {
+      const value = size?.sieve_size;
+
+      if (!value || seen.has(value)) continue;
+
+      seen.add(value);
+      choices.push({ value: value, display_name: value });
+    }
+
+    const current = sieveSize || seededSieveSize;
+
+    if (current && !seen.has(current)) {
+      choices.push({ value: current, display_name: current });
+    }
+
+    return choices;
+  }, [diamondSizes, sieveSize, seededSieveSize]);
+
+  // MM Size -> Sieve Size.
+  const onMmSizeChange = useCallback((value: any, record: any) => {
+    const pk = value ?? null;
+
+    if (mmAwaitingSeed.current) {
+      // The stored MM Size of the line being edited, not a user selection.
+      mmAwaitingSeed.current = false;
+      lastMmPk.current = pk;
+      return;
+    }
+
+    if (pk === lastMmPk.current) return;
+
+    lastMmPk.current = pk;
+
+    // Clearing the dropdown leaves the sieve size alone.
+    if (!pk) return;
+
+    setMmSize(pk);
+    setSieveSize(record?.sieve_size ?? "");
+  }, []);
+
+  // Sieve Size -> MM Size.
+  const onSieveSizeChange = useCallback(
+    (value: any, record?: any) => {
+      // A choice field is only given a second argument when ApiForm seeds the
+      // form from the server - that is not the user picking a sieve size.
+      if (record !== undefined) {
+        setSeededSieveSize(value ?? undefined);
+        return;
+      }
+
+      setSieveSize(value ?? "");
+
+      const match = diamondSizes.find((size) => size?.sieve_size === value);
+
+      if (!match?.pk) return;
+
+      // Adopt the pk up front, so the dropdown loading it back does not read
+      // as a fresh user selection and bounce the sieve size we matched on.
+      lastMmPk.current = match.pk;
+      mmAwaitingSeed.current = false;
+      setMmSize(match.pk);
+    },
+    [diamondSizes],
+  );
+
+  const reset = useCallback(() => {
+    setPcs(undefined);
+    setRate(undefined);
+    setLabourRate(undefined);
+    setPc(undefined);
+    setMmSize(undefined);
+    setSieveSize(undefined);
+    setSeededSieveSize(undefined);
+    lastMmPk.current = undefined;
+    mmAwaitingSeed.current = loadsExistingLine;
+  }, [loadsExistingLine]);
+
+  const fields: ApiFormFieldSet = useMemo(() => {
     const pcsValue = toNumber(pcs);
 
     // 'C' is the model default, so an untouched P/C selector counts as C.
     const amount = pc === "P" ? roundAmount(pcsValue * toNumber(rate)) : "";
     const labourAmount = roundAmount(pcsValue * toNumber(labourRate));
 
+    const baseFields = costCardStoneLineFields(
+      ApiEndpoints.diamond_stone_list,
+      ApiEndpoints.diamond_shape_list,
+      ApiEndpoints.diamond_size_list,
+      ApiEndpoints.diamond_color_list,
+      ApiEndpoints.diamond_cut_list,
+      ApiEndpoints.diamond_quality_list,
+    );
+
     return {
       cost_card: { hidden: true, value: costCardId },
-      ...costCardStoneLineFields(
-        ApiEndpoints.diamond_stone_list,
-        ApiEndpoints.diamond_shape_list,
-        ApiEndpoints.diamond_size_list,
-        ApiEndpoints.diamond_color_list,
-        ApiEndpoints.diamond_cut_list,
-        ApiEndpoints.diamond_quality_list,
-      ),
+      ...baseFields,
+      mm_size: {
+        ...baseFields.mm_size,
+        value: mmSize,
+        onValueChange: onMmSizeChange,
+      },
+      sieve_size: {
+        field_type: "choice",
+        choices: sieveChoices,
+        value: sieveSize,
+        onValueChange: onSieveSizeChange,
+      },
       pcs: { onValueChange: (value: any) => setPcs(value) },
       pc: { onValueChange: (value: any) => setPc(value) },
       rate: { onValueChange: (value: any) => setRate(value) },
@@ -746,7 +934,20 @@ export function useCostCardDiamondLineFields(
         disabled: true,
       },
     };
-  }, [costCardId, pcs, rate, labourRate, pc]);
+  }, [
+    costCardId,
+    pcs,
+    rate,
+    labourRate,
+    pc,
+    mmSize,
+    sieveSize,
+    sieveChoices,
+    onMmSizeChange,
+    onSieveSizeChange,
+  ]);
+
+  return useMemo(() => ({ fields: fields, reset: reset }), [fields, reset]);
 }
 
 /**
