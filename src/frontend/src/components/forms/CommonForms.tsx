@@ -699,19 +699,68 @@ function costCardStoneLineFields(
   };
 }
 
-/** Diamond tab line fields — one row per diamond entry on the cost card. */
-export function costCardDiamondLineFields(costCardId: number): ApiFormFieldSet {
-  return {
-    cost_card: { hidden: true, value: costCardId },
-    ...costCardStoneLineFields(
-      ApiEndpoints.diamond_stone_list,
-      ApiEndpoints.diamond_shape_list,
-      ApiEndpoints.diamond_size_list,
-      ApiEndpoints.diamond_color_list,
-      ApiEndpoints.diamond_cut_list,
-      ApiEndpoints.diamond_quality_list,
-    ),
-  };
+/** Coerce a form value (string or number, possibly blank) to a number. */
+function toNumber(value: any): number {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/** Round to the two decimal places the amount columns are stored with. */
+function roundAmount(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+export function useCostCardDiamondLineFields(
+  costCardId: number,
+): ApiFormFieldSet {
+  const [pcs, setPcs] = useState<any>(undefined);
+  const [rate, setRate] = useState<any>(undefined);
+  const [labourRate, setLabourRate] = useState<any>(undefined);
+  const [pc, setPc] = useState<any>(undefined);
+
+  return useMemo(() => {
+    const pcsValue = toNumber(pcs);
+
+    // 'C' is the model default, so an untouched P/C selector counts as C.
+    const amount = pc === "P" ? roundAmount(pcsValue * toNumber(rate)) : "";
+    const labourAmount = roundAmount(pcsValue * toNumber(labourRate));
+
+    return {
+      cost_card: { hidden: true, value: costCardId },
+      ...costCardStoneLineFields(
+        ApiEndpoints.diamond_stone_list,
+        ApiEndpoints.diamond_shape_list,
+        ApiEndpoints.diamond_size_list,
+        ApiEndpoints.diamond_color_list,
+        ApiEndpoints.diamond_cut_list,
+        ApiEndpoints.diamond_quality_list,
+      ),
+      pcs: { onValueChange: (value: any) => setPcs(value) },
+      pc: { onValueChange: (value: any) => setPc(value) },
+      rate: { onValueChange: (value: any) => setRate(value) },
+      amount: { value: amount, read_only: true, disabled: true },
+      labour_rate: { onValueChange: (value: any) => setLabourRate(value) },
+      labour_amount: {
+        value: labourAmount,
+        read_only: true,
+        disabled: true,
+      },
+    };
+  }, [costCardId, pcs, rate, labourRate, pc]);
+}
+
+/**
+ * A per-carat line shows a blank Amount, but the backend column is a non-null
+ * decimal — send the blank as 0 rather than an empty string.
+ */
+export function processCostCardDiamondLineData(data: any): any {
+  const amount = data?.amount;
+
+  if (amount === "" || amount === null || amount === undefined) {
+    return { ...data, amount: 0 };
+  }
+
+  return data;
 }
 
 /** Color Stone tab line fields — one row per color stone entry on the cost card. */

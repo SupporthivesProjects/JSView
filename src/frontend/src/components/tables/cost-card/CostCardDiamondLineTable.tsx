@@ -13,7 +13,10 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableColumn } from "@lib/types/Tables";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { costCardDiamondLineFields } from "../../forms/CommonForms";
+import {
+  processCostCardDiamondLineData,
+  useCostCardDiamondLineFields,
+} from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -30,6 +33,10 @@ export default function CostCardDiamondLineTable({
 }: Readonly<{ costCardId: number }>) {
   const table = useTable("cost-card-diamond-line");
   const user = useUserState();
+
+  // One field set per modal - each keeps its own live Amount / L.Amount state.
+  const newLineFields = useCostCardDiamondLineFields(costCardId);
+  const editLineFields = useCostCardDiamondLineFields(costCardId);
 
   const { nameByPk: stoneByPk } = useNameLookup(
     ApiEndpoints.diamond_stone_list,
@@ -200,7 +207,8 @@ export default function CostCardDiamondLineTable({
   const newLine = useCreateApiFormModal({
     url: ApiEndpoints.cost_card_diamond_line,
     title: t`Add Diamond Line`,
-    fields: costCardDiamondLineFields(costCardId),
+    fields: newLineFields,
+    processFormData: processCostCardDiamondLineData,
     table: table,
   });
 
@@ -213,7 +221,8 @@ export default function CostCardDiamondLineTable({
     url: ApiEndpoints.cost_card_diamond_line,
     pk: selectedLine,
     title: t`Edit Diamond Line`,
-    fields: costCardDiamondLineFields(costCardId),
+    fields: editLineFields,
+    processFormData: processCostCardDiamondLineData,
     table: table,
   });
 
