@@ -1,5 +1,6 @@
 import { IconUsers } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
 import { ModelType } from "@lib/enums/ModelType";
@@ -440,8 +441,25 @@ export function stampFields(
 // containers/cost-card-detail) rather than a single modal, so its fields are
 // split into one set per tab instead of one flat costCardFields() blob.
 
-/** General tab — core identity, party, and measurement fields. */
-export function costCardGeneralFields(): ApiFormFieldSet {
+/**
+ * General tab — core identity, party, and measurement fields.
+ *
+ * Metal Grams drives Gross Weight and Net Weight: whatever is typed into
+ * Metal Grams is mirrored into both, and those two fields are read-only so
+ * they can only ever be set that way.
+ */
+export function useCostCardGeneralFields(): ApiFormFieldSet {
+  const [metalGrams, setMetalGrams] = useState<any>(undefined);
+
+  return useMemo(() => {
+    return costCardGeneralFieldSet(metalGrams, setMetalGrams);
+  }, [metalGrams]);
+}
+
+function costCardGeneralFieldSet(
+  metalGrams: any,
+  setMetalGrams: (value: any) => void,
+): ApiFormFieldSet {
   return {
     cost_card_no: { read_only: true },
     our_style_no: {},
@@ -482,7 +500,9 @@ export function costCardGeneralFields(): ApiFormFieldSet {
       },
     },
     karat: {},
-    metal_grams: {},
+    metal_grams: {
+      onValueChange: (value: any) => setMetalGrams(value),
+    },
     finding_type: {
       api_url: `${apiUrl(ApiEndpoints.finding_type)}?active=true`,
       modelRenderer: (arg: any) => {
@@ -491,8 +511,16 @@ export function costCardGeneralFields(): ApiFormFieldSet {
       },
     },
     finding_price: {},
-    gross_weight: {},
-    net_weight: {},
+    gross_weight: {
+      value: metalGrams,
+      read_only: true,
+      disabled: true,
+    },
+    net_weight: {
+      value: metalGrams,
+      read_only: true,
+      disabled: true,
+    },
     troy_ounce_price: {},
     height_mm: {},
     height_inch: {},
@@ -511,13 +539,64 @@ export function costCardGeneralFields(): ApiFormFieldSet {
   };
 }
 
-/** Labour Details tab — read-only rollups from the Finish / Diamond / Color Stone tabs. */
-export function costCardLabourFields(): ApiFormFieldSet {
-  return {
-    labour_finish_amount: { read_only: true },
-    labour_diamond_amount: { read_only: true },
-    labour_colorstone_amount: { read_only: true },
-  };
+/**
+ * Labour Details tab — read-only rollups from the Finish / Diamond / Color
+ * Stone tabs.
+ *
+ * The Finish Type rollup has no server-side computation, so it's summed
+ * here from the cost card's finish lines (one row per finish type, each
+ * with its own rate) and mirrored into the read-only labour_finish_amount
+ * field. Pass `refreshOn` (e.g. whether the Labour Details tab is the
+ * active tab) to have it re-fetch those lines - keep-mounted tabs don't
+ * remount on switch, so this is what picks up edits made on the Finish
+ * Type tab.
+ */
+export function useCostCardLabourFields(
+  costCardId: number | undefined,
+  refreshOn?: boolean,
+): ApiFormFieldSet {
+  const api = useApi();
+
+  const finishLinesQuery = useQuery({
+    queryKey: ["cost-card-finish-lines-for-labour", costCardId],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.cost_card_finish_line), {
+          params: { cost_card: costCardId, limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    enabled: !!costCardId,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (refreshOn && costCardId) {
+      finishLinesQuery.refetch();
+    }
+    // Only re-run when the caller flips the refresh trigger - not on every
+    // finishLinesQuery identity change (that would refetch in a loop).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshOn, costCardId]);
+
+  const finishAmount = useMemo(() => {
+    if (!finishLinesQuery.data) return undefined;
+    return finishLinesQuery.data.reduce(
+      (sum: number, line: any) => sum + (Number(line.rate) || 0),
+      0,
+    );
+  }, [finishLinesQuery.data]);
+
+  return useMemo(() => {
+    return {
+      labour_finish_amount: {
+        read_only: true,
+        disabled: true,
+        value: finishAmount,
+      },
+      labour_diamond_amount: { read_only: true },
+      labour_colorstone_amount: { read_only: true },
+    };
+  }, [finishAmount]);
 }
 
 /** Cost tab — editable percentages plus their computed (read-only) amounts. */

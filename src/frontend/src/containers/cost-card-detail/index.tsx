@@ -30,9 +30,9 @@ import { PageDetail } from "@components/nav/PageDetail";
 import { CreateApiForm, EditApiForm } from "@components/forms/ApiForm";
 import {
   costCardCostFields,
-  costCardGeneralFields,
-  costCardLabourFields,
   costCardRemarksFields,
+  useCostCardGeneralFields,
+  useCostCardLabourFields,
 } from "@components/forms/CommonForms";
 import CostCardFinishLineTable from "@components/tables/cost-card/CostCardFinishLineTable";
 import CostCardDiamondLineTable from "@components/tables/cost-card/CostCardDiamondLineTable";
@@ -69,6 +69,12 @@ export default function CostCardDetail() {
   const costCardId = isNew ? undefined : Number(id);
 
   const [activeTab, setActiveTab] = useState<string>("general");
+
+  const generalFields = useCostCardGeneralFields();
+  const labourFields = useCostCardLabourFields(
+    costCardId,
+    activeTab === "labour-details",
+  );
 
   const instanceQuery = useQuery({
     enabled: !isNew,
@@ -170,7 +176,7 @@ export default function CostCardDetail() {
               <CreateApiForm
                 props={{
                   url: ApiEndpoints.cost_card,
-                  fields: costCardGeneralFields(),
+                  fields: generalFields,
                   submitText: t`Create`,
                   gridColumns: FORM_GRID_COLUMNS,
                   onFormSuccess: (data: any) => {
@@ -183,7 +189,7 @@ export default function CostCardDetail() {
                 props={{
                   url: ApiEndpoints.cost_card,
                   pk: costCardId,
-                  fields: costCardGeneralFields(),
+                  fields: generalFields,
                   submitText: t`Save`,
                   gridColumns: FORM_GRID_COLUMNS,
                   onFormSuccess: (data: any) => setInstanceData(data),
@@ -212,7 +218,7 @@ export default function CostCardDetail() {
                 props={{
                   url: ApiEndpoints.cost_card,
                   pk: costCardId,
-                  fields: costCardLabourFields(),
+                  fields: labourFields,
                   submitText: t`Save`,
                   gridColumns: FORM_GRID_COLUMNS,
                   onFormSuccess: (data: any) => setInstanceData(data),

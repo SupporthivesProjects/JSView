@@ -315,6 +315,16 @@ export function ApiForm({
     const _fetchedData: any = initialDataQuery.data || {};
 
     for (const k of Object.keys(_fields)) {
+      // A field whose own definition already carries an explicit value
+      // (e.g. one computed live from another field via onValueChange, such
+      // as a rollup mirrored from a sibling tab) is caller-controlled -
+      // that value should keep winning on every recompute, not just the
+      // first. Otherwise, once initial data has been fetched once, this
+      // effect would keep re-asserting the stale fetched value over any
+      // later live update, since fetchedData itself never changes.
+      const hasExplicitValue =
+        _fields[k].value !== undefined && _fields[k].value !== null;
+
       // Ensure default values override initial field spec
       if (k in defaultValues) {
         _fields[k].value = defaultValues[k];
@@ -325,8 +335,9 @@ export function ApiForm({
         _fields[k].value = _initialData[k];
       }
 
-      // Ensure fetched data overrides also
-      if (_fetchedData && k in _fetchedData) {
+      // Ensure fetched data overrides also, unless the field itself already
+      // specifies an explicit, caller-controlled value.
+      if (_fetchedData && k in _fetchedData && !hasExplicitValue) {
         _fields[k].value = _fetchedData[k];
       }
     }
