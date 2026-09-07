@@ -1,12 +1,12 @@
 """DRF serializers for the 'properties' app."""
 
-from rest_framework import serializers
+from rest_framework.fields import empty
 
 from InvenTree.serializers import InvenTreeModelSerializer
 
 from data_exporter.mixins import DataExportSerializerMixin
-
-from company.models import Company
+from importer.mixins import DataImportSerializerMixin
+from importer.registry import register_importer
 
 from .models import (
     ColorStone,
@@ -26,41 +26,84 @@ from .models import (
 )
 
 
-class DiamondStoneSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondStone model."""
-
+@register_importer()
+class DiamondStoneSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondStone
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class DiamondCutSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondCut model."""
-
+@register_importer()
+class DiamondCutSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondCut
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class DiamondShapeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondShape model."""
-
+@register_importer()
+class DiamondShapeSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondShape
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class DiamondColorSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondColor model."""
-
+@register_importer()
+class DiamondColorSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondColor
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class DiamondSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondSize model."""
-
+@register_importer()
+class DiamondSizeSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondSize
         fields = [
@@ -75,49 +118,102 @@ class DiamondSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer)
         ]
 
 
-class DiamondQualitySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the DiamondQuality model."""
-
+@register_importer()
+class DiamondQualitySerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = DiamondQuality
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class ColorStoneSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStone model."""
-
+@register_importer()
+class ColorStoneSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStone
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class ColorStoneCutSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStoneCut model."""
-
+@register_importer()
+class ColorStoneCutSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStoneCut
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class ColorStoneShapeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStoneShape model."""
-
+@register_importer()
+class ColorStoneShapeSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStoneShape
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class ColorStoneColorSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStoneColor model."""
-
+@register_importer()
+class ColorStoneColorSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStoneColor
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class ColorStoneSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStoneSize model."""
-
+@register_importer()
+class ColorStoneSizeSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStoneSize
         fields = [
@@ -132,118 +228,133 @@ class ColorStoneSizeSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
         ]
 
 
-class ColorStoneQualitySerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
-    """Serializer for the ColorStoneQuality model."""
-
+@register_importer()
+class ColorStoneQualitySerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     class Meta:
         model = ColorStoneQuality
-        fields = ['pk', 'name', 'description', 'active', 'created_at', 'updated_at']
+        fields = [
+            'pk',
+            'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
 
 
-class RateCustomerMixin(metaclass=serializers.SerializerMetaclass):
-    """Shared customer multi-select fields for diamond / color-stone rates.
-
-    InvenTreeModelSerializer.run_validation instantiates the model with
-    ``Model(**validated_data)``. M2M values cannot be passed there, so
-    ``customers`` is stripped before validation/create and applied via .set().
-
-    SerializerMetaclass is required so ``customers`` is a declared serializer
-    field (PK list only — nested customer objects are not returned).
-    """
-
-    customers = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Company.objects.filter(is_customer=True),
-        required=False,
-        allow_empty=True,
-        help_text='Company PKs (is_customer=True) this rate applies to.',
-    )
-
-    def skip_create_fields(self):
-        fields = list(super().skip_create_fields())
-        if 'customers' not in fields:
-            fields.append('customers')
-        return fields
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        all_customers = attrs.get(
-            'all_customers',
-            getattr(self.instance, 'all_customers', False),
-        )
-        if all_customers:
-            self._rate_customers = []
-            attrs.pop('customers', None)
-        else:
-            self._rate_customers = attrs.pop('customers', serializers.empty)
-        return attrs
-
-    def create(self, validated_data):
-        validated_data.pop('customers', None)
-        instance = super().create(validated_data)
-        customers = getattr(self, '_rate_customers', serializers.empty)
-        if not instance.all_customers and customers not in (serializers.empty, None):
-            instance.customers.set(customers)
-        return instance
-
-    def update(self, instance, validated_data):
-        validated_data.pop('customers', None)
-        instance = super().update(instance, validated_data)
-        customers = getattr(self, '_rate_customers', serializers.empty)
-        if instance.all_customers:
-            instance.customers.clear()
-        elif customers is not serializers.empty:
-            instance.customers.set(customers)
-        return instance
-
-
+@register_importer()
 class DiamondStoneRateSerializer(
-    RateCustomerMixin, DataExportSerializerMixin, InvenTreeModelSerializer
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
 ):
-    """Serializer for the DiamondStoneRate model."""
-
-    shape_detail = DiamondShapeSerializer(read_only=True, source='shape')
-    mm_size_detail = DiamondSizeSerializer(read_only=True, source='mm_size')
-    stone_detail = DiamondStoneSerializer(read_only=True, source='stone')
-    color_detail = DiamondColorSerializer(read_only=True, source='color')
-    cut_detail = DiamondCutSerializer(read_only=True, source='cut')
-    quality_detail = DiamondQualitySerializer(read_only=True, source='quality')
-
     class Meta:
         model = DiamondStoneRate
         fields = [
             'pk',
-            'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
-            'pointer', 'rate', 'pc',
-            'customers', 'all_customers',
-            'active', 'created_at', 'updated_at',
-            'shape_detail', 'mm_size_detail', 'stone_detail',
-            'color_detail', 'cut_detail', 'quality_detail',
+            'shape',
+            'mm_size',
+            'stone',
+            'color',
+            'cut',
+            'quality',
+            'pointer',
+            'rate',
+            'pc',
+            'all_customers',
+            'customers',
+            'active',
+            'created_at',
+            'updated_at',
         ]
-        read_only_fields = ['pk', 'created_at', 'updated_at']
+
+    def run_validation(self, data=empty):
+        extra_m2m = {}
+
+        if data is not empty and hasattr(data, 'items'):
+            data = data.copy() if hasattr(data, 'copy') else dict(data)
+            if 'customers' in data:
+                if hasattr(data, 'getlist'):
+                    extra_m2m['customers'] = data.getlist('customers')
+                    del data['customers']
+                else:
+                    extra_m2m['customers'] = data.pop('customers')
+
+        validated_data = super().run_validation(data)
+        validated_data.update(extra_m2m)
+        return validated_data
+
+    def create(self, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().create(validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
+
+    def update(self, instance, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().update(instance, validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
 
 
+@register_importer()
 class ColorStoneRateSerializer(
-    RateCustomerMixin, DataExportSerializerMixin, InvenTreeModelSerializer
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
 ):
-    """Serializer for the ColorStoneRate model."""
-
-    shape_detail = ColorStoneShapeSerializer(read_only=True, source='shape')
-    mm_size_detail = ColorStoneSizeSerializer(read_only=True, source='mm_size')
-    stone_detail = ColorStoneSerializer(read_only=True, source='stone')
-    color_detail = ColorStoneColorSerializer(read_only=True, source='color')
-    cut_detail = ColorStoneCutSerializer(read_only=True, source='cut')
-    quality_detail = ColorStoneQualitySerializer(read_only=True, source='quality')
-
     class Meta:
         model = ColorStoneRate
         fields = [
             'pk',
-            'shape', 'mm_size', 'stone', 'color', 'cut', 'quality',
-            'pointer', 'rate', 'pc',
-            'customers', 'all_customers',
-            'active', 'created_at', 'updated_at',
-            'shape_detail', 'mm_size_detail', 'stone_detail',
-            'color_detail', 'cut_detail', 'quality_detail',
+            'shape',
+            'mm_size',
+            'stone',
+            'color',
+            'cut',
+            'quality',
+            'pointer',
+            'rate',
+            'pc',
+            'all_customers',
+            'customers',
+            'active',
+            'created_at',
+            'updated_at',
         ]
-        read_only_fields = ['pk', 'created_at', 'updated_at']
+
+    def run_validation(self, data=empty):
+        extra_m2m = {}
+
+        if data is not empty and hasattr(data, 'items'):
+            data = data.copy() if hasattr(data, 'copy') else dict(data)
+            if 'customers' in data:
+                if hasattr(data, 'getlist'):
+                    extra_m2m['customers'] = data.getlist('customers')
+                    del data['customers']
+                else:
+                    extra_m2m['customers'] = data.pop('customers')
+
+        validated_data = super().run_validation(data)
+        validated_data.update(extra_m2m)
+        return validated_data
+
+    def create(self, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().create(validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
+
+    def update(self, instance, validated_data):
+        customers = validated_data.pop('customers', None)
+        instance = super().update(instance, validated_data)
+        if customers is not None:
+            instance.customers.set(customers)
+        return instance
