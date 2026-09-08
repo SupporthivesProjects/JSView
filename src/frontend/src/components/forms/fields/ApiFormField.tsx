@@ -119,6 +119,7 @@ export function ApiFormField({
       allow_blank: undefined,
       allow_null: undefined,
       read_only: undefined,
+      valueFromCaller: undefined,
       children: undefined,
       exclude: undefined,
     };

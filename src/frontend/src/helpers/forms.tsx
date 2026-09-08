@@ -92,9 +92,16 @@ export function constructField({
   field: ApiFormFieldType;
   definition?: ApiFormFieldType;
 }) {
+  // Record whether the value comes from the caller's own field definition, or
+  // was merely inherited from a `default` in the API metadata. Only the former
+  // is a live, caller-controlled value that should keep winning over data
+  // fetched for an existing record (see the fetched-data merge in ApiForm).
+  const valueFromCaller = field.value !== undefined && field.value !== null;
+
   const def = {
     ...definition,
-    ...field
+    ...field,
+    valueFromCaller
   };
 
   switch (def.field_type) {

@@ -322,8 +322,16 @@ export function ApiForm({
       // first. Otherwise, once initial data has been fetched once, this
       // effect would keep re-asserting the stale fetched value over any
       // later live update, since fetchedData itself never changes.
+      //
+      // Note this must only consider a value the *caller* supplied. A value
+      // that merely came from a `default` in the API metadata (any model
+      // field with a Django default, e.g. the 0-defaulted decimals on a cost
+      // card) is not caller-controlled, and must never mask the value fetched
+      // for an existing record - that would render the whole form as defaults.
       const hasExplicitValue =
-        _fields[k].value !== undefined && _fields[k].value !== null;
+        _fields[k].valueFromCaller === true &&
+        _fields[k].value !== undefined &&
+        _fields[k].value !== null;
 
       // Ensure default values override initial field spec
       if (k in defaultValues) {
