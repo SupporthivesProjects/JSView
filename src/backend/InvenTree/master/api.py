@@ -2,6 +2,8 @@
 
 from django.urls import include, path
 
+from data_exporter.mixins import DataExportViewMixin
+
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework.pagination import LimitOffsetPagination
@@ -33,7 +35,7 @@ class MasterPagination(LimitOffsetPagination):
     max_limit = 100
 
 
-class MetalTypeList(ListCreateAPI):
+class MetalTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalType.objects.all()
     serializer_class = master_serializers.MetalTypeSerializer
     pagination_class = MasterPagination
@@ -51,7 +53,7 @@ class MetalTypeDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class MetalPurityList(ListCreateAPI):
+class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalPurity.objects.all()
     serializer_class = master_serializers.MetalPuritySerializer
     pagination_class = MasterPagination
@@ -69,7 +71,7 @@ class MetalPurityDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class MetalRateList(ListCreateAPI):
+class MetalRateList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalRate.objects.all()
     serializer_class = master_serializers.MetalRateSerializer
     pagination_class = MasterPagination
@@ -87,7 +89,7 @@ class MetalRateDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class FindingTypeList(ListCreateAPI):
+class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
     pagination_class = MasterPagination
@@ -105,7 +107,7 @@ class FindingTypeDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class FinishTypeList(ListCreateAPI):
+class FinishTypeList(DataExportViewMixin, ListCreateAPI):
     queryset = FinishType.objects.all()
     serializer_class = master_serializers.FinishTypeSerializer
     pagination_class = MasterPagination
@@ -123,7 +125,7 @@ class FinishTypeDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class SettingList(ListCreateAPI):
+class SettingList(DataExportViewMixin, ListCreateAPI):
     queryset = Setting.objects.all()
     serializer_class = master_serializers.SettingSerializer
     pagination_class = MasterPagination
@@ -141,7 +143,7 @@ class SettingDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class LabourSettingList(ListCreateAPI):
+class LabourSettingList(DataExportViewMixin, ListCreateAPI):
     queryset = LabourSetting.objects.all()
     serializer_class = master_serializers.LabourSettingSerializer
     pagination_class = MasterPagination
@@ -159,7 +161,7 @@ class LabourSettingDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class DutyList(ListCreateAPI):
+class DutyList(DataExportViewMixin, ListCreateAPI):
     queryset = Duty.objects.all()
     serializer_class = master_serializers.DutySerializer
     pagination_class = MasterPagination
@@ -177,7 +179,7 @@ class DutyDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class StampList(ListCreateAPI):
+class StampList(DataExportViewMixin, ListCreateAPI):
     queryset = Stamp.objects.all()
     serializer_class = master_serializers.StampSerializer
     pagination_class = MasterPagination
@@ -195,7 +197,7 @@ class StampDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class ACExecutiveList(ListCreateAPI):
+class ACExecutiveList(DataExportViewMixin, ListCreateAPI):
     queryset = ACExecutive.objects.all()
     serializer_class = master_serializers.ACExecutiveSerializer
     pagination_class = MasterPagination
@@ -213,7 +215,7 @@ class ACExecutiveDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class TermsList(ListCreateAPI):
+class TermsList(DataExportViewMixin, ListCreateAPI):
     queryset = Terms.objects.all()
     serializer_class = master_serializers.TermsSerializer
     pagination_class = MasterPagination
@@ -231,7 +233,7 @@ class TermsDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class CourierServiceList(ListCreateAPI):
+class CourierServiceList(DataExportViewMixin, ListCreateAPI):
     queryset = CourierService.objects.all()
     serializer_class = master_serializers.CourierServiceSerializer
     pagination_class = MasterPagination
@@ -249,7 +251,7 @@ class CourierServiceDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class JewelryCategoryList(ListCreateAPI):
+class JewelryCategoryList(DataExportViewMixin, ListCreateAPI):
     queryset = JewelryCategory.objects.all()
     serializer_class = master_serializers.JewelryCategorySerializer
     pagination_class = MasterPagination
@@ -267,7 +269,7 @@ class JewelryCategoryDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class JewelrySubCategoryList(ListCreateAPI):
+class JewelrySubCategoryList(DataExportViewMixin, ListCreateAPI):
     queryset = JewelrySubCategory.objects.all()
     serializer_class = master_serializers.JewelrySubCategorySerializer
     pagination_class = MasterPagination
@@ -285,7 +287,7 @@ class JewelrySubCategoryDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class TemplatesList(ListCreateAPI):
+class TemplatesList(DataExportViewMixin, ListCreateAPI):
     queryset = Templates.objects.all()
     serializer_class = master_serializers.TemplatesSerializer
     pagination_class = MasterPagination
@@ -303,7 +305,7 @@ class TemplatesDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
-class POMailList(ListCreateAPI):
+class POMailList(DataExportViewMixin, ListCreateAPI):
     queryset = POMail.objects.all()
     serializer_class = master_serializers.POMailSerializer
     pagination_class = MasterPagination
