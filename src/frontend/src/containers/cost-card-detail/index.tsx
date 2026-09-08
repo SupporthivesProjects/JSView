@@ -33,6 +33,7 @@ import {
   PatchApiForm,
 } from "@components/forms/ApiForm";
 import {
+  COST_CARD_FORM_GRID_COLUMNS,
   costCardCostFields,
   costCardRemarksFields,
   useCostCardGeneralFields,
@@ -49,7 +50,7 @@ const DETAIL_QUERY_KEY = "cost-card-detail-instance";
 
 // General/Cost/Labour Details forms lay their fields out in a responsive
 // grid instead of one long vertical stack.
-const FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
+const FORM_GRID_COLUMNS = COST_CARD_FORM_GRID_COLUMNS;
 
 /**
  * Cost Card create/edit view — rendered in the same "Cost Card" page as the

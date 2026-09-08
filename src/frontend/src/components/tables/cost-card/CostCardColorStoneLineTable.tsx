@@ -14,6 +14,8 @@ import useTable from "@lib/hooks/UseTable";
 import type { TableColumn } from "@lib/types/Tables";
 import { InvenTreeTable } from "../InvenTreeTable";
 import {
+  COST_CARD_FORM_GRID_COLUMNS,
+  COST_CARD_LINE_MODAL_SIZE,
   processCostCardStoneLineData,
   useCostCardColorStoneLineFields,
 } from "../../forms/CommonForms";
@@ -213,6 +215,10 @@ export default function CostCardColorStoneLineTable({
     processFormData: processCostCardStoneLineData,
     onClose: newLineFields.reset,
     table: table,
+    // A color stone line carries ~18 fields - lay them out across three
+    // columns in a wide modal rather than one long scroll.
+    gridColumns: COST_CARD_FORM_GRID_COLUMNS,
+    size: COST_CARD_LINE_MODAL_SIZE,
   });
 
   // --- Edit / Delete modals --------------------------------------------
@@ -228,6 +234,8 @@ export default function CostCardColorStoneLineTable({
     processFormData: processCostCardStoneLineData,
     onClose: editLineFields.reset,
     table: table,
+    gridColumns: COST_CARD_FORM_GRID_COLUMNS,
+    size: COST_CARD_LINE_MODAL_SIZE,
   });
 
   const deleteLine = useDeleteApiFormModal({

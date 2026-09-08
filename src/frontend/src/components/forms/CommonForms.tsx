@@ -446,6 +446,16 @@ export function stampFields(
 // split into one set per tab instead of one flat costCardFields() blob.
 
 /**
+ * Cost Card forms carry far too many fields for a single vertical stack, so
+ * they lay their fields out in a responsive grid - one column on a phone,
+ * three on a wide screen.
+ */
+export const COST_CARD_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
+
+/** Width of a cost card line modal, sized to hold three columns of fields. */
+export const COST_CARD_LINE_MODAL_SIZE = "72rem";
+
+/**
  * General tab — core identity, party, and measurement fields.
  *
  * Metal Grams drives Gross Weight and Net Weight: whatever is typed into
@@ -707,6 +717,9 @@ function costCardStoneLineFields(
     return instance?.name ?? "";
   };
 
+  // Field order is the order the form renders in, so keep related fields
+  // adjacent - the two linked size fields especially, and the rate fields
+  // next to the amounts they feed.
   return {
     stone: {
       api_url: apiUrl(stoneEndpoint),
@@ -726,6 +739,15 @@ function costCardStoneLineFields(
         return instance?.mm_size ?? "";
       },
     },
+    sieve_size: {
+      api_url: apiUrl(sizeEndpoint),
+      filters: { active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.sieve_size ?? "";
+      },
+    },
+    pointer: {},
     color: {
       api_url: apiUrl(colorEndpoint),
       filters: { active: true },
@@ -741,6 +763,13 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
+    pcs: {},
+    cts: {},
+    pc: {},
+    rate: {},
+    amount: {},
+    labour_rate: {},
+    labour_amount: {},
     setting: {
       api_url: apiUrl(ApiEndpoints.master_setting),
       filters: { active: true },
@@ -751,23 +780,7 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
-    pointer: {},
-    sieve_size: {
-      api_url: apiUrl(sizeEndpoint),
-      filters: { active: true },
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.sieve_size ?? "";
-      },
-    },
-    pcs: {},
-    cts: {},
     default_rate: {},
-    pc: {},
-    rate: {},
-    amount: {},
-    labour_rate: {},
-    labour_amount: {},
     active: {},
   };
 }
