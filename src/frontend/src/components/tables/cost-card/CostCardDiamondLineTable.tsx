@@ -14,7 +14,7 @@ import useTable from "@lib/hooks/UseTable";
 import type { TableColumn } from "@lib/types/Tables";
 import { InvenTreeTable } from "../InvenTreeTable";
 import {
-  processCostCardDiamondLineData,
+  processCostCardStoneLineData,
   useCostCardDiamondLineFields,
 } from "../../forms/CommonForms";
 import {
@@ -210,7 +210,7 @@ export default function CostCardDiamondLineTable({
     url: ApiEndpoints.cost_card_diamond_line,
     title: t`Add Diamond Line`,
     fields: newLineFields.fields,
-    processFormData: processCostCardDiamondLineData,
+    processFormData: processCostCardStoneLineData,
     onClose: newLineFields.reset,
     table: table,
   });
@@ -225,7 +225,7 @@ export default function CostCardDiamondLineTable({
     pk: selectedLine,
     title: t`Edit Diamond Line`,
     fields: editLineFields.fields,
-    processFormData: processCostCardDiamondLineData,
+    processFormData: processCostCardStoneLineData,
     onClose: editLineFields.reset,
     table: table,
   });

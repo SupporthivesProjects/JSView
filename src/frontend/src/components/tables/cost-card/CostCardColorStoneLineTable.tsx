@@ -13,7 +13,10 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableColumn } from "@lib/types/Tables";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { costCardColorStoneLineFields } from "../../forms/CommonForms";
+import {
+  processCostCardStoneLineData,
+  useCostCardColorStoneLineFields,
+} from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -30,6 +33,12 @@ export default function CostCardColorStoneLineTable({
 }: Readonly<{ costCardId: number }>) {
   const table = useTable("cost-card-colorstone-line");
   const user = useUserState();
+
+  // One field set per modal - each keeps its own live Amount / L.Amount and
+  // MM Size / Sieve Size state, cleared again when its modal closes. Only the
+  // edit modal loads an existing line.
+  const newLineFields = useCostCardColorStoneLineFields(costCardId);
+  const editLineFields = useCostCardColorStoneLineFields(costCardId, true);
 
   const { nameByPk: stoneByPk } = useNameLookup(
     ApiEndpoints.color_stone_type_list,
@@ -200,7 +209,9 @@ export default function CostCardColorStoneLineTable({
   const newLine = useCreateApiFormModal({
     url: ApiEndpoints.cost_card_colorstone_line,
     title: t`Add Color Stone Line`,
-    fields: costCardColorStoneLineFields(costCardId),
+    fields: newLineFields.fields,
+    processFormData: processCostCardStoneLineData,
+    onClose: newLineFields.reset,
     table: table,
   });
 
@@ -213,7 +224,9 @@ export default function CostCardColorStoneLineTable({
     url: ApiEndpoints.cost_card_colorstone_line,
     pk: selectedLine,
     title: t`Edit Color Stone Line`,
-    fields: costCardColorStoneLineFields(costCardId),
+    fields: editLineFields.fields,
+    processFormData: processCostCardStoneLineData,
+    onClose: editLineFields.reset,
     table: table,
   });
 

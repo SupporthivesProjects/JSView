@@ -757,13 +757,53 @@ function roundAmount(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** The properties endpoints backing one stone tab's dropdowns. */
+type CostCardStoneLineEndpoints = {
+  stone: ApiEndpoints;
+  shape: ApiEndpoints;
+  size: ApiEndpoints;
+  color: ApiEndpoints;
+  cut: ApiEndpoints;
+  quality: ApiEndpoints;
+};
+
+const DIAMOND_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
+  stone: ApiEndpoints.diamond_stone_list,
+  shape: ApiEndpoints.diamond_shape_list,
+  size: ApiEndpoints.diamond_size_list,
+  color: ApiEndpoints.diamond_color_list,
+  cut: ApiEndpoints.diamond_cut_list,
+  quality: ApiEndpoints.diamond_quality_list,
+};
+
+const COLOR_STONE_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
+  stone: ApiEndpoints.color_stone_type_list,
+  shape: ApiEndpoints.color_stone_shape_list,
+  size: ApiEndpoints.color_stone_size_list,
+  color: ApiEndpoints.color_stone_color_list,
+  cut: ApiEndpoints.color_stone_cut_list,
+  quality: ApiEndpoints.color_stone_quality_list,
+};
+
 /**
- * MM Size and Sieve Size are two views of the same Diamond Size record in
- * Diamond Properties (each record pairs an mm size with a sieve size), so both
- * are dropdowns over that master list and each prefills the other.
+ * Line fields for a stone tab (Diamond or Color Stone) - the two tabs behave
+ * identically, over their own properties endpoints.
  *
- * The line stores the sieve size as plain text, so Sieve Size is a choice
- * field over the sieve sizes on those records rather than a related field.
+ * Amount and L.Amount are read-only: they are computed live from Pcs, Rate,
+ * L.Rate and the P/C (rate unit) selector, and can only ever come from those.
+ *
+ *   P (per piece): Amount = Pcs × Rate
+ *   C (per carat): Amount is blanked out — a per-carat line is not priced by
+ *                  piece count. It is stored as 0, see
+ *                  processCostCardStoneLineData().
+ *
+ * L.Amount = Pcs × L.Rate either way.
+ *
+ * MM Size and Sieve Size are two views of the same size record in Properties
+ * (each record pairs an mm size with a sieve size), so both are dropdowns over
+ * that master list and each prefills the other. The line stores the sieve size
+ * as plain text, so Sieve Size is a choice field over the sieve sizes on those
+ * records rather than a related field.
  *
  * Pass `loadsExistingLine` on a form that fetches an existing line (the edit
  * modal), so the stored MM Size arriving on load is not read as the user
@@ -773,9 +813,10 @@ function roundAmount(value: number): number {
  * this hook lives in the table - so wire the returned `reset` up to the
  * modal's onClose, or the next line opens with the previous one's values.
  */
-export function useCostCardDiamondLineFields(
+function useCostCardStoneLineFields(
   costCardId: number,
-  loadsExistingLine: boolean = false,
+  endpoints: CostCardStoneLineEndpoints,
+  loadsExistingLine: boolean,
 ): { fields: ApiFormFieldSet; reset: () => void } {
   const api = useApi();
 
@@ -796,10 +837,10 @@ export function useCostCardDiamondLineFields(
   const lastMmPk = useRef<any>(undefined);
   const mmAwaitingSeed = useRef<boolean>(loadsExistingLine);
 
-  const diamondSizesQuery = useQuery({
-    queryKey: ["cost-card-diamond-sizes"],
+  const stoneSizesQuery = useQuery({
+    queryKey: ["cost-card-stone-sizes", endpoints.size],
     queryFn: async () => {
-      const url = apiUrl(ApiEndpoints.diamond_size_list);
+      const url = apiUrl(endpoints.size);
 
       // The properties endpoints cap a page at 100 records, so walk the pages
       // rather than asking for one oversized one and silently losing sizes.
@@ -832,16 +873,16 @@ export function useCostCardDiamondLineFields(
     staleTime: 5 * 60 * 1000,
   });
 
-  const diamondSizes: any[] = useMemo(
-    () => diamondSizesQuery.data ?? [],
-    [diamondSizesQuery.data],
+  const stoneSizes: any[] = useMemo(
+    () => stoneSizesQuery.data ?? [],
+    [stoneSizesQuery.data],
   );
 
   const sieveChoices: ApiFormFieldChoice[] = useMemo(() => {
     const seen = new Set<string>();
     const choices: ApiFormFieldChoice[] = [];
 
-    for (const size of diamondSizes) {
+    for (const size of stoneSizes) {
       const value = size?.sieve_size;
 
       if (!value || seen.has(value)) continue;
@@ -857,7 +898,7 @@ export function useCostCardDiamondLineFields(
     }
 
     return choices;
-  }, [diamondSizes, sieveSize, seededSieveSize]);
+  }, [stoneSizes, sieveSize, seededSieveSize]);
 
   // MM Size -> Sieve Size.
   const onMmSizeChange = useCallback((value: any, record: any) => {
@@ -893,7 +934,7 @@ export function useCostCardDiamondLineFields(
 
       setSieveSize(value ?? "");
 
-      const match = diamondSizes.find((size) => size?.sieve_size === value);
+      const match = stoneSizes.find((size) => size?.sieve_size === value);
 
       if (!match?.pk) return;
 
@@ -903,7 +944,7 @@ export function useCostCardDiamondLineFields(
       mmAwaitingSeed.current = false;
       setMmSize(match.pk);
     },
-    [diamondSizes],
+    [stoneSizes],
   );
 
   const reset = useCallback(() => {
@@ -926,12 +967,12 @@ export function useCostCardDiamondLineFields(
     const labourAmount = roundAmount(pcsValue * toNumber(labourRate));
 
     const baseFields = costCardStoneLineFields(
-      ApiEndpoints.diamond_stone_list,
-      ApiEndpoints.diamond_shape_list,
-      ApiEndpoints.diamond_size_list,
-      ApiEndpoints.diamond_color_list,
-      ApiEndpoints.diamond_cut_list,
-      ApiEndpoints.diamond_quality_list,
+      endpoints.stone,
+      endpoints.shape,
+      endpoints.size,
+      endpoints.color,
+      endpoints.cut,
+      endpoints.quality,
     );
 
     return {
@@ -961,6 +1002,7 @@ export function useCostCardDiamondLineFields(
     };
   }, [
     costCardId,
+    endpoints,
     pcs,
     rate,
     labourRate,
@@ -975,11 +1017,35 @@ export function useCostCardDiamondLineFields(
   return useMemo(() => ({ fields: fields, reset: reset }), [fields, reset]);
 }
 
+/** Diamond tab line fields — one row per diamond entry on the cost card. */
+export function useCostCardDiamondLineFields(
+  costCardId: number,
+  loadsExistingLine: boolean = false,
+): { fields: ApiFormFieldSet; reset: () => void } {
+  return useCostCardStoneLineFields(
+    costCardId,
+    DIAMOND_LINE_ENDPOINTS,
+    loadsExistingLine,
+  );
+}
+
+/** Color Stone tab line fields — one row per color stone entry on the card. */
+export function useCostCardColorStoneLineFields(
+  costCardId: number,
+  loadsExistingLine: boolean = false,
+): { fields: ApiFormFieldSet; reset: () => void } {
+  return useCostCardStoneLineFields(
+    costCardId,
+    COLOR_STONE_LINE_ENDPOINTS,
+    loadsExistingLine,
+  );
+}
+
 /**
  * A per-carat line shows a blank Amount, but the backend column is a non-null
  * decimal — send the blank as 0 rather than an empty string.
  */
-export function processCostCardDiamondLineData(data: any): any {
+export function processCostCardStoneLineData(data: any): any {
   const amount = data?.amount;
 
   if (amount === "" || amount === null || amount === undefined) {
@@ -987,23 +1053,6 @@ export function processCostCardDiamondLineData(data: any): any {
   }
 
   return data;
-}
-
-/** Color Stone tab line fields — one row per color stone entry on the cost card. */
-export function costCardColorStoneLineFields(
-  costCardId: number,
-): ApiFormFieldSet {
-  return {
-    cost_card: { hidden: true, value: costCardId },
-    ...costCardStoneLineFields(
-      ApiEndpoints.color_stone_type_list,
-      ApiEndpoints.color_stone_shape_list,
-      ApiEndpoints.color_stone_size_list,
-      ApiEndpoints.color_stone_color_list,
-      ApiEndpoints.color_stone_cut_list,
-      ApiEndpoints.color_stone_quality_list,
-    ),
-  };
 }
 
 /** Finish Type tab line fields — one row per finish applied to the cost card. */
