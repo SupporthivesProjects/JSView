@@ -547,13 +547,14 @@ function costCardGeneralFieldSet(
  * Labour Details tab — read-only rollups from the Finish / Diamond / Color
  * Stone tabs.
  *
- * Neither rollup has server-side computation, so each is summed here from
- * the cost card's own lines (finish lines by `rate`, diamond lines by
- * `labour_amount`) and mirrored into the matching read-only
- * labour_finish_amount / labour_diamond_amount field. Pass `refreshOn`
- * (e.g. whether the Labour Details tab is the active tab) to have it
- * re-fetch those lines - keep-mounted tabs don't remount on switch, so
- * this is what picks up edits made on the Finish Type / Diamond tabs.
+ * None of the rollups have server-side computation, so each is summed here
+ * from the cost card's own lines (finish lines by `rate`, diamond and color
+ * stone lines by `labour_amount`) and mirrored into the matching read-only
+ * labour_finish_amount / labour_diamond_amount / labour_colorstone_amount
+ * field. Pass `refreshOn` (e.g. whether the Labour Details tab is the
+ * active tab) to have it re-fetch those lines - keep-mounted tabs don't
+ * remount on switch, so this is what picks up edits made on the Finish
+ * Type / Diamond / Color Stone tabs.
  */
 export function useCostCardLabourFields(
   costCardId: number | undefined,
@@ -585,10 +586,23 @@ export function useCostCardLabourFields(
     staleTime: 0,
   });
 
+  const colorstoneLinesQuery = useQuery({
+    queryKey: ["cost-card-colorstone-lines-for-labour", costCardId],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.cost_card_colorstone_line), {
+          params: { cost_card: costCardId, limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    enabled: !!costCardId,
+    staleTime: 0,
+  });
+
   useEffect(() => {
     if (refreshOn && costCardId) {
       finishLinesQuery.refetch();
       diamondLinesQuery.refetch();
+      colorstoneLinesQuery.refetch();
     }
     // Only re-run when the caller flips the refresh trigger - not on every
     // query identity change (that would refetch in a loop).
@@ -611,6 +625,14 @@ export function useCostCardLabourFields(
     );
   }, [diamondLinesQuery.data]);
 
+  const colorstoneAmount = useMemo(() => {
+    if (!colorstoneLinesQuery.data) return undefined;
+    return colorstoneLinesQuery.data.reduce(
+      (sum: number, line: any) => sum + (Number(line.labour_amount) || 0),
+      0,
+    );
+  }, [colorstoneLinesQuery.data]);
+
   return useMemo(() => {
     return {
       labour_finish_amount: {
@@ -623,9 +645,13 @@ export function useCostCardLabourFields(
         disabled: true,
         value: diamondAmount,
       },
-      labour_colorstone_amount: { read_only: true },
+      labour_colorstone_amount: {
+        read_only: true,
+        disabled: true,
+        value: colorstoneAmount,
+      },
     };
-  }, [finishAmount, diamondAmount]);
+  }, [finishAmount, diamondAmount, colorstoneAmount]);
 }
 
 /** Cost tab — editable percentages plus their computed (read-only) amounts. */
