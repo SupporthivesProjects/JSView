@@ -547,13 +547,13 @@ function costCardGeneralFieldSet(
  * Labour Details tab — read-only rollups from the Finish / Diamond / Color
  * Stone tabs.
  *
- * The Finish Type rollup has no server-side computation, so it's summed
- * here from the cost card's finish lines (one row per finish type, each
- * with its own rate) and mirrored into the read-only labour_finish_amount
- * field. Pass `refreshOn` (e.g. whether the Labour Details tab is the
- * active tab) to have it re-fetch those lines - keep-mounted tabs don't
- * remount on switch, so this is what picks up edits made on the Finish
- * Type tab.
+ * Neither rollup has server-side computation, so each is summed here from
+ * the cost card's own lines (finish lines by `rate`, diamond lines by
+ * `labour_amount`) and mirrored into the matching read-only
+ * labour_finish_amount / labour_diamond_amount field. Pass `refreshOn`
+ * (e.g. whether the Labour Details tab is the active tab) to have it
+ * re-fetch those lines - keep-mounted tabs don't remount on switch, so
+ * this is what picks up edits made on the Finish Type / Diamond tabs.
  */
 export function useCostCardLabourFields(
   costCardId: number | undefined,
@@ -573,12 +573,25 @@ export function useCostCardLabourFields(
     staleTime: 0,
   });
 
+  const diamondLinesQuery = useQuery({
+    queryKey: ["cost-card-diamond-lines-for-labour", costCardId],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.cost_card_diamond_line), {
+          params: { cost_card: costCardId, limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    enabled: !!costCardId,
+    staleTime: 0,
+  });
+
   useEffect(() => {
     if (refreshOn && costCardId) {
       finishLinesQuery.refetch();
+      diamondLinesQuery.refetch();
     }
     // Only re-run when the caller flips the refresh trigger - not on every
-    // finishLinesQuery identity change (that would refetch in a loop).
+    // query identity change (that would refetch in a loop).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshOn, costCardId]);
 
@@ -590,6 +603,14 @@ export function useCostCardLabourFields(
     );
   }, [finishLinesQuery.data]);
 
+  const diamondAmount = useMemo(() => {
+    if (!diamondLinesQuery.data) return undefined;
+    return diamondLinesQuery.data.reduce(
+      (sum: number, line: any) => sum + (Number(line.labour_amount) || 0),
+      0,
+    );
+  }, [diamondLinesQuery.data]);
+
   return useMemo(() => {
     return {
       labour_finish_amount: {
@@ -597,10 +618,14 @@ export function useCostCardLabourFields(
         disabled: true,
         value: finishAmount,
       },
-      labour_diamond_amount: { read_only: true },
+      labour_diamond_amount: {
+        read_only: true,
+        disabled: true,
+        value: diamondAmount,
+      },
       labour_colorstone_amount: { read_only: true },
     };
-  }, [finishAmount]);
+  }, [finishAmount, diamondAmount]);
 }
 
 /** Cost tab — editable percentages plus their computed (read-only) amounts. */
