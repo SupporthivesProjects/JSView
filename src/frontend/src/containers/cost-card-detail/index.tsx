@@ -27,7 +27,11 @@ import { UserRoles } from "@lib/enums/Roles";
 import { apiUrl } from "@lib/functions/Api";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
-import { CreateApiForm, EditApiForm } from "@components/forms/ApiForm";
+import {
+  CreateApiForm,
+  EditApiForm,
+  PatchApiForm,
+} from "@components/forms/ApiForm";
 import {
   costCardCostFields,
   costCardRemarksFields,
@@ -214,7 +218,7 @@ export default function CostCardDetail() {
 
           <Tabs.Panel value="labour-details" p="sm">
             {costCardId && (
-              <EditApiForm
+              <PatchApiForm
                 props={{
                   url: ApiEndpoints.cost_card,
                   pk: costCardId,
@@ -239,7 +243,7 @@ export default function CostCardDetail() {
 
           <Tabs.Panel value="cost" p="sm">
             {costCardId && (
-              <EditApiForm
+              <PatchApiForm
                 props={{
                   url: ApiEndpoints.cost_card,
                   pk: costCardId,
@@ -254,7 +258,7 @@ export default function CostCardDetail() {
 
           <Tabs.Panel value="remarks" p="sm">
             {costCardId && (
-              <EditApiForm
+              <PatchApiForm
                 props={{
                   url: ApiEndpoints.cost_card,
                   pk: costCardId,

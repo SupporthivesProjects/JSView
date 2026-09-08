@@ -848,6 +848,35 @@ export function EditApiForm({
   return <OptionsApiForm props={editProps} id={id} />;
 }
 
+/**
+ * Same as EditApiForm, but submits a PATCH (partial update) instead of a PUT.
+ *
+ * Use this whenever the form only renders *some* of the model's fields (e.g.
+ * one tab of a multi-tab record): a PUT replaces the whole object, so every
+ * required field the form does not render comes back as "This field is
+ * required.". The OPTIONS metadata for PATCH is read from the PUT action,
+ * so the rendered fields are identical either way.
+ */
+export function PatchApiForm({
+  id,
+  props
+}: Readonly<{
+  id?: string;
+  props: ApiFormProps;
+}>) {
+  const patchProps = useMemo<ApiFormProps>(
+    () => ({
+      ...props,
+      fetchInitialData: props.fetchInitialData ?? true,
+      submitText: props.submitText ?? t`Update`,
+      method: 'PATCH'
+    }),
+    [props]
+  );
+
+  return <OptionsApiForm props={patchProps} id={id} />;
+}
+
 export function DeleteApiForm({
   id,
   props
