@@ -976,7 +976,12 @@ function useCostCardStoneLineFields(
     if (pk === lastMmPk.current) return;
 
     lastMmPk.current = pk;
-    setMmSize(pk);
+
+    // Push the cleared state back as a blank rather than a null: ApiForm only
+    // treats a non-null field value as caller-controlled, and a null one is
+    // overwritten again by the data fetched for the line being edited. The
+    // field's adjustValue turns the blank back into a null for the form.
+    setMmSize(pk ?? "");
 
     // The two fields are one pair, so clearing MM Size clears Sieve Size.
     if (!pk) {
@@ -1005,7 +1010,7 @@ function useCostCardStoneLineFields(
       if (!value) {
         lastMmPk.current = null;
         mmAwaitingSeed.current = false;
-        setMmSize(null);
+        setMmSize("");
         return;
       }
 
@@ -1056,6 +1061,7 @@ function useCostCardStoneLineFields(
       mm_size: {
         ...baseFields.mm_size,
         value: mmSize,
+        adjustValue: (value: any) => (value === "" ? null : value),
         onValueChange: onMmSizeChange,
       },
       sieve_size: {

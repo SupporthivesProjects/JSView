@@ -83,6 +83,12 @@ function RelatedModelFieldComponent({
   // Handle condition where the form is rebuilt dynamically
   useEffect(() => {
     if (isMulti) return;
+
+    // An explicitly empty form value means the selection was cleared - either
+    // by the user, or by another field this one is linked to - so the (stale)
+    // internal pk must not be pushed back into the form here.
+    if (field.value === null || field.value === '') return;
+
     const value = field.value || pk;
     if (value && value != form.getValues()[fieldName]) {
       form.setValue(fieldName, value);
