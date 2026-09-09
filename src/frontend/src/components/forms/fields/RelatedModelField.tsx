@@ -313,6 +313,15 @@ function RelatedModelFieldComponent({
     // If the value is unchanged, do nothing
     if (field.value === pk) return;
 
+    // An explicitly empty form value means the selection was cleared - either
+    // by the user, or by another field this one is linked to - so drop the
+    // displayed selection instead of reloading it from the internal pk.
+    if (field.value === null || field.value === '') {
+      requestedIdRef.current = null;
+      setPk(null);
+      return;
+    }
+
     const id = field.value || pk;
 
     if (id !== null && id !== undefined && id !== '') {

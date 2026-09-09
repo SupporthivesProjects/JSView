@@ -976,11 +976,15 @@ function useCostCardStoneLineFields(
     if (pk === lastMmPk.current) return;
 
     lastMmPk.current = pk;
-
-    // Clearing the dropdown leaves the sieve size alone.
-    if (!pk) return;
-
     setMmSize(pk);
+
+    // The two fields are one pair, so clearing MM Size clears Sieve Size.
+    if (!pk) {
+      setSieveSize("");
+      setSeededSieveSize(undefined);
+      return;
+    }
+
     setSieveSize(record?.sieve_size ?? "");
   }, []);
 
@@ -995,6 +999,15 @@ function useCostCardStoneLineFields(
       }
 
       setSieveSize(value ?? "");
+      setSeededSieveSize(undefined);
+
+      // ... and clearing Sieve Size clears MM Size.
+      if (!value) {
+        lastMmPk.current = null;
+        mmAwaitingSeed.current = false;
+        setMmSize(null);
+        return;
+      }
 
       const match = stoneSizes.find((size) => size?.sieve_size === value);
 
@@ -1048,6 +1061,7 @@ function useCostCardStoneLineFields(
       sieve_size: {
         field_type: "choice",
         choices: sieveChoices,
+        clearable: true,
         value: sieveSize,
         onValueChange: onSieveSizeChange,
       },

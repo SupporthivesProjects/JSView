@@ -56,9 +56,13 @@ function ChoiceFieldComponent({
     [field.onChange, definition]
   );
 
+  /* Mantine only resets the text shown in a searchable select when its value
+   * is *null* - handing it an empty string instead leaves the previous
+   * selection on display, so an empty value is normalised to null here.
+   */
   const choiceValue = useMemo(() => {
-    if (!value) {
-      return '';
+    if (value === undefined || value === null || value === '') {
+      return null;
     } else {
       return value.toString();
     }
@@ -85,6 +89,7 @@ function ChoiceFieldComponent({
       disabled={definition.disabled}
       leftSection={definition.icon}
       comboboxProps={{ withinPortal: true }}
+      clearable={definition.clearable && !definition.required}
       searchable
       selectFirstOptionOnChange
     />
