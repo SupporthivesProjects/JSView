@@ -52,6 +52,13 @@ const DETAIL_QUERY_KEY = "cost-card-detail-instance";
 // grid instead of one long vertical stack.
 const FORM_GRID_COLUMNS = COST_CARD_FORM_GRID_COLUMNS;
 
+// The page itself must not scroll: the tab strip and the form's Save button
+// stay put and only the field area scrolls. The subtracted height is the
+// chrome above the fields (app header, page title, tab strip, padding) plus
+// the chrome below them (button row, footer), with a floor so the field area
+// stays usable on a short screen.
+const FORM_BODY_MAX_HEIGHT = "clamp(18rem, calc(100vh - 24rem), 100vh)";
+
 /**
  * Cost Card create/edit view — rendered in the same "Cost Card" page as the
  * table (same title, same Paper container), with a horizontal row of tabs
@@ -184,6 +191,7 @@ export default function CostCardDetail() {
                   fields: generalFields,
                   submitText: t`Create`,
                   gridColumns: FORM_GRID_COLUMNS,
+                  bodyMaxHeight: FORM_BODY_MAX_HEIGHT,
                   onFormSuccess: (data: any) => {
                     navigate(`/cards/cost-card/${data.pk}`);
                   },
@@ -197,6 +205,7 @@ export default function CostCardDetail() {
                   fields: generalFields,
                   submitText: t`Save`,
                   gridColumns: FORM_GRID_COLUMNS,
+                  bodyMaxHeight: FORM_BODY_MAX_HEIGHT,
                   onFormSuccess: (data: any) => setInstanceData(data),
                 }}
               />
@@ -226,6 +235,7 @@ export default function CostCardDetail() {
                   fields: labourFields,
                   submitText: t`Save`,
                   gridColumns: FORM_GRID_COLUMNS,
+                  bodyMaxHeight: FORM_BODY_MAX_HEIGHT,
                   onFormSuccess: (data: any) => setInstanceData(data),
                 }}
               />
@@ -251,6 +261,7 @@ export default function CostCardDetail() {
                   fields: costCardCostFields(),
                   submitText: t`Save`,
                   gridColumns: FORM_GRID_COLUMNS,
+                  bodyMaxHeight: FORM_BODY_MAX_HEIGHT,
                   onFormSuccess: (data: any) => setInstanceData(data),
                 }}
               />
@@ -265,6 +276,7 @@ export default function CostCardDetail() {
                   pk: costCardId,
                   fields: costCardRemarksFields(),
                   submitText: t`Save`,
+                  bodyMaxHeight: FORM_BODY_MAX_HEIGHT,
                   onFormSuccess: (data: any) => setInstanceData(data),
                 }}
               />

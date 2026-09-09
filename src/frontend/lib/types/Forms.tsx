@@ -209,6 +209,13 @@ export interface ApiFormProps {
   gridColumns?:
     | number
     | Partial<Record<'base' | 'xs' | 'sm' | 'md' | 'lg' | 'xl', number>>;
+  /**
+   * Optional height cap for the scrolling field area (default: 65vh).
+   * A form rendered inside a page rather than a modal can pass a smaller
+   * value so the page's own chrome and the form's action buttons stay on
+   * screen, and only the field area scrolls.
+   */
+  bodyMaxHeight?: string | number;
 }
 
 /**

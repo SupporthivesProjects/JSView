@@ -692,9 +692,11 @@ export function ApiForm({
     []
   );
 
+  const bodyMaxHeight = props.bodyMaxHeight ?? '65vh';
+
   if (optionsLoading || initialDataQuery.isFetching) {
     return (
-      <Paper mah={'65vh'}>
+      <Paper mah={bodyMaxHeight}>
         <LoadingOverlay visible zIndex={1010} />
       </Paper>
     );
@@ -708,7 +710,7 @@ export function ApiForm({
 
         {/* Attempt at making fixed footer with scroll area */}
         <Paper
-          mah={'65vh'}
+          mah={bodyMaxHeight}
           style={{
             overflowY: 'auto',
             paddingRight: '15px',
