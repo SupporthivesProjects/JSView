@@ -62,6 +62,7 @@ export type ApiFormFieldHeader = {
  * @param read_only : Whether the field is read-only
  * @param placeholder : The placeholder text to display
  * @param placeholderAutofill: Whether to allow auto-filling of the placeholder value
+ * @param boxed : Render a 'boolean' field inside a bordered panel (label on the left, switch on the right) so it lines up with neighbouring inputs in a grid layout
  * @param multiline : Render a 'string' field as a multi-line textarea rather than a single line input
  * @param minRows : Minimum number of visible rows for a multiline field (default = 3)
  * @param maxRows : Maximum number of rows a multiline field grows to before scrolling (default = 8)
@@ -127,6 +128,7 @@ export type ApiFormFieldType = {
   read_only?: boolean;
   placeholder?: string;
   placeholderAutofill?: boolean;
+  boxed?: boolean;
   multiline?: boolean;
   minRows?: number;
   maxRows?: number;

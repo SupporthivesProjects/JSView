@@ -26,7 +26,7 @@ export function projectCodeFields(): ApiFormFieldSet {
     responsible: {
       icon: <IconUsers />,
     },
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -35,7 +35,7 @@ export function metalTypeFields(): ApiFormFieldSet {
     code: {},
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -43,7 +43,7 @@ export function stonePlaceFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -58,7 +58,7 @@ export function metalPurityFields(): ApiFormFieldSet {
     },
     name: {},
     purity: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -73,7 +73,7 @@ export function metalRate(): ApiFormFieldSet {
     },
     rate: {},
     date: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -82,7 +82,7 @@ export function masterTerms(): ApiFormFieldSet {
     name: {},
     days: {},
     description: {},
-    active: {},
+    active: { boxed: true },
     vendors: {
       field_type: "related field",
       model: ModelType.company,
@@ -106,7 +106,7 @@ export function masterCourierService(): ApiFormFieldSet {
     phone: {},
     email: {},
     tracking_url: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -116,7 +116,7 @@ export function masterExecutive(): ApiFormFieldSet {
     code: {},
     email: {},
     phone: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 export function findingTypeFields(): ApiFormFieldSet {
@@ -127,7 +127,7 @@ export function findingTypeFields(): ApiFormFieldSet {
     weight: {},
     metal: {},
     price: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -135,7 +135,7 @@ export function finishTypeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -152,7 +152,7 @@ export function ListDutyFields(): ApiFormFieldSet {
     duty: {},
     markup: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -160,7 +160,7 @@ export function MasterSettingFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -176,7 +176,7 @@ export function LabourSettingFields(): ApiFormFieldSet {
     },
     charge_type: {},
     rate: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -210,7 +210,7 @@ export function masterVendors(): ApiFormFieldSet {
     rating: {},
     credit_limit: {},
     ref_by: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 export function vendorContactFields(): ApiFormFieldSet {
@@ -265,7 +265,7 @@ export function masterCustomer(): ApiFormFieldSet {
     rating: {},
     credit_limit: {},
     ref_by: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -273,7 +273,7 @@ export function jewelleryCategoryFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -288,7 +288,7 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
     },
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -296,7 +296,7 @@ export function colorStoneTypeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -304,7 +304,7 @@ export function colorStoneCutFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -312,7 +312,7 @@ export function colorStoneShapeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -320,7 +320,7 @@ export function colorStoneColorFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -330,7 +330,7 @@ export function colorStoneSizeFields(): ApiFormFieldSet {
     mm_size: {},
     sieve_size: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -338,7 +338,7 @@ export function colorStoneQualityFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -402,7 +402,7 @@ export function colorStoneRateFields(): ApiFormFieldSet {
       },
     },
     all_customers: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -425,8 +425,12 @@ export function stampFields(
         return instance?.code ?? "";
       },
     },
-    all_customers: {},
-    active: {},
+    // all_customers: {
+    //   boxed: true,
+    // },
+    // active: {
+    //   boxed: true,
+    // },
   };
 
   if (includeImage) {
@@ -435,6 +439,19 @@ export function stampFields(
       onValueChange: (value: any) => {
         onImageChange?.(value instanceof File ? value : null);
       },
+    };
+  }
+
+  {
+    fields.all_customers = {
+      field_type: "boolean",
+      boxed: true
+    };
+  }
+  {
+    fields.active = {
+      field_type: "boolean",
+      boxed: true
     };
   }
 
@@ -547,7 +564,9 @@ function costCardGeneralFieldSet(
     drape_length_mm: {},
     drape_length_inch: {},
     remarks: {},
-    active: {},
+    active: {
+      boxed: true,
+    },
     design_note: {
       multiline: true,
     },
@@ -784,8 +803,8 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
-    default_rate: {},
-    active: {},
+    default_rate: { boxed: true},
+    active: { boxed: true },
   };
 }
 
@@ -1110,7 +1129,7 @@ export function costCardFinishLineFields(costCardId: number): ApiFormFieldSet {
       },
     },
     rate: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1118,7 +1137,7 @@ export function DiamondStoneFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1126,7 +1145,7 @@ export function diamondCutFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1134,7 +1153,7 @@ export function diamondShapeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1142,7 +1161,7 @@ export function diamondColorFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1152,7 +1171,7 @@ export function diamondSizeFields(): ApiFormFieldSet {
     mm_size: {},
     sieve_size: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1160,7 +1179,7 @@ export function diamondQualityFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1226,7 +1245,7 @@ export function diamondRateFields(): ApiFormFieldSet {
       },
     },
     all_customers: {},
-    active: {},
+    active: { boxed: true },
   };
 }
 
@@ -1512,7 +1531,7 @@ export function selectionListFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
-    active: {},
+    active: { boxed: true },
     source_plugin: {},
     source_string: {},
   };
@@ -1523,6 +1542,6 @@ export function selectionEntryFields(): ApiFormFieldSet {
     value: {},
     label: {},
     description: {},
-    active: {},
+    active: { boxed: true },
   };
 }
