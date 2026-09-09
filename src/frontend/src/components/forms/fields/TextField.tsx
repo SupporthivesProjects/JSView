@@ -1,4 +1,4 @@
-import { TextInput } from '@mantine/core';
+import { Textarea, TextInput } from '@mantine/core';
 import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { FieldValues, UseControllerReturn } from 'react-hook-form';
 import AutoFillRightSection from './AutoFillRightSection';
@@ -51,17 +51,32 @@ function TextField({
   const fieldDefinition = useMemo(() => {
     return {
       ...definition,
-      allow_blank: undefined
+      allow_blank: undefined,
+      multiline: undefined,
+      minRows: undefined,
+      maxRows: undefined
     };
   }, [definition]);
 
+  // Fields marked as 'multiline' render as a <Textarea> rather than a single
+  // line <TextInput> - used for free-form notes / instruction fields.
+  const InputComponent = definition.multiline ? Textarea : TextInput;
+
+  const multilineProps = definition.multiline
+    ? {
+        autosize: true,
+        minRows: definition.minRows ?? 3,
+        maxRows: definition.maxRows ?? 8
+      }
+    : { type: definition.field_type };
+
   return (
-    <TextInput
+    <InputComponent
       {...fieldDefinition}
+      {...multilineProps}
       ref={field.ref}
       id={fieldId}
       aria-label={`text-field-${field.name}`}
-      type={definition.field_type}
       value={textValue || ''}
       error={definition.error ?? error?.message}
       radius='sm'
@@ -73,6 +88,12 @@ function TextField({
       }}
       onKeyDown={(event) => {
         if (event.code === 'Enter') {
+          // In a multiline field Enter inserts a newline, so it must not
+          // reach the form-level "submit on Enter" handler (mod+Enter
+          // still submits the form).
+          if (definition.multiline) {
+            return;
+          }
           // Bypass debounce on enter key
           onTextChange(event.currentTarget.value);
         }

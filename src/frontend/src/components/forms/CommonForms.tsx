@@ -546,10 +546,14 @@ function costCardGeneralFieldSet(
     shank_size_inch: {},
     drape_length_mm: {},
     drape_length_inch: {},
-    design_note: {},
-    special_note: {},
     remarks: {},
     active: {},
+    design_note: {
+      multiline: true,
+    },
+    special_note: {
+      multiline: true,
+    },
   };
 }
 
