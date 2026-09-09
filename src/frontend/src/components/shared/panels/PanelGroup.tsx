@@ -22,6 +22,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState
 } from 'react';
 import {
@@ -59,6 +60,12 @@ import { useLocalState } from '@store/LocalState';
 import { vars } from '../../../styles/theme';
 import * as classes from './PanelGroup.css';
 
+/* Space left below a 'fillHeight' panel group for the page footer. */
+const FILL_HEIGHT_BOTTOM_GUTTER = 48;
+
+/* Never shrink a 'fillHeight' panel group below this height. */
+const FILL_HEIGHT_MINIMUM = 300;
+
 /**
  * Set of properties which define a panel group:
  *
@@ -71,6 +78,7 @@ import * as classes from './PanelGroup.css';
  * @param selectedPanel - The currently selected panel
  * @param onPanelChange - Callback when the active panel changes
  * @param collapsible - If true, the panel group can be collapsed (defaults to true)
+ * @param fillHeight - If true, the group fills the remaining viewport height instead of growing with its content: the page itself does not scroll, and the tab sidebar and panel content scroll independently
  * @param pluginPanelWithoutId - If true, the panel group will load plugin panels even with no id provided
  * @param pluginPanelKey - The plugin panel key to use when loading plugin panels for this group from the backend
  */
@@ -86,6 +94,7 @@ export type PanelProps = {
   defaultPanel?: string;
   onPanelChange?: (panel: string) => void;
   collapsible?: boolean;
+  fillHeight?: boolean;
   pluginPanelWithoutId?: boolean;
   pluginPanelKey?: PluginPanelKey;
 };
@@ -194,6 +203,7 @@ function BasePanelGroup({
   model,
   id,
   collapsible = true,
+  fillHeight = false,
   pluginPanelWithoutId = false,
   pluginPanelKey
 }: Readonly<PanelProps>): ReactNode {
@@ -362,17 +372,67 @@ function BasePanelGroup({
     }
   });
 
+  /* For a 'fillHeight' group, size the group to whatever is left of the
+   * viewport below it, so the page as a whole does not scroll. The offset
+   * above the group (header, breadcrumbs, page title) varies from page to
+   * page, so it is measured rather than hard-coded.
+   */
+  const groupRef = useRef<HTMLDivElement>(null);
+  const [groupHeight, setGroupHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (!fillHeight) {
+      setGroupHeight(undefined);
+      return;
+    }
+
+    const updateHeight = () => {
+      const element = groupRef.current;
+
+      if (!element) {
+        return;
+      }
+
+      const offsetTop = element.getBoundingClientRect().top + window.scrollY;
+
+      setGroupHeight(
+        Math.max(
+          window.innerHeight - offsetTop - FILL_HEIGHT_BOTTOM_GUTTER,
+          FILL_HEIGHT_MINIMUM
+        )
+      );
+    };
+
+    updateHeight();
+
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, [fillHeight]);
+
   return (
     <Boundary label={`PanelGroup-${pageKey}`}>
-      <Paper p='sm' radius='xs' shadow='xs' aria-label={`${pageKey}`}>
+      <Paper
+        ref={groupRef}
+        p='sm'
+        radius='xs'
+        shadow='xs'
+        aria-label={`${pageKey}`}
+        className={fillHeight ? classes.fillHeightGroup : undefined}
+        style={fillHeight ? { height: groupHeight } : undefined}
+      >
         <Tabs
           value={currentPanel}
           orientation='vertical'
           keepMounted={false}
           aria-label={`panel-group-${pageKey}`}
+          className={fillHeight ? classes.fillHeightTabs : undefined}
           classNames={{ tab: classes.selectedPanelTab }}
         >
-          <Tabs.List justify='left' aria-label={`panel-tabs-${pageKey}`}>
+          <Tabs.List
+            justify='left'
+            aria-label={`panel-tabs-${pageKey}`}
+            className={fillHeight ? classes.fillHeightTabList : undefined}
+          >
             {groupedPanels.map((group) => (
               <Box key={`group-${group.id}`} w={'100%'}>
                 <Text
@@ -437,6 +497,7 @@ function BasePanelGroup({
                     `${pageKey}-${panel.name}`
                   )}`}
                   p='sm'
+                  className={fillHeight ? classes.fillHeightPanel : undefined}
                   style={{
                     overflowX: 'scroll',
                     width: '100%'

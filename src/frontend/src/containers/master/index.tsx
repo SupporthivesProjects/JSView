@@ -163,7 +163,7 @@ export default function MetalTypeIndex() {
   return (
     <Stack>
       <PageDetail title={t`Master`} />
-      <PanelGroup pageKey="metal-type-index" panels={panels} />
+      <PanelGroup pageKey="metal-type-index" panels={panels} fillHeight />
     </Stack>
   );
 }
