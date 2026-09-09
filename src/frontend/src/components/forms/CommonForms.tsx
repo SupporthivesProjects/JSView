@@ -722,7 +722,7 @@ export function costCardCostFields(): ApiFormFieldSet {
 /** Remarks tab — the detailed remarks field (distinct from the short General-tab remarks). */
 export function costCardRemarksFields(): ApiFormFieldSet {
   return {
-    remarks_full: {},
+    remarks_full: { multiline: true, minRows: 10},
   };
 }
 
