@@ -61,13 +61,13 @@ function BooleanFieldComponent({
         p='xs'
         bg={
           booleanValue
-            ? 'var(--mantine-color-green-light)'
+            ? 'var(--mantine-color-default)'
             : 'var(--mantine-color-default)'
         }
         style={{
-          borderColor: booleanValue
-            ? 'var(--mantine-color-green-filled)'
-            : undefined,
+          // borderColor: booleanValue
+          //   ? 'var(--mantine-color-green-filled)'
+          //   : undefined,
           transition: 'background-color 150ms ease, border-color 150ms ease'
         }}
       >

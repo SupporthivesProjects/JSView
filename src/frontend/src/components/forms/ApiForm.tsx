@@ -718,7 +718,9 @@ export function ApiForm({
             paddingLeft: '5px'
           }}
         >
-          <div>
+          {/* 'api-form' is the styling hook for form-wide rules in
+              styles/overrides.css - notably the disabled field appearance */}
+          <div className='api-form'>
             {/* Form Fields */}
             <Stack gap='sm'>
               {(!isValid || nonFieldErrors.length > 0) && (
