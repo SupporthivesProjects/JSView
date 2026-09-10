@@ -401,7 +401,7 @@ export function colorStoneRateFields(): ApiFormFieldSet {
         return instance?.code ?? "";
       },
     },
-    all_customers: {},
+    all_customers: { boxed: true },
     active: { boxed: true },
   };
 }
@@ -445,13 +445,13 @@ export function stampFields(
   {
     fields.all_customers = {
       field_type: "boolean",
-      boxed: true
+      boxed: true,
     };
   }
   {
     fields.active = {
       field_type: "boolean",
-      boxed: true
+      boxed: true,
     };
   }
 
@@ -722,7 +722,7 @@ export function costCardCostFields(): ApiFormFieldSet {
 /** Remarks tab — the detailed remarks field (distinct from the short General-tab remarks). */
 export function costCardRemarksFields(): ApiFormFieldSet {
   return {
-    remarks_full: { multiline: true, minRows: 10},
+    remarks_full: { multiline: true, minRows: 10 },
   };
 }
 
@@ -803,7 +803,7 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
-    default_rate: { boxed: true},
+    default_rate: { boxed: true },
     active: { boxed: true },
   };
 }
@@ -1266,7 +1266,7 @@ export function diamondRateFields(): ApiFormFieldSet {
         return instance?.code ?? "";
       },
     },
-    all_customers: {},
+    all_customers: { boxed: true },
     active: { boxed: true },
   };
 }
