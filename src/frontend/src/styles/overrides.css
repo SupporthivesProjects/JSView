@@ -1,8 +1,10 @@
 /* fullcalendar multimonth single-column (scroll-year) overrides */
+/* fullcalendar multimonth single-column (scroll-year) overrides */
 .fc-multimonth-singlecol .fc-multimonth-title {
   padding: 0.35em 0;
 }
 
+/* Alternating month backgrounds in the multi-month scroll calendar view */
 /* Alternating month backgrounds in the multi-month scroll calendar view */
 [data-mantine-color-scheme='light'] .fc-day-month-odd:not(.fc-day-today) {
   background-color: var(--mantine-color-gray-1);
@@ -12,6 +14,7 @@
 }
 
 /* Today highlight */
+/* Today highlight */
 [data-mantine-color-scheme='light'] .fc-day-today {
   background-color: var(--mantine-color-blue-1) !important;
 }
@@ -19,6 +22,7 @@
   background-color: var(--mantine-color-blue-9) !important;
 }
 
+/* mantine-datatable overrides */
 /* mantine-datatable overrides */
 .mantine-datatable-pointer-cursor,
 .mantine-datatable-context-menu-cursor {
