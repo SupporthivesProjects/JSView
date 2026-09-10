@@ -82,7 +82,6 @@ export function masterTerms(): ApiFormFieldSet {
     name: {},
     days: {},
     description: {},
-    active: { boxed: true },
     vendors: {
       field_type: "related field",
       model: ModelType.company,
@@ -95,7 +94,9 @@ export function masterTerms(): ApiFormFieldSet {
         return instance?.code ?? "";
       },
     },
-    all_vendors: {},
+    all_vendors: { boxed: true },
+    active: { boxed: true },
+
   };
 }
 
@@ -413,7 +414,21 @@ export function stampFields(
   const fields: ApiFormFieldSet = {
     name: {},
     description: {},
-    customers: {
+  };
+
+  if (includeImage) {
+    fields.image = {
+      field_type: "file upload",
+      onValueChange: (value: any) => {
+        onImageChange?.(value instanceof File ? value : null);
+      },
+    };
+  }
+
+  {
+    fields.customer = {
+      label: "Customer",
+      description: "Customers assigned to this stamp.",
       field_type: "related field",
       model: ModelType.company,
       multiple: true,
@@ -423,21 +438,6 @@ export function stampFields(
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.code ?? "";
-      },
-    },
-    // all_customers: {
-    //   boxed: true,
-    // },
-    // active: {
-    //   boxed: true,
-    // },
-  };
-
-  if (includeImage) {
-    fields.image = {
-      field_type: "file upload",
-      onValueChange: (value: any) => {
-        onImageChange?.(value instanceof File ? value : null);
       },
     };
   }
