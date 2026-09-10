@@ -28,3 +28,11 @@
 .mantine-datatable-resizable-columns {
   table-layout: auto !important;
 }
+
+.api-form input:disabled,
+.api-form textarea:disabled,
+.api-form select:disabled,
+.api-form [class*='mantine']:has(> input:disabled) {
+  color: black;
+  opacity: 1;
+}
