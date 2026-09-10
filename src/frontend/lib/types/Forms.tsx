@@ -63,6 +63,7 @@ export type ApiFormFieldHeader = {
  * @param placeholder : The placeholder text to display
  * @param placeholderAutofill: Whether to allow auto-filling of the placeholder value
  * @param clearable : Allow a 'choice' field selection to be cleared, via a clear button in the input (ignored for required fields)
+ * @param searchableSelect : Render a 'choice' field using the same select control as a related field, so a choice field sitting alongside related fields matches them
  * @param boxed : Render a 'boolean' field inside a bordered panel (label on the left, switch on the right) so it lines up with neighbouring inputs in a grid layout
  * @param multiline : Render a 'string' field as a multi-line textarea rather than a single line input
  * @param minRows : Minimum number of visible rows for a multiline field (default = 3)
@@ -130,6 +131,7 @@ export type ApiFormFieldType = {
   placeholder?: string;
   placeholderAutofill?: boolean;
   clearable?: boolean;
+  searchableSelect?: boolean;
   boxed?: boolean;
   multiline?: boolean;
   minRows?: number;

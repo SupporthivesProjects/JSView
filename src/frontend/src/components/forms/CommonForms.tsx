@@ -1067,6 +1067,8 @@ function useCostCardStoneLineFields(
       sieve_size: {
         field_type: "choice",
         choices: sieveChoices,
+        // Match the MM Size dropdown it sits next to, which is a related field.
+        searchableSelect: true,
         clearable: true,
         value: sieveSize,
         onValueChange: onSieveSizeChange,

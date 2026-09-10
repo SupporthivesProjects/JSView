@@ -1,11 +1,5 @@
 import { t } from '@lingui/core/macro';
-import {
-  Group,
-  Input,
-  darken,
-  useMantineColorScheme,
-  useMantineTheme
-} from '@mantine/core';
+import { Group, Input } from '@mantine/core';
 import { useDebouncedValue, useId } from '@mantine/hooks';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -40,10 +34,10 @@ import {
   useGlobalSettingsState,
   useUserSettingsState
 } from '@store/SettingsStates';
-import { vars } from '../../../styles/theme';
 import { ScanButton } from '../../ui/buttons/ScanButton';
 import Expand from '../../ui/items/Expand';
 import { RenderInstance } from '../../shared/render/Instance';
+import { selectFieldStyles, useSelectFieldColors } from './SelectFieldTheme';
 
 /**
  * Render a 'select' field for searching the database against a particular model type
@@ -563,52 +557,7 @@ function RelatedModelFieldComponent({
     return _data.find((item) => item.value === pk);
   }, [pk, data]);
 
-  // Field doesn't follow Mantine theming
-  // Define color theme to pass to field based on Mantine theme
-  const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
-
-  const colors = useMemo(() => {
-    let colors: any;
-    if (colorScheme === 'dark') {
-      colors = {
-        neutral0: vars.colors.dark[6],
-        neutral5: vars.colors.dark[4],
-        neutral10: vars.colors.dark[4],
-        neutral20: vars.colors.dark[4],
-        neutral30: vars.colors.dark[3],
-        neutral40: vars.colors.dark[2],
-        neutral50: vars.colors.dark[1],
-        neutral60: vars.colors.dark[0],
-        neutral70: vars.colors.dark[0],
-        neutral80: vars.colors.dark[0],
-        neutral90: vars.colors.dark[0],
-        primary: vars.colors.primaryColors[7],
-        primary25: vars.colors.primaryColors[6],
-        primary50: vars.colors.primaryColors[5],
-        primary75: vars.colors.primaryColors[4]
-      };
-    } else {
-      colors = {
-        neutral0: vars.colors.white,
-        neutral5: darken(vars.colors.white, 0.05),
-        neutral10: darken(vars.colors.white, 0.1),
-        neutral20: darken(vars.colors.white, 0.2),
-        neutral30: darken(vars.colors.white, 0.3),
-        neutral40: darken(vars.colors.white, 0.4),
-        neutral50: darken(vars.colors.white, 0.5),
-        neutral60: darken(vars.colors.white, 0.6),
-        neutral70: darken(vars.colors.white, 0.7),
-        neutral80: darken(vars.colors.white, 0.8),
-        neutral90: darken(vars.colors.white, 0.9),
-        primary: vars.colors.primaryColors[7],
-        primary25: vars.colors.primaryColors[4],
-        primary50: vars.colors.primaryColors[5],
-        primary75: vars.colors.primaryColors[6]
-      };
-    }
-    return colors;
-  }, [theme]);
+  const colors = useSelectFieldColors();
 
   return (
     <Input.Wrapper
@@ -660,14 +609,7 @@ function RelatedModelFieldComponent({
             menuPortalTarget={document.body}
             noOptionsMessage={() => t`No results found`}
             menuPosition='fixed'
-            styles={{
-              menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
-              clearIndicator: (base: any) => ({
-                ...base,
-                color: 'red',
-                ':hover': { color: 'red' }
-              })
-            }}
+            styles={selectFieldStyles}
             formatOptionLabel={(option: any) => formatOption(option)}
             theme={(theme) => {
               return {

@@ -18,6 +18,7 @@ import type { NavigateFunction } from "react-router-dom";
 import DateTimeField from "../DateTimeField";
 import { BooleanField } from "./BooleanField";
 import { ChoiceField } from "./ChoiceField";
+import { SearchableChoiceField } from "./SearchableChoiceField";
 import DateField from "./DateField";
 import { DependentField } from "./DependentField";
 import IconField from "./IconField";
@@ -259,7 +260,13 @@ export function ApiFormField({
           />
         );
       case "choice":
-        return (
+        return fieldDefinition.searchableSelect ? (
+          <SearchableChoiceField
+            controller={controller}
+            fieldName={fieldName}
+            definition={fieldDefinition}
+          />
+        ) : (
           <ChoiceField
             controller={controller}
             fieldName={fieldName}
