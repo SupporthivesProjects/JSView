@@ -47,7 +47,15 @@ class CostCardAdmin(admin.ModelAdmin):
         'sub_category', 'final_amount', 'active', 'created_at', 'updated_at',
     )
     search_fields = ('cost_card_no', 'our_style_no', 'vendor_style_no')
-    autocomplete_fields = ('vendor', 'customer', 'category', 'sub_category', 'metal_purity', 'finding_type')
+    autocomplete_fields = (
+        'vendor',
+        'customer',
+        'category',
+        'sub_category',
+        'metal_purity',
+        'finding_type',
+        'finding_item',
+    )
     list_filter = ('active', 'category', 'sub_category')
     inlines = [CostCardDiamondLineInline, CostCardColorStoneLineInline, CostCardFinishLineInline]
 

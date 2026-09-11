@@ -255,6 +255,7 @@ class CostCardSerializer(
             'karat',
             'metal_grams',
             'finding_type',
+            'finding_item',
             'finding_price',
             'gross_weight',
             'net_weight',
