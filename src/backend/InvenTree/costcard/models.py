@@ -7,7 +7,7 @@ from company.models import Company
 
 from master.models import (
     JewelryCategory, JewelrySubCategory, MetalPurity,
-    FindingType, Setting, FinishType,
+    FindingType, FindingItem, Setting, FinishType,
 )
 from properties.models import (
     DiamondStone, DiamondShape, DiamondSize, DiamondColor, DiamondCut, DiamondQuality, DiamondStoneRate,
@@ -69,6 +69,7 @@ class CostCard(CardsFieldsMixin):
     karat = models.CharField(max_length=20, null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14KT, 18KT.'))
     metal_grams = models.DecimalField(max_digits=10, decimal_places=3, verbose_name=_('Metal Grams'), help_text=_('Weight of metal used, in grams.'))
     finding_type = models.ForeignKey(FindingType, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Finding Type'), help_text=_('Finding type used on this piece.'))
+    finding_item = models.ForeignKey(FindingItem,null=True, blank=True,on_delete=models.SET_NULL,related_name='cost_cards', verbose_name=_('Finding Item'),help_text=_('Finding item used on this piece.'),)
     finding_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Finding Price'), help_text=_('Price charged for the finding used.'))
     gross_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Gross Weight'), help_text=_('Total gross weight of the piece.'))
     net_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Net Weight'), help_text=_('Net weight of the piece excluding stones.'))

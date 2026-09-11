@@ -62,6 +62,7 @@ class CostCardList(DataExportViewMixin, ListCreateAPI):
         'sub_category',
         'metal_purity',
         'finding_type',
+        'finding_item',
         'active',
     ]
     search_fields = [
