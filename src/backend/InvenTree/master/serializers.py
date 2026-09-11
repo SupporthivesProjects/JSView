@@ -12,6 +12,7 @@ from .models import (
     ACExecutive,
     CourierService,
     Duty,
+    FindingItem,
     FindingType,
     FinishType,
     JewelryCategory,
@@ -96,11 +97,29 @@ class FindingTypeSerializer(
         fields = [
             'pk',
             'name',
+            'description',
+            'active',
+            'created_at',
+            'updated_at',
+        ]
+
+
+@register_importer()
+class FindingItemSerializer(
+    DataImportSerializerMixin,
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
+    class Meta:
+        model = FindingItem
+        fields = [
+            'pk',
+            'finding_type',
+            'name',
             'type',
             'weight',
             'metal',
             'price',
-            'description',
             'active',
             'created_at',
             'updated_at',
@@ -209,7 +228,6 @@ class StampSerializer(
         if data is not empty and hasattr(data, 'items'):
             data = data.copy() if hasattr(data, 'copy') else dict(data)
             if 'customers' in data:
-                # old: extra_m2m['customers'] = data.pop('customers')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
                 if hasattr(data, 'getlist'):
                     extra_m2m['customers'] = data.getlist('customers')
                     del data['customers']
@@ -281,7 +299,6 @@ class TermsSerializer(
         if data is not empty and hasattr(data, 'items'):
             data = data.copy() if hasattr(data, 'copy') else dict(data)
             if 'vendors' in data:
-                # old: extra_m2m['vendors'] = data.pop('vendors')  # QueryDict.pop() only returns the LAST value, and calling del afterward raised KeyError since pop() already removes the key
                 if hasattr(data, 'getlist'):
                     extra_m2m['vendors'] = data.getlist('vendors')
                     del data['vendors']

@@ -14,6 +14,7 @@ from .models import (
     ACExecutive,
     CourierService,
     Duty,
+    FindingItem,
     FindingType,
     FinishType,
     JewelryCategory,
@@ -95,15 +96,33 @@ class FindingTypeList(DataExportViewMixin, ListCreateAPI):
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['type', 'active']
-    search_fields = ['name', 'type', 'metal', 'description']
-    ordering_fields = ['name', 'type', 'weight', 'price', 'active']
+    filterset_fields = ['active']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'active']
     ordering = 'name'
 
 
 class FindingTypeDetail(RetrieveUpdateDestroyAPI):
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
+    permission_classes = [MasterDataPermission]
+
+
+class FindingItemList(DataExportViewMixin, ListCreateAPI):
+    queryset = FindingItem.objects.all()
+    serializer_class = master_serializers.FindingItemSerializer
+    pagination_class = MasterPagination
+    permission_classes = [MasterDataPermission]
+    filter_backends = SEARCH_ORDER_FILTER
+    filterset_fields = ['finding_type', 'active']
+    search_fields = ['name', 'type', 'metal', 'finding_type__name']
+    ordering_fields = ['name', 'type', 'weight', 'price', 'active']
+    ordering = 'name'
+
+
+class FindingItemDetail(RetrieveUpdateDestroyAPI):
+    queryset = FindingItem.objects.all()
+    serializer_class = master_serializers.FindingItemSerializer
     permission_classes = [MasterDataPermission]
 
 
@@ -342,6 +361,11 @@ master_api_urls = [
     path('finding-type/', include([
         path('<int:pk>/', FindingTypeDetail.as_view(), name='api-finding-type-detail'),
         path('', FindingTypeList.as_view(), name='api-finding-type-list'),
+    ])),
+
+    path('finding-item/', include([
+        path('<int:pk>/', FindingItemDetail.as_view(), name='api-finding-item-detail'),
+        path('', FindingItemList.as_view(), name='api-finding-item-list'),
     ])),
 
     path('finish-type/', include([

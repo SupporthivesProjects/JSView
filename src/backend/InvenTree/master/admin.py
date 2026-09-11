@@ -57,9 +57,19 @@ class MetalRateAdmin(admin.ModelAdmin):
 class FindingTypeAdmin(admin.ModelAdmin):
     """Admin class for the FindingType model."""
 
-    list_display = ('name', 'type', 'weight', 'metal', 'price', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'type', 'metal', 'description')
-    list_filter = ('type', 'active')
+    list_display = ('name', 'description', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'description')
+    list_filter = ('active',)
+
+
+@admin.register(models.FindingItem)
+class FindingItemAdmin(admin.ModelAdmin):
+    """Admin class for the FindingItem model."""
+
+    list_display = ('finding_type', 'name', 'type', 'weight', 'metal', 'price', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'type', 'metal', 'finding_type__name')
+    autocomplete_fields = ('finding_type',)
+    list_filter = ('active',)
 
 
 @admin.register(models.FinishType)

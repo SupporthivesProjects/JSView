@@ -181,12 +181,8 @@ class MetalRate(MasterFieldsMixin):
 class FindingType(MasterFieldsMixin):
     """Jewelry finding type (e.g. Chain, Clasp, Hook, Jump Ring)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Finding Item'), help_text=_('Name of the jewelry finding item.'))
-    type = models.CharField(max_length=100, blank=True, null=True, verbose_name=_('Type'), help_text=_('Type or specification of the finding, e.g. CABLE - 30.'))
-    weight = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Wt.'), help_text=_('Weight of the finding in grams.'))
-    metal = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal of the finding, e.g. 14 KT Gold.'))
-    price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Price'), help_text=_('Price of the finding.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finding.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Finding Type'), help_text=_('Name of the jewelry finding type.'))
+    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finding type.'))
 
     class Meta:
         verbose_name = _('Finding Type')
@@ -194,13 +190,35 @@ class FindingType(MasterFieldsMixin):
         ordering = ['name']
         indexes = [
             models.Index(fields=['name']),
-            models.Index(fields=['type']),
             models.Index(fields=['active']),
         ]
 
     def __str__(self):
         return self.name
-    
+
+class FindingItem(MasterFieldsMixin):
+    """Jewelry finding item belonging to a finding type."""
+
+    finding_type = models.ForeignKey(FindingType, on_delete=models.CASCADE, related_name='items', verbose_name=_('Finding Type'))
+    name = models.CharField(max_length=100, verbose_name=_('Finding Item'))
+    type = models.CharField(max_length=100, blank=True, null=True, verbose_name=_('Type'), help_text=_('Type or specification of the finding, e.g. CABLE - 30.'))
+    weight = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Wt.'), help_text=_('Weight of the finding in grams.'))
+    metal = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal of the finding, e.g. 14 KT Gold.'))
+    price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Price'), help_text=_('Price of the finding.'))
+
+    class Meta:
+        verbose_name = _('Finding Item')
+        verbose_name_plural = _('Finding Items')
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['finding_type']),
+            models.Index(fields=['name']),
+            models.Index(fields=['active']),
+        ]
+
+    def __str__(self):
+        return self.name
+        
 
 class FinishType(MasterFieldsMixin):
     """Surface finish type (e.g. Matte, Glossy, Antique)."""
