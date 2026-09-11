@@ -158,12 +158,12 @@ class CostCard(CardsFieldsMixin):
             last_card = CostCard.objects.order_by('-id').first()
 
             if last_card:
-                last_number = int(last_card.cost_card_no.replace('CC', ''))
+                last_number = int(last_card.cost_card_no)
                 next_number = last_number + 1
             else:
                 next_number = 1
 
-            self.cost_card_no = f'CC{next_number:06d}'
+            self.cost_card_no = f'{next_number:06d}'
 
         super().save(*args, **kwargs)
 
