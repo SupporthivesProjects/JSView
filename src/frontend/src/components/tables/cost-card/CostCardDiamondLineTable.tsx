@@ -53,6 +53,7 @@ export default function CostCardDiamondLineTable({
   const { nameByPk: sizeByPk } = useNameLookup(
     ApiEndpoints.diamond_size_list,
     "cost-card-diamond-size-lookup",
+    "mm_size"
   );
   const { nameByPk: colorByPk } = useNameLookup(
     ApiEndpoints.diamond_color_list,

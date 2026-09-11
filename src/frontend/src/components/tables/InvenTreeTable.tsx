@@ -690,10 +690,104 @@ export function InvenTreeTableInternal<T extends Record<string, any>>({
     }
   }, [tableProps.enablePagination, pageSize, tableState.recordCount]);
 
+  /*
+   * When a local dataset is supplied via the "tableData" prop, no API request is
+   * made - so searching, sorting and pagination all have to be performed here,
+   * rather than being delegated to the server.
+   */
+  const clientData: T[] | null = useMemo(() => {
+    if (!tableData) {
+      return null;
+    }
+
+    let data: T[] = [...tableData];
+
+    const searchTerm: string =
+      tableState.searchTerm?.trim()?.toLowerCase() ?? '';
+
+    if (searchTerm && tableProps.enableSearch) {
+      data = data.filter((record: any) =>
+        dataColumns.some((col: any) => {
+          if (col.hidden || col.accessor == ACTIONS_COLUMN_ACCESSOR) {
+            return false;
+          }
+
+          const value = resolveItem(record, col.ordering || col.accessor);
+
+          return (
+            value != null && String(value).toLowerCase().includes(searchTerm)
+          );
+        })
+      );
+    }
+
+    const sortKey: string = (sortStatus.columnAccessor as string) ?? '';
+
+    if (sortKey) {
+      const column = dataColumns.find((col: any) => col.accessor == sortKey);
+      const accessor: string = column?.ordering || sortKey;
+      const direction: number = sortStatus.direction == 'desc' ? -1 : 1;
+
+      data.sort((a: any, b: any) => {
+        const left = resolveItem(a, accessor);
+        const right = resolveItem(b, accessor);
+
+        // Empty values are always sorted to the end
+        const leftEmpty = left == null || left === '';
+        const rightEmpty = right == null || right === '';
+
+        if (leftEmpty && rightEmpty) {
+          return 0;
+        } else if (leftEmpty) {
+          return 1;
+        } else if (rightEmpty) {
+          return -1;
+        }
+
+        if (typeof left === 'number' && typeof right === 'number') {
+          return (left - right) * direction;
+        }
+
+        return (
+          String(left).localeCompare(String(right), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+          }) * direction
+        );
+      });
+    }
+
+    return data;
+  }, [
+    tableData,
+    dataColumns,
+    sortStatus,
+    tableState.searchTerm,
+    tableProps.enableSearch
+  ]);
+
   // Update tableState.records when new data received
   useEffect(() => {
-    tableState.setRecords(tableData ?? apiData ?? []);
-  }, [tableData, apiData]);
+    if (!clientData) {
+      tableState.setRecords(apiData ?? []);
+      return;
+    }
+
+    tableState.setRecordCount(clientData.length);
+
+    if (tableProps.enablePagination) {
+      const offset: number = Math.max(0, (tableState.page - 1) * pageSize);
+      tableState.setRecords(clientData.slice(offset, offset + pageSize));
+    } else {
+      tableState.setRecords(clientData);
+    }
+  }, [
+    clientData,
+    apiData,
+    tableProps.enablePagination,
+    tableState.page,
+    pageSize
+  ]);
 
   // Callback when a cell is clicked
   const handleCellClick = useCallback(
@@ -920,7 +1014,7 @@ export function InvenTreeTableInternal<T extends Record<string, any>>({
               }
               isRecordSelectable={tableProps.isRecordSelectable}
               rowExpansion={rowExpansion}
-              fetching={isFetching}
+              fetching={isFetching || (!!tableData && !!tableProps.dataLoading)}
               noRecordsText={missingRecordsText}
               records={tableState.records}
               storeColumnsKey={cacheKey}

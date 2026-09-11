@@ -15,7 +15,9 @@ import { useApi } from "@context/ApiContext";
 export default function useNameLookup(
   endpoint: ApiEndpoints,
   queryKey: string,
+  key?: string,
 ) {
+
   const api = useApi();
 
   const query = useQuery({
@@ -31,7 +33,7 @@ export default function useNameLookup(
   const nameByPk = useMemo(() => {
     const map: Record<number, string> = {};
     (query.data ?? []).forEach((record: any) => {
-      map[record.pk] = record.name;
+      map[record.pk] = key ? record[key] : record.name;
     });
     return map;
   }, [query.data]);
