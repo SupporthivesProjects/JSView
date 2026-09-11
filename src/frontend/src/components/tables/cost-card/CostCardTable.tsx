@@ -6,6 +6,7 @@ import { AddItemButton } from "@lib/components/AddItemButton";
 import {
   type RowAction,
   RowDeleteAction,
+  RowDuplicateAction,
   RowEditAction,
 } from "@lib/components/RowActions";
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
@@ -27,9 +28,16 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { IconFilterOff, IconSearch, IconX } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconFilterOff,
+  IconSearch,
+  IconX,
+} from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
+import { showApiErrorMessage } from "@helpers/notifications";
 
 // Maximum number of cost card records fetched for client-side filtering
 const MAX_RECORDS = 10000;
@@ -437,6 +445,52 @@ export default function CostCardTable() {
     ];
   }, [columnFilters, setColumnFilter]);
 
+  // --- Duplicate action --------------------------------------------------
+  // The server performs the duplication in a single request (copying the cost
+  // card along with its line items), so no form is required - the table is
+  // simply reloaded afterwards to pick up the new record.
+  const [duplicatingPk, setDuplicatingPk] = useState<number | undefined>(
+    undefined,
+  );
+
+  // Held in a ref so that the duplicate callback (and therefore the row actions
+  // and the table columns derived from them) keeps a stable identity
+  const refreshTableRef = useRef(table.refreshTable);
+  refreshTableRef.current = table.refreshTable;
+
+  const duplicateCostCard = useCallback(
+    async (pk: number) => {
+      setDuplicatingPk(pk);
+
+      try {
+        const response = await api.post(
+          apiUrl(ApiEndpoints.cost_card_duplicate, pk),
+        );
+
+        const record = response.data?.duplicated;
+
+        notifications.show({
+          title: t`Cost card duplicated`,
+          message: record?.cost_card_no
+            ? t`Created cost card ${record.cost_card_no}`
+            : undefined,
+          color: "green",
+          icon: <IconCircleCheck />,
+        });
+
+        refreshTableRef.current();
+      } catch (error: any) {
+        showApiErrorMessage({
+          error: error,
+          title: t`Error duplicating cost card`,
+        });
+      } finally {
+        setDuplicatingPk(undefined);
+      }
+    },
+    [api],
+  );
+
   // --- Delete modal ------------------------------------------------------
   // Create and edit now happen on a dedicated tabbed page (see
   // containers/cost-card-detail) rather than in a modal, since a cost card
@@ -463,6 +517,13 @@ export default function CostCardTable() {
             navigate(`/cards/cost-card/${record.pk}`);
           },
         }),
+        RowDuplicateAction({
+          hidden: !user.hasAddRole(UserRoles.part),
+          disabled: duplicatingPk != undefined,
+          onClick: () => {
+            duplicateCostCard(record.pk);
+          },
+        }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
@@ -472,7 +533,7 @@ export default function CostCardTable() {
         }),
       ];
     },
-    [user, navigate],
+    [user, navigate, duplicatingPk, duplicateCostCard],
   );
 
   // --- Table-level filters ----------------------------------------------
