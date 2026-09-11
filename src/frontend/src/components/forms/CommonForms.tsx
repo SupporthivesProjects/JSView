@@ -492,18 +492,25 @@ export const COST_CARD_LINE_MODAL_SIZE = "72rem";
  * Metal Grams drives Gross Weight and Net Weight: whatever is typed into
  * Metal Grams is mirrored into both, and those two fields are read-only so
  * they can only ever be set that way.
+ *
+ * Metal Purity drives Kt in the same way: selecting a purity copies that
+ * record's karat into the Kt field, which is read-only so it can only ever be
+ * set that way.
  */
 export function useCostCardGeneralFields(): ApiFormFieldSet {
   const [metalGrams, setMetalGrams] = useState<any>(undefined);
+  const [karat, setKarat] = useState<any>(undefined);
 
   return useMemo(() => {
-    return costCardGeneralFieldSet(metalGrams, setMetalGrams);
-  }, [metalGrams]);
+    return costCardGeneralFieldSet(metalGrams, setMetalGrams, karat, setKarat);
+  }, [metalGrams, karat]);
 }
 
 function costCardGeneralFieldSet(
   metalGrams: any,
   setMetalGrams: (value: any) => void,
+  karat: any,
+  setKarat: (value: any) => void,
 ): ApiFormFieldSet {
   return {
     cost_card_no: { read_only: true },
@@ -543,8 +550,15 @@ function costCardGeneralFieldSet(
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
+      onValueChange: (_value: any, instance?: any) => {
+        setKarat(instance?.karat ?? null);
+      },
     },
-    karat: {},
+    karat: {
+      value: karat,
+      read_only: true,
+      disabled: true,
+    },
     metal_grams: {
       onValueChange: (value: any) => setMetalGrams(value),
     },
