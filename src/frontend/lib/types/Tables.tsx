@@ -181,6 +181,7 @@ export type RowViewProps = RowAction & RowModelProps;
  * @param isRecordSelectable : (record: any, index: number) => boolean - Callback function to determine if a row is selectable
  * @param detailAction: boolean - Enable detail action for each row (default = true)
  * @param dataFormatter : (data: any) => any - Callback function to reformat data returned by server (if not in default format)
+ * @param dataLoading : boolean - Externally managed loading state (only used when local "tableData" is supplied)
  * @param rowActions : (record: any) => RowAction[] - Callback function to generate row actions
  * @param onRowClick : (record: any, index: number, event: any) => void - Callback function when a row is clicked
  * @param onCellClick : (event: any, record: any, index: number, column: any, columnIndex: number) => void - Callback function when a cell is clicked
@@ -212,6 +213,7 @@ export type InvenTreeTableProps<T = any> = {
   isRecordSelectable?: (record: T, index: number) => boolean;
   rowExpansion?: DataTableRowExpansionProps<T>;
   dataFormatter?: (data: any) => any;
+  dataLoading?: boolean;
   rowActions?: (record: T) => RowAction[];
   detailAction?: boolean;
   onRowClick?: (record: T, index: number, event: any) => void;
