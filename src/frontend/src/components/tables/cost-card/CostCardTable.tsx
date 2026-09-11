@@ -117,18 +117,6 @@ export default function CostCardTable() {
               size={24}
               hover
             />
-            <Thumbnail
-              src={record.back_view}
-              alt={t`Back View`}
-              size={24}
-              hover
-            />
-            <Thumbnail
-              src={record.side_view}
-              alt={t`Side View`}
-              size={24}
-              hover
-            />
           </Group>
         ),
       },
