@@ -36,26 +36,6 @@ export default function FindingTypeTable() {
         switchable: false,
       },
       DescriptionColumn({}),
-      {
-        accessor: "type",
-        sortable: true,
-        switchable: false,
-      },
-      {
-        accessor: "weight",
-        sortable: true,
-        switchable: false,
-      },
-      {
-        accessor: "metal",
-        sortable: true,
-        switchable: false,
-      },
-      {
-        accessor: "price",
-        sortable: true,
-        switchable: false,
-      },
       BooleanColumn({
         accessor: "active",
       }),

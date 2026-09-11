@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
-import { IconAtom2 } from "@tabler/icons-react";
+import { IconAtom2, IconIdBadge } from "@tabler/icons-react";
 import { useMemo } from "react";
 
 import {
@@ -45,6 +45,7 @@ import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTa
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
 import StampTable from "@components/tables/metal/StampTable";
 import StonePlaceTable from "@components/tables/metal/StonePlaceTable";
+import FindingItemTable from "@components/tables/metal/FindingItemList";
 
 export default function MetalTypeIndex() {
   const user = useUserState();
@@ -98,6 +99,12 @@ export default function MetalTypeIndex() {
         label: t`Finding Type`,
         icon: <IconComponents />,
         content: <FindingTypeTable />,
+      },
+      {
+        name: "finding-item",
+        label: t`Finding Item`,
+        icon: <IconTag />,
+        content: <FindingItemTable />,
       },
       {
         name: "master-customer",

@@ -97,7 +97,6 @@ export function masterTerms(): ApiFormFieldSet {
     },
     all_vendors: { boxed: true },
     active: { boxed: true },
-
   };
 }
 
@@ -125,6 +124,20 @@ export function findingTypeFields(): ApiFormFieldSet {
   return {
     name: {},
     description: {},
+    active: { boxed: true },
+  };
+}
+
+export function findingTypeItems(): ApiFormFieldSet {
+  return {
+    finding_type: {
+      api_url: `${apiUrl(ApiEndpoints.finding_type)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    name: {},
     type: {},
     weight: {},
     metal: {},

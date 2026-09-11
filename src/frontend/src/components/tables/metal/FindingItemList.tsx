@@ -1,6 +1,5 @@
 import { t } from "@lingui/core/macro";
 import { useCallback, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
 import {
@@ -14,55 +13,50 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
-import { BooleanColumn, DecimalColumn } from "../ColumnRenderers";
+import { BooleanColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { metalPurityFields } from "../../forms/CommonForms";
+import { findingTypeItems } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
-import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
+import { useApi } from "@context/ApiContext";
+import { useQuery } from "@tanstack/react-query";
 
-/**
- * Table for displaying, creating, editing and deleting Metal Purity records
- */
-export default function MetalPurityTable() {
-  const table = useTable("metal-purities");
-
+export default function FindingItemTable() {
+  const table = useTable("finding-item");
   const user = useUserState();
+
   const api = useApi();
 
-  const metalTypesQuery = useQuery({
-    queryKey: ["metal-types-lookup"],
+  const findingTypesQuery = useQuery({
+    queryKey: ["finding-type-lookup"],
     queryFn: () =>
       api
-        .get(apiUrl(ApiEndpoints.metal_type_list), { params: { limit: 1000 } })
+        .get(apiUrl(ApiEndpoints.finding_type), { params: { limit: 1000 } })
         .then((response) => response.data?.results ?? response.data ?? []),
     staleTime: 5 * 60 * 1000,
   });
 
-
-
-  const metalTypeNameByPk = useMemo(() => {
+  const findingTypeNameByPk = useMemo(() => {
     const map: Record<number, string> = {};
-    (metalTypesQuery.data ?? []).forEach((metalType: any) => {
-      map[metalType.pk] = metalType.name;
+    (findingTypesQuery.data ?? []).forEach((findingType: any) => {
+      map[findingType.pk] = findingType.name;
     });
     return map;
-  }, [metalTypesQuery.data]);
+  }, [findingTypesQuery.data]);
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "metal_type",
-        title: t`Metal Type`,
+        accessor: "finding_type",
         sortable: true,
         switchable: false,
         render: (record: any) =>
-          metalTypeNameByPk[record.metal_type] ?? record.metal_type,
+          findingTypeNameByPk[record.finding_type] ?? record.finding_type,
       },
       {
         accessor: "name",
@@ -70,7 +64,22 @@ export default function MetalPurityTable() {
         switchable: false,
       },
       {
-        accessor: "karat",
+        accessor: "type",
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "weight",
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "metal",
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "price",
         sortable: true,
         switchable: false,
       },
@@ -90,33 +99,33 @@ export default function MetalPurityTable() {
         switchable: true,
       },
     ];
-  }, [metalTypeNameByPk]);
+  }, [findingTypeNameByPk]);
 
   // --- Create modal ----------------------------------------------------
-  const newMetalPurity = useCreateApiFormModal({
-    url: ApiEndpoints.metal_purity_list,
-    title: t`Add Metal Purity`,
-    fields: metalPurityFields(),
+  const newFindingItem = useCreateApiFormModal({
+    url: ApiEndpoints.finding_item,
+    title: t`Add Finding Item`,
+    fields: findingTypeItems(),
     table: table,
   });
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedMetalPurity, setSelectedMetalPurity] = useState<
+  const [selectedFindingItem, setSelectedFindingItem] = useState<
     number | undefined
   >(undefined);
 
-  const editMetalPurity = useEditApiFormModal({
-    url: ApiEndpoints.metal_purity_list,
-    pk: selectedMetalPurity,
-    title: t`Edit Metal Purity`,
-    fields: metalPurityFields(),
+  const editFindingItem = useEditApiFormModal({
+    url: ApiEndpoints.finding_item,
+    pk: selectedFindingItem,
+    title: t`Edit Finding Item`,
+    fields: findingTypeItems(),
     table: table,
   });
 
-  const deleteMetalPurity = useDeleteApiFormModal({
-    url: ApiEndpoints.metal_purity_list,
-    pk: selectedMetalPurity,
-    title: t`Delete Metal Purity`,
+  const deleteFindingItem = useDeleteApiFormModal({
+    url: ApiEndpoints.finding_item,
+    pk: selectedFindingItem,
+    title: t`Delete Finding Item`,
     table: table,
   });
 
@@ -127,15 +136,15 @@ export default function MetalPurityTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setSelectedMetalPurity(record.pk);
-            editMetalPurity.open();
+            setSelectedFindingItem(record.pk);
+            editFindingItem.open();
           },
         }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
-            setSelectedMetalPurity(record.pk);
-            deleteMetalPurity.open();
+            setSelectedFindingItem(record.pk);
+            deleteFindingItem.open();
           },
         }),
       ];
@@ -149,7 +158,7 @@ export default function MetalPurityTable() {
       {
         name: "active",
         label: t`Active`,
-        description: t`Show active metal purity grades`,
+        description: t`Show active finding item`,
         type: "boolean",
       },
     ];
@@ -159,9 +168,9 @@ export default function MetalPurityTable() {
   const tableActions = useMemo(() => {
     return [
       <AddItemButton
-        key="add-metal-purity"
-        onClick={() => newMetalPurity.open()}
-        tooltip={t`Add Metal Purity`}
+        key="add-finding-item"
+        onClick={() => newFindingItem.open()}
+        tooltip={t`Add Finding Item`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
@@ -169,11 +178,11 @@ export default function MetalPurityTable() {
 
   return (
     <>
-      {newMetalPurity.modal}
-      {editMetalPurity.modal}
-      {deleteMetalPurity.modal}
+      {newFindingItem.modal}
+      {editFindingItem.modal}
+      {deleteFindingItem.modal}
       <InvenTreeTable
-        url={apiUrl(ApiEndpoints.metal_purity_list)}
+        url={apiUrl(ApiEndpoints.finding_item)}
         tableState={table}
         columns={columns}
         props={{

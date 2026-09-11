@@ -133,6 +133,7 @@ export enum ApiEndpoints {
   metal_purity_list = "master/metal-purity/",
   metal_rate = "master/metal-rate/",
   finding_type = "master/finding-type/",
+  finding_item = "master/finding-item/",
   finish_type = "master/finish-type/",
   list_duty = "master/duty/",
   master_terms = "master/terms/",
