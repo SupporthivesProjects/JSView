@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
+from django.core.validators import MaxValueValidator, MinValueValidator
 from company.models import Company
 
 from master.models import (
@@ -66,7 +66,7 @@ class CostCard(CardsFieldsMixin):
     category = models.ForeignKey(JewelryCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Category'), help_text=_('Jewelry category of this piece.'))
     sub_category = models.ForeignKey(JewelrySubCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Sub Category'), help_text=_('Jewelry sub-category of this piece.'))
     metal_purity = models.ForeignKey(MetalPurity, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Metal Purity'), help_text=_('Metal purity grade used for this piece.'))
-    karat = models.CharField(max_length=20, null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14KT, 18KT.'))
+    karat = models.PositiveIntegerField(validators=[MinValueValidator(1)],null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14, 18, 22, or 24.'))
     metal_grams = models.DecimalField(max_digits=10, decimal_places=3, verbose_name=_('Metal Grams'), help_text=_('Weight of metal used, in grams.'))
     finding_type = models.ForeignKey(FindingType, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Finding Type'), help_text=_('Finding type used on this piece.'))
     finding_item = models.ForeignKey(FindingItem,null=True, blank=True,on_delete=models.SET_NULL,related_name='cost_cards', verbose_name=_('Finding Item'),help_text=_('Finding item used on this piece.'),)
