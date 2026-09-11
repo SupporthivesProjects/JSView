@@ -62,7 +62,7 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type', 'active']
     search_fields = ['name', 'metal_type__name']
-    ordering_fields = ['metal_type', 'name', 'purity']
+    ordering_fields = ['metal_type', 'name', 'purity','karat']
     ordering = 'name'
 
 

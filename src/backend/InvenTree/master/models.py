@@ -46,7 +46,8 @@ class MetalPurity(MasterFieldsMixin):
 
     name = models.CharField(max_length=50, verbose_name=_('Name'), help_text=_('Name of the metal purity grade.'))
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='purities', verbose_name=_('Metal Type'), help_text=_('Metal type associated with this purity grade.'))
-    purity = models.PositiveIntegerField(validators=[MinValueValidator(1)], verbose_name=_('Karat'), help_text=_('Karat value of the metal, such as 14, 18, 22.'))
+    purity = models.DecimalField(max_digits=6, null=True, blank=True, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Purity (%)'), help_text=_('Purity percentage of the metal, from 0 to 100.'))
+    karat = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14, 18, 22, or 24.'))
 
     class Meta:
         verbose_name = _('Metal Purity')

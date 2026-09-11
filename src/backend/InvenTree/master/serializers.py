@@ -61,6 +61,7 @@ class MetalPuritySerializer(
             'metal_type',
             'name',
             'purity',
+            'karat',
             'active',
             'created_at',
             'updated_at',

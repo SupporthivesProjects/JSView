@@ -18,7 +18,7 @@ class MetalTypeAdmin(admin.ModelAdmin):
 class MetalPurityAdmin(admin.ModelAdmin):
     """Admin class for the MetalPurity model."""
 
-    list_display = ('metal_type', 'name', 'purity', 'active', 'created_at', 'updated_at')
+    list_display = ('metal_type', 'name', 'purity', 'karat', 'active', 'created_at', 'updated_at')
     search_fields = ('name', 'metal_type__name')
     autocomplete_fields = ('metal_type',)
     list_filter = ('active',)

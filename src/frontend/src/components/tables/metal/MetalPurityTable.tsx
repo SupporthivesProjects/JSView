@@ -74,11 +74,11 @@ export default function MetalPurityTable() {
         sortable: true,
         switchable: false,
       },
-      DecimalColumn({
-        accessor: "purity",
-        title: t`Purity (%)`,
+      {
+        accessor: "karat",
         sortable: true,
-      }),
+        switchable: false,
+      },
       BooleanColumn({
         accessor: "active",
       }),

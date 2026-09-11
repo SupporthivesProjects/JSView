@@ -57,7 +57,8 @@ export function metalPurityFields(): ApiFormFieldSet {
       },
     },
     name: {},
-    purity: {},
+    // purity: {},
+    karat: {},
     active: { boxed: true },
   };
 }
