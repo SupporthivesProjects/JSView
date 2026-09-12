@@ -56,10 +56,8 @@ export const CostCardDetail = Loadable(
   lazy(() => import("@containers/cost-card-detail")),
 );
 
-export const ColorStoneIndex = Loadable(lazy(() => import("@containers/color-stone")));
-
-export const DiamondPropertiesIndex = Loadable(
-  lazy(() => import("@containers/diamond-properties")),
+export const PropertiesIndex = Loadable(
+  lazy(() => import("@containers/properties")),
 );
 
 export const LocationDetail = Loadable(
@@ -189,10 +187,22 @@ export const routes = (
         <Route path="category/:id?/*" element={<CategoryDetail />} />
         <Route path=":id/*" element={<PartDetail />} />
       </Route>
-      <Route path="diamond-properties/">
-        <Route index element={<Navigate to="metal-types/" />} />
-        <Route path="*" element={<DiamondPropertiesIndex />} />
+      <Route path="properties/">
+        <Route index element={<Navigate to="diamond/" />} />
+        <Route
+          path="diamond/*"
+          element={<PropertiesIndex section="diamond" />}
+        />
+        <Route
+          path="color-stone/*"
+          element={<PropertiesIndex section="color-stone" />}
+        />
       </Route>
+      {/* Legacy paths, before both property sets moved under /properties/ */}
+      <Route
+        path="diamond-properties/*"
+        element={<Navigate to="/properties/diamond/" replace />}
+      />
       <Route path="master/">
         <Route index element={<Navigate to="metal-types/" />} />
         <Route path="*" element={<MasterIndex />} />
@@ -202,10 +212,10 @@ export const routes = (
         <Route path="cost-card/:id" element={<CostCardDetail />} />
         <Route path="*" element={<CostCardIndex />} />
       </Route>
-      <Route path="color-stone/">
-        <Route index element={<Navigate to="stone-types/" />} />
-        <Route path="*" element={<ColorStoneIndex />} />
-      </Route>
+      <Route
+        path="color-stone/*"
+        element={<Navigate to="/properties/color-stone/" replace />}
+      />
       <Route path="stock/">
         <Route index element={<Navigate to="location/index/" />} />
         <Route path="location/:id?/*" element={<LocationDetail />} />

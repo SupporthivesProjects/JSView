@@ -1,35 +1,28 @@
 import { t } from "@lingui/core/macro";
-import { Stack } from "@mantine/core";
 import { useMemo } from "react";
 
 import {
-  IconSparkles,
-  IconScissors,
+  IconAward,
   IconCategory,
   IconColorFilter,
   IconRuler2,
-  IconAward,
   IconScale,
+  IconScissors,
+  IconSparkles,
 } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
-import PermissionDenied from "@components/shared/errors/PermissionDenied";
-import { PageDetail } from "@components/nav/PageDetail";
-import { PanelGroup } from "@components/shared/panels/PanelGroup";
-import { useUserState } from "@store/UserState";
-import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
-import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
-import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
 import ColorStoneColorTable from "@components/tables/colorStone/ColorStoneColorTable";
-import ColorStoneSizeTable from "@components/tables/colorStone/ColorStoneSizeTable";
+import ColorStoneCutTable from "@components/tables/colorStone/ColorStoneCutTable";
 import ColorStoneQualityTable from "@components/tables/colorStone/ColorStoneQualityTable";
 import ColorStoneRateTable from "@components/tables/colorStone/ColorStoneRateTable";
+import ColorStoneShapeTable from "@components/tables/colorStone/ColorStoneShapeTable";
+import ColorStoneSizeTable from "@components/tables/colorStone/ColorStoneSizeTable";
+import ColorStoneTable from "@components/tables/colorStone/ColorStoneTable";
 
-export default function ColorStonePropertiesIndex() {
-  const user = useUserState();
-
-  const panels: PanelType[] = useMemo(() => {
+/** Panels displayed under the "Color Stone Properties" tab of the Properties page */
+export function useColorStonePropertyPanels(): PanelType[] {
+  return useMemo(() => {
     return [
       {
         name: "stone-types",
@@ -75,15 +68,4 @@ export default function ColorStonePropertiesIndex() {
       },
     ];
   }, []);
-
-  if (!user.hasViewRole(UserRoles.part)) {
-    return <PermissionDenied />;
-  }
-
-  return (
-    <Stack>
-      <PageDetail title={t`Color Stone Properties`} />
-      <PanelGroup pageKey="color-stone-index" panels={panels} />
-    </Stack>
-  );
 }
