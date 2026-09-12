@@ -314,6 +314,12 @@ class DiamondStoneRate(PropertiesFieldsMixin):
             models.Index(fields=['shape', 'mm_size', 'pointer']),
             models.Index(fields=['all_customers']),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['shape', 'mm_size', 'stone'],
+                name='uniq_diamond_stone_rate',
+            ),
+        ]
 
     def __str__(self):
         parts = []
@@ -399,6 +405,12 @@ class ColorStoneRate(PropertiesFieldsMixin):
             models.Index(fields=['active']),
             models.Index(fields=['shape', 'mm_size', 'pointer']),
             models.Index(fields=['all_customers']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['shape', 'mm_size', 'stone'],
+                name='uniq_color_stone_rate',
+            ),
         ]
 
     def __str__(self):

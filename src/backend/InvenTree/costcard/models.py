@@ -163,7 +163,7 @@ class CostCard(CardsFieldsMixin):
             else:
                 next_number = 1
 
-            self.cost_card_no = f'{next_number:06d}'
+            self.cost_card_no = f'{next_number:05d}'
 
         super().save(*args, **kwargs)
 
