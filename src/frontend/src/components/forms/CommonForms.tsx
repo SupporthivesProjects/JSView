@@ -500,10 +500,18 @@ export const COST_CARD_LINE_MODAL_SIZE = "72rem";
 export function useCostCardGeneralFields(): ApiFormFieldSet {
   const [metalGrams, setMetalGrams] = useState<any>(undefined);
   const [karat, setKarat] = useState<any>(undefined);
+  const [findingPrice, setFindingPrice] = useState<any>(undefined);
 
   return useMemo(() => {
-    return costCardGeneralFieldSet(metalGrams, setMetalGrams, karat, setKarat);
-  }, [metalGrams, karat]);
+    return costCardGeneralFieldSet(
+      metalGrams,
+      setMetalGrams,
+      karat,
+      setKarat,
+      findingPrice,
+      setFindingPrice,
+    );
+  }, [metalGrams, karat, findingPrice]);
 }
 
 function costCardGeneralFieldSet(
@@ -511,6 +519,8 @@ function costCardGeneralFieldSet(
   setMetalGrams: (value: any) => void,
   karat: any,
   setKarat: (value: any) => void,
+  findingPrice: any,
+  setFindingPrice: (value: any) => void,
 ): ApiFormFieldSet {
   return {
     cost_card_no: { read_only: true },
@@ -562,14 +572,21 @@ function costCardGeneralFieldSet(
     metal_grams: {
       onValueChange: (value: any) => setMetalGrams(value),
     },
-    finding_type: {
-      api_url: `${apiUrl(ApiEndpoints.finding_type)}?active=true`,
+    finding_item: {
+      api_url: `${apiUrl(ApiEndpoints.finding_item)}?active=true`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
+      onValueChange: (_value: any, instance?: any) => {
+        setFindingPrice(instance?.price ?? null);
+      },
     },
-    finding_price: {},
+    finding_price: {
+      value: findingPrice,
+      read_only: true,
+      disabled: true,
+    },
     gross_weight: {
       value: metalGrams,
       read_only: true,
