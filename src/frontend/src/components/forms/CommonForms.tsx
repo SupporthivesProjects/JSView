@@ -872,12 +872,8 @@ type CostCardStoneLineEndpoints = {
   color: ApiEndpoints;
   cut: ApiEndpoints;
   quality: ApiEndpoints;
-  /**
-   * The rate table to look the line's Rate up in. A tab that names one gets a
-   * read-only Rate filled in from Stone + Shape + MM Size; a tab that leaves
-   * it out keeps a hand-entered Rate.
-   */
-  rate?: ApiEndpoints;
+  /** The rate table the line's Rate is looked up in. */
+  rate: ApiEndpoints;
 };
 
 const DIAMOND_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
@@ -897,6 +893,7 @@ const COLOR_STONE_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
   color: ApiEndpoints.color_stone_color_list,
   cut: ApiEndpoints.color_stone_cut_list,
   quality: ApiEndpoints.color_stone_quality_list,
+  rate: ApiEndpoints.color_stone_rate_list,
 };
 
 /**
@@ -912,6 +909,9 @@ const COLOR_STONE_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
  *                  processCostCardStoneLineData().
  *
  * L.Amount = Pcs × L.Rate either way.
+ *
+ * Rate is read-only too: a rate table row is unique on (stone, shape, mm size),
+ * so picking all three is what prices the line — see the rate lookup below.
  *
  * MM Size and Sieve Size are two views of the same size record in Properties
  * (each record pairs an mm size with a sieve size), so both are dropdowns over
@@ -1095,21 +1095,19 @@ function useCostCardStoneLineFields(
   // are picked the line's Rate is that row's rate - the field is read-only and
   // can only ever come from here. A combination with no row priced for it
   // leaves the Rate blank rather than keeping a rate from another combination.
-  const hasRateLookup = !!endpoints.rate;
-
   const rateLookupKeys = useMemo(
     () =>
-      hasRateLookup && stonePk && shapePk && mmSizePk
+      stonePk && shapePk && mmSizePk
         ? { stone: stonePk, shape: shapePk, mm_size: mmSizePk }
         : null,
-    [hasRateLookup, stonePk, shapePk, mmSizePk],
+    [stonePk, shapePk, mmSizePk],
   );
 
   const rateQuery = useQuery({
     queryKey: ["cost-card-stone-line-rate", endpoints.rate, rateLookupKeys],
     enabled: !!rateLookupKeys,
     queryFn: async () => {
-      const response = await api.get(apiUrl(endpoints.rate!), {
+      const response = await api.get(apiUrl(endpoints.rate), {
         params: { active: true, ...rateLookupKeys, limit: 1, offset: 0 },
       });
 
@@ -1206,9 +1204,7 @@ function useCostCardStoneLineFields(
       },
       pcs: { onValueChange: (value: any) => setPcs(value) },
       pc: { onValueChange: (value: any) => setPc(value) },
-      rate: hasRateLookup
-        ? { value: rate, read_only: true, disabled: true }
-        : { onValueChange: (value: any) => setRate(value) },
+      rate: { value: rate, read_only: true, disabled: true },
       amount: { value: amount, read_only: true, disabled: true },
       labour_rate: { onValueChange: (value: any) => setLabourRate(value) },
       labour_amount: {
@@ -1227,7 +1223,6 @@ function useCostCardStoneLineFields(
     mmSize,
     sieveSize,
     sieveChoices,
-    hasRateLookup,
     onStoneChange,
     onShapeChange,
     onMmSizeChange,
