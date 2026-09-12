@@ -1,13 +1,26 @@
 import { t } from "@lingui/core/macro";
-import { ActionIcon, FileButton, Group, Stack, Text } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Button,
+  Group,
+  LoadingOverlay,
+  Paper,
+  SimpleGrid,
+  Text,
+  FileButton,
+  Tooltip,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCirclePlus, IconCircleMinus } from "@tabler/icons-react";
+import { IconPhotoPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useState } from "react";
 
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
 import { apiUrl } from "@lib/functions/Api";
-import { Thumbnail } from "@components/shared/images/Thumbnail";
+import { ApiImage } from "@components/shared/images/ApiImage";
 import { useApi } from "@context/ApiContext";
+
+import * as classes from "./CostCardImagesPanel.css";
 
 type ImageSlot = "front_view" | "side_view" | "back_view";
 
@@ -60,41 +73,115 @@ export default function CostCardImagesPanel({
   };
 
   return (
-    <Group align="flex-start" gap="xl" wrap="wrap">
-      {SLOTS.map(({ field, label }) => (
-        <Stack key={field} gap="xs" align="center">
-          <Text size="sm">{label()}</Text>
-          <Thumbnail src={instance?.[field]} alt={label()} size={160} hover />
-          <Group gap="xs">
-            <FileButton
-              onChange={(file) => file && patchImage(field, file)}
-              accept="image/*"
-            >
-              {(props) => (
-                <ActionIcon
-                  {...props}
-                  variant="subtle"
-                  color="green"
-                  loading={uploading === field}
-                  aria-label={t`Upload image`}
+    <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="lg" maw={900}>
+      {SLOTS.map(({ field, label }) => {
+        const src = instance?.[field];
+        const busy = uploading === field;
+
+        return (
+          <Paper
+            key={field}
+            withBorder
+            radius="md"
+            className={classes.card}
+            pos="relative"
+          >
+            <LoadingOverlay
+              visible={busy}
+              zIndex={2}
+              overlayProps={{ radius: "md", blur: 1 }}
+            />
+
+            <Box className={classes.preview}>
+              {src ? (
+                <>
+                  <Box className={classes.imageWrap}>
+                    <ApiImage
+                      src={src}
+                      aria-label={label()}
+                      fit="contain"
+                      radius="sm"
+                      className={classes.previewImage}
+                    />
+                  </Box>
+                  <Box className={classes.overlay}>
+                    <FileButton
+                      onChange={(file) => file && patchImage(field, file)}
+                      accept="image/*"
+                    >
+                      {(props) => (
+                        <Button
+                          {...props}
+                          size="xs"
+                          variant="white"
+                          leftSection={<IconUpload size={14} />}
+                          aria-label={t`Upload image`}
+                        >
+                          {t`Replace`}
+                        </Button>
+                      )}
+                    </FileButton>
+                    <Tooltip label={t`Remove image`} withinPortal>
+                      <Button
+                        size="xs"
+                        color="red"
+                        variant="filled"
+                        onClick={() => patchImage(field, "")}
+                        aria-label={t`Remove image`}
+                      >
+                        <IconTrash size={14} />
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                </>
+              ) : (
+                <FileButton
+                  onChange={(file) => file && patchImage(field, file)}
+                  accept="image/*"
                 >
-                  <IconCirclePlus />
-                </ActionIcon>
+                  {(props) => (
+                    <Box
+                      {...props}
+                      component="button"
+                      type="button"
+                      className={classes.empty}
+                      aria-label={t`Upload image`}
+                    >
+                      <IconPhotoPlus size={28} stroke={1.5} />
+                      <Text component="span" size="xs" fw={500}>
+                        {t`Upload image`}
+                      </Text>
+                      <Text component="span" size="xs" c="dimmed">
+                        {t`PNG or JPG`}
+                      </Text>
+                    </Box>
+                  )}
+                </FileButton>
               )}
-            </FileButton>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              disabled={!instance?.[field]}
-              loading={uploading === field}
-              onClick={() => patchImage(field, "")}
-              aria-label={t`Remove image`}
+            </Box>
+
+            <Group
+              className={classes.footer}
+              justify="space-between"
+              wrap="nowrap"
+              px="sm"
+              py="xs"
             >
-              <IconCircleMinus />
-            </ActionIcon>
-          </Group>
-        </Stack>
-      ))}
-    </Group>
+              <Text size="sm" fw={500}>
+                {label()}
+              </Text>
+              <Badge
+                size="sm"
+                radius="sm"
+                variant="light"
+                color={src ? "green" : "gray"}
+              >
+                {src ? t`Uploaded` : t`Empty`}
+              </Badge>
+            </Group>
+          </Paper>
+        );
+      })}
+    </SimpleGrid>
   );
 }
