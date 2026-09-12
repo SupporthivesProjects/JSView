@@ -2,13 +2,13 @@ import { t } from "@lingui/core/macro";
 import { useMemo } from "react";
 
 import {
-  IconAward,
-  IconCategory,
-  IconColorFilter,
-  IconRuler2,
+  IconCertificate,
+  IconCoin,
+  IconDiamond,
+  IconPalette,
   IconScale,
   IconScissors,
-  IconSparkles,
+  IconShape,
 } from "@tabler/icons-react";
 
 import type { PanelType } from "@lib/types/Panel";
@@ -27,7 +27,7 @@ export function useColorStonePropertyPanels(): PanelType[] {
       {
         name: "stone-types",
         label: t`Stone`,
-        icon: <IconSparkles />,
+       icon: <IconDiamond />,
         content: <ColorStoneTable />,
       },
       {
@@ -39,31 +39,31 @@ export function useColorStonePropertyPanels(): PanelType[] {
       {
         name: "stone-shape",
         label: t`Shape`,
-        icon: <IconCategory />,
+        icon: <IconShape />,
         content: <ColorStoneShapeTable />,
       },
       {
         name: "stone-color",
         label: t`Color`,
-        icon: <IconColorFilter />,
+           icon: <IconPalette />,
         content: <ColorStoneColorTable />,
       },
       {
         name: "stone-size",
         label: t`Size`,
-        icon: <IconRuler2 />,
+         icon: <IconScale />,
         content: <ColorStoneSizeTable />,
       },
       {
         name: "stone-quality",
         label: t`Quality`,
-        icon: <IconAward />,
+        icon: <IconCertificate />,
         content: <ColorStoneQualityTable />,
       },
       {
         name: "stone-rate",
         label: t`Weight / Rate Per Stone`,
-        icon: <IconScale />,
+       icon: <IconCoin />,
         content: <ColorStoneRateTable />,
       },
     ];
