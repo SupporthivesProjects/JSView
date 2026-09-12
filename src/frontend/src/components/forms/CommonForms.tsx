@@ -872,6 +872,12 @@ type CostCardStoneLineEndpoints = {
   color: ApiEndpoints;
   cut: ApiEndpoints;
   quality: ApiEndpoints;
+  /**
+   * The rate table to look the line's Rate up in. A tab that names one gets a
+   * read-only Rate filled in from Stone + Shape + MM Size; a tab that leaves
+   * it out keeps a hand-entered Rate.
+   */
+  rate?: ApiEndpoints;
 };
 
 const DIAMOND_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
@@ -881,6 +887,7 @@ const DIAMOND_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
   color: ApiEndpoints.diamond_color_list,
   cut: ApiEndpoints.diamond_cut_list,
   quality: ApiEndpoints.diamond_quality_list,
+  rate: ApiEndpoints.diamond_rate_list,
 };
 
 const COLOR_STONE_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
@@ -931,6 +938,11 @@ function useCostCardStoneLineFields(
   const [rate, setRate] = useState<any>(undefined);
   const [labourRate, setLabourRate] = useState<any>(undefined);
   const [pc, setPc] = useState<any>(undefined);
+
+  // The three selections the rate table is keyed on (see rateQuery below).
+  const [stonePk, setStonePk] = useState<any>(undefined);
+  const [shapePk, setShapePk] = useState<any>(undefined);
+  const [mmSizePk, setMmSizePk] = useState<any>(undefined);
 
   // Values pushed back into the two linked size fields. The seeded sieve size
   // is remembered separately so a value stored on the line but missing from
@@ -1011,6 +1023,10 @@ function useCostCardStoneLineFields(
   const onMmSizeChange = useCallback((value: any, record: any) => {
     const pk = value ?? null;
 
+    // The rate lookup keys on the selection either way - a seeded MM Size is
+    // still the MM Size the line's rate must match.
+    setMmSizePk(pk);
+
     if (mmAwaitingSeed.current) {
       // The stored MM Size of the line being edited, not a user selection.
       mmAwaitingSeed.current = false;
@@ -1056,6 +1072,7 @@ function useCostCardStoneLineFields(
         lastMmPk.current = null;
         mmAwaitingSeed.current = false;
         setMmSize("");
+        setMmSizePk(null);
         return;
       }
 
@@ -1068,8 +1085,72 @@ function useCostCardStoneLineFields(
       lastMmPk.current = match.pk;
       mmAwaitingSeed.current = false;
       setMmSize(match.pk);
+      setMmSizePk(match.pk);
     },
     [stoneSizes],
+  );
+
+  // --- Rate lookup -----------------------------------------------------
+  // A rate table row is unique on (stone, shape, mm size), so once all three
+  // are picked the line's Rate is that row's rate - the field is read-only and
+  // can only ever come from here. A combination with no row priced for it
+  // leaves the Rate blank rather than keeping a rate from another combination.
+  const hasRateLookup = !!endpoints.rate;
+
+  const rateLookupKeys = useMemo(
+    () =>
+      hasRateLookup && stonePk && shapePk && mmSizePk
+        ? { stone: stonePk, shape: shapePk, mm_size: mmSizePk }
+        : null,
+    [hasRateLookup, stonePk, shapePk, mmSizePk],
+  );
+
+  const rateQuery = useQuery({
+    queryKey: ["cost-card-stone-line-rate", endpoints.rate, rateLookupKeys],
+    enabled: !!rateLookupKeys,
+    queryFn: async () => {
+      const response = await api.get(apiUrl(endpoints.rate!), {
+        params: { active: true, ...rateLookupKeys, limit: 1, offset: 0 },
+      });
+
+      const data = response.data;
+      const results = Array.isArray(data) ? data : (data?.results ?? []);
+
+      // null, not undefined: "looked it up, nothing is priced for it".
+      return results[0]?.rate ?? null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const lookedUpRate = rateQuery.data;
+
+  useEffect(() => {
+    if (!rateLookupKeys || lookedUpRate === undefined) return;
+
+    // Push the blank back as "" rather than null - ApiForm only treats a
+    // non-null field value as caller-controlled.
+    setRate(lookedUpRate ?? "");
+  }, [rateLookupKeys, lookedUpRate]);
+
+  // Clearing any of the three keys clears the rate they produced.
+  const onRateKeyChange = useCallback(
+    (setKey: (value: any) => void) => (value: any) => {
+      const pk = value ?? null;
+
+      setKey(pk);
+
+      if (!pk) setRate("");
+    },
+    [],
+  );
+
+  const onStoneChange = useMemo(
+    () => onRateKeyChange(setStonePk),
+    [onRateKeyChange],
+  );
+  const onShapeChange = useMemo(
+    () => onRateKeyChange(setShapePk),
+    [onRateKeyChange],
   );
 
   const reset = useCallback(() => {
@@ -1080,6 +1161,9 @@ function useCostCardStoneLineFields(
     setMmSize(undefined);
     setSieveSize(undefined);
     setSeededSieveSize(undefined);
+    setStonePk(undefined);
+    setShapePk(undefined);
+    setMmSizePk(undefined);
     lastMmPk.current = undefined;
     mmAwaitingSeed.current = loadsExistingLine;
   }, [loadsExistingLine]);
@@ -1103,6 +1187,8 @@ function useCostCardStoneLineFields(
     return {
       cost_card: { hidden: true, value: costCardId },
       ...baseFields,
+      stone: { ...baseFields.stone, onValueChange: onStoneChange },
+      shape: { ...baseFields.shape, onValueChange: onShapeChange },
       mm_size: {
         ...baseFields.mm_size,
         value: mmSize,
@@ -1120,7 +1206,9 @@ function useCostCardStoneLineFields(
       },
       pcs: { onValueChange: (value: any) => setPcs(value) },
       pc: { onValueChange: (value: any) => setPc(value) },
-      rate: { onValueChange: (value: any) => setRate(value) },
+      rate: hasRateLookup
+        ? { value: rate, read_only: true, disabled: true }
+        : { onValueChange: (value: any) => setRate(value) },
       amount: { value: amount, read_only: true, disabled: true },
       labour_rate: { onValueChange: (value: any) => setLabourRate(value) },
       labour_amount: {
@@ -1139,6 +1227,9 @@ function useCostCardStoneLineFields(
     mmSize,
     sieveSize,
     sieveChoices,
+    hasRateLookup,
+    onStoneChange,
+    onShapeChange,
     onMmSizeChange,
     onSieveSizeChange,
   ]);
@@ -1171,17 +1262,22 @@ export function useCostCardColorStoneLineFields(
 }
 
 /**
- * A per-carat line shows a blank Amount, but the backend column is a non-null
- * decimal — send the blank as 0 rather than an empty string.
+ * A per-carat line shows a blank Amount, and a stone combination with no row
+ * in the rate table shows a blank Rate — but both backend columns are non-null
+ * decimals, so send those blanks as 0 rather than as an empty string.
  */
 export function processCostCardStoneLineData(data: any): any {
-  const amount = data?.amount;
+  const processed = { ...data };
 
-  if (amount === "" || amount === null || amount === undefined) {
-    return { ...data, amount: 0 };
+  for (const field of ["amount", "rate"]) {
+    const value = processed[field];
+
+    if (value === "" || value === null || value === undefined) {
+      processed[field] = 0;
+    }
   }
 
-  return data;
+  return processed;
 }
 
 /** Finish Type tab line fields — one row per finish applied to the cost card. */
