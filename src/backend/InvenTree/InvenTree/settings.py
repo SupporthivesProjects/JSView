@@ -320,6 +320,7 @@ INSTALLED_APPS = [
     'costcard.apps.CostCardConfig',
     'purchase_order.apps.PurchaseOrderConfig',
     'properties.apps.PropertiesConfig',
+    'revision.apps.RevisionConfig',
 
     'order.apps.OrderConfig',
     'part.apps.PartConfig',
