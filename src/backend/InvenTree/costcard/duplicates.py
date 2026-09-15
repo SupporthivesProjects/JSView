@@ -9,6 +9,7 @@ from .models import (
     CostCardColorStoneLine,
     CostCardFinishLine,
 )
+from revision.costcard.services import create_cost_card_version
 
 
 def copy_file(file_field):
@@ -46,7 +47,7 @@ def copy_fields(source, target, excluded_fields):
 
 
 @transaction.atomic
-def duplicate_cost_card(cost_card):
+def duplicate_cost_card(cost_card, user=None):
     original = cost_card
 
     new_card = CostCard()
@@ -117,5 +118,10 @@ def duplicate_cost_card(cost_card):
 
         new_line.cost_card = new_card
         new_line.save()
+
+    create_cost_card_version(
+        cost_card=new_card,
+        user=user,
+    )
 
     return new_card

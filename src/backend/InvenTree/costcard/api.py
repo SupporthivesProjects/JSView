@@ -191,7 +191,7 @@ class CostCardDuplicate(generics.GenericAPIView):
 
     def post(self, request, pk):
         cost_card = self.get_object()
-        new_cost_card = duplicate_cost_card(cost_card)
+        new_cost_card = duplicate_cost_card(cost_card, user=request.user)
         serializer = self.get_serializer(new_cost_card)
 
         return Response(
