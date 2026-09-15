@@ -284,6 +284,106 @@ export function masterCustomer(): ApiFormFieldSet {
   };
 }
 
+export function purchaseTableFields(): ApiFormFieldSet {
+  return {
+    pocategory: {
+      field_type: "choice",
+      default: "Production",
+      choices: [
+        { value: "Extra", display_name: "Extra" },
+        { value: "Master Sample", display_name: "Master Sample" },
+        { value: "Production", display_name: "Production" },
+        { value: "Sample", display_name: "Sample" },
+        { value: "Spl Order", display_name: "Spl Order" },
+        { value: "Casting", display_name: "Casting" },
+        { value: "CZ Sample", display_name: "CZ Sample" },
+        { value: "CZ Host Sample", display_name: "CZ Host Sample" },
+        { value: "Photo Sample", display_name: "Photo Sample" },
+      ],
+    },
+    pono:{hidden: true},
+    potype: { 
+      field_type: "boolean",
+      value: true,
+      hidden: false
+    },
+    podate: {
+      label: "P.R Date",
+      default: new Date().toISOString().split("T")[0],
+    },
+    ddate: {},
+    customerid: {
+      label: "Customer",
+      api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_customer=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
+    acexeid: {
+      label: "Executive",
+      api_url: apiUrl(ApiEndpoints.master_executive),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    // customer_pono: {},
+    termsid: {
+      label: "Terms",
+      api_url: apiUrl(ApiEndpoints.master_terms),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    stampid: {
+      label: "Stamp",
+      api_url: apiUrl(ApiEndpoints.master_stamp),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    // vendorid: {
+    //   label: "Vendor",
+    //   api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_supplier=true`,
+    //   modelRenderer: (arg: any) => {
+    //     const instance = arg?.instance ?? arg;
+    //     return instance?.code ?? "";
+    //   },
+    // },
+    // vcsdate: {default: null},
+    rem: {label: "Remarks",},
+    // note: {
+    //   multiline: true,
+    // },
+    tqty: {
+      read_only: true,
+      disabled: true,
+      hidden: true
+    },
+
+
+    costcardid: {
+      label: "Cost Card",
+      // Reference to the cost card endpoint
+      api_url: apiUrl(ApiEndpoints.cost_card),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.cost_card_no ?? "";
+      },
+    },
+    styleno: {},
+    vstyleno: {},
+    vendorid: {},
+    qty: {},
+    size: {},
+    spcs: {},
+  };
+}
+
+
 export function jewelleryCategoryFields(): ApiFormFieldSet {
   return {
     name: {},

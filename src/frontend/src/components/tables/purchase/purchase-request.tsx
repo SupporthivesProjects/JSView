@@ -15,7 +15,7 @@ import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { metalTypeFields } from "../../forms/CommonForms";
+import { metalTypeFields, purchaseTableFields } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -35,16 +35,35 @@ export default function PurchaseRequestTable() {
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "code",
+        accessor: "pono",
+        title: t`P.R. No.`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "name",
+        accessor: "podate",
+        title: t`P.R. Date`,
         sortable: true,
         switchable: false,
       },
-      DescriptionColumn({}),
+      {
+        accessor: "tqty",
+        title: t`Total. Qty.`,
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "prepby_username",
+        title: t`Prepared By`,
+        sortable: true,
+        switchable: false,
+      },
+      {
+        accessor: "customerid",
+        title: t`Customer`,
+        sortable: true,
+        switchable: false,
+      },
       BooleanColumn({
         accessor: "active",
       }),
@@ -65,9 +84,9 @@ export default function PurchaseRequestTable() {
 
   // --- Create modal ----------------------------------------------------
   const newMetalType = useCreateApiFormModal({
-    url: ApiEndpoints.metal_type_list,
-    title: t`Add Metal Type`,
-    fields: metalTypeFields(),
+    url: ApiEndpoints.purchase_api,
+    title: t`Create New Purchase Request`,
+    fields: purchaseTableFields(),
     table: table,
   });
 
