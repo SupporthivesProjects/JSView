@@ -19,16 +19,16 @@ class PurchaseOrderList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating PurchaseOrder objects."""
 
     queryset = PurchaseOrder.objects.select_related(
-        'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid',
+        'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
     ).prefetch_related('lines').all()
     serializer_class = po_serializers.PurchaseOrderSerializer
     pagination_class = PurchaseOrderPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = [
         'potype', 'pocategory', 'customerid', 'vendorid',
-        'stampid', 'acexeid', 'termsid', 'active',
+        'stampid', 'acexeid', 'termsid', 'prepby', 'active',
     ]
-    search_fields = ['pono', 'customer_pono', 'rem', 'note']
+    search_fields = ['pono', 'customer_pono', 'rem', 'note', 'prepby__username']
     ordering_fields = ['podate', 'npono', 'createdat', 'tqty']
     ordering = ['-podate', '-npono']
 
@@ -37,7 +37,7 @@ class PurchaseOrderDetail(RetrieveUpdateDestroyAPI):
     """API endpoint for detail view of a single PurchaseOrder object."""
 
     queryset = PurchaseOrder.objects.select_related(
-        'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid',
+        'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
     ).prefetch_related('lines').all()
     serializer_class = po_serializers.PurchaseOrderSerializer
 
