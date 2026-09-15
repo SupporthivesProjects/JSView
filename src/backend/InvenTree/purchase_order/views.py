@@ -56,6 +56,13 @@ class PurchaseOrderLineList(DataExportViewMixin, ListCreateAPI):
     ordering_fields = ['pk', 'qty']
     ordering = 'pk'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        po_pk = self.kwargs.get('pk')
+        if po_pk is not None:
+            queryset = queryset.filter(poid_id=po_pk)
+        return queryset
+
 
 class PurchaseOrderLineDetail(RetrieveUpdateDestroyAPI):
     """API endpoint for detail view of a single PurchaseOrderLine object."""
