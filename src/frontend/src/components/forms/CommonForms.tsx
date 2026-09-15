@@ -352,12 +352,15 @@ function PurchaseRequestLineRow({
     };
   }, [item.costcardid, rowId, changeFn]);
 
-  // Vendor for this specific line - overrides the PO level vendor
+  // Vendor for this specific line, carried over from the selected cost card.
+  // Disabled rather than editable, but still fetches and displays its own
+  // value - only the dropdown search is gated on `disabled`.
   const vendorField: ApiFormFieldType = useMemo(() => {
     return {
       field_type: "related field",
       api_url: apiUrl(ApiEndpoints.master_vendor_customer),
       required: false,
+      disabled: true,
       filters: {
         active: true,
         is_supplier: true,
@@ -367,11 +370,8 @@ function PurchaseRequestLineRow({
         const instance = arg?.instance ?? arg;
         return instance?.name ?? instance?.code ?? "";
       },
-      onValueChange: (value: any) => {
-        changeFn(rowId, "vendorid", value);
-      },
     };
-  }, [item.vendorid, rowId, changeFn]);
+  }, [item.vendorid]);
 
   return (
     <Table.Tr key={`table-row-${rowId}`}>
@@ -387,6 +387,7 @@ function PurchaseRequestLineRow({
         <TextInput
           aria-label="text-field-styleno"
           value={item.styleno ?? ""}
+          disabled
           onChange={(event) =>
             changeFn(rowId, "styleno", event.currentTarget.value)
           }
@@ -394,12 +395,11 @@ function PurchaseRequestLineRow({
         />
       </Table.Td>
       <Table.Td>
+        {/* Carried over from the selected cost card, never typed by hand */}
         <TextInput
           aria-label="text-field-vstyleno"
+          disabled
           value={item.vstyleno ?? ""}
-          onChange={(event) =>
-            changeFn(rowId, "vstyleno", event.currentTarget.value)
-          }
           error={rowErrors?.vstyleno?.message}
         />
       </Table.Td>
@@ -412,8 +412,11 @@ function PurchaseRequestLineRow({
         />
       </Table.Td>
       <Table.Td>
+        {/* Locked - the handler is kept so it can be reopened for editing
+            by dropping `disabled`, without rewiring the row */}
         <TableFieldQuantityInput
           min={0}
+          disabled
           value={item.qty ?? 0}
           onChange={(value) => changeFn(rowId, "qty", value === "" ? 0 : value)}
           error={rowErrors?.qty?.message}

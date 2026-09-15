@@ -437,17 +437,20 @@ export function TableFieldQuantityInput({
   value,
   onChange,
   error,
-  min
+  min,
+  disabled
 }: {
   value: number | '';
   onChange: (value: number | '') => void;
   error?: string;
   min?: number;
+  disabled?: boolean;
 }) {
   return (
     <NumberInput
       radius='sm'
       aria-label='number-field-quantity'
+      disabled={disabled}
       min={min}
       step={1}
       decimalScale={10}
