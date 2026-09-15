@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -91,11 +92,14 @@ class PurchaseOrder(POFieldsMixin):
         help_text=_('Date when the purchase order was created.'),
     )
 
-    prepby = models.CharField(
-        max_length=100,
+    prepby = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
         blank=True,
+        on_delete=models.SET_NULL,
+        related_name='prepared_purchase_orders',
         verbose_name=_('Prepared By'),
-        help_text=_('Name of the person who prepared this PO.'),
+        help_text=_('InvenTree user who created this purchase request or order.'),
     )
 
     ddate = models.DateField(
@@ -241,6 +245,7 @@ class PurchaseOrder(POFieldsMixin):
             models.Index(fields=['podate']),
             models.Index(fields=['customerid']),
             models.Index(fields=['vendorid']),
+            models.Index(fields=['prepby']),
         ]
 
     def __str__(self):

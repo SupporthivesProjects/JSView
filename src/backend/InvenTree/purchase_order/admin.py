@@ -18,10 +18,11 @@ class PurchaseOrderLineInline(admin.TabularInline):
 class PurchaseOrderAdmin(admin.ModelAdmin):
     list_display = [
         'pono', 'potype', 'pocategory', 'podate',
-        'customerid', 'vendorid', 'tqty', 'active',
+        'prepby', 'customerid', 'vendorid', 'tqty', 'active',
     ]
     list_filter = ['potype', 'pocategory', 'active']
-    search_fields = ['pono', 'customer_pono']
+    search_fields = ['pono', 'customer_pono', 'prepby__username']
+    autocomplete_fields = ['prepby', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'linkid']
     inlines = [PurchaseOrderLineInline]
 
 

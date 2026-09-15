@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "JSView — Purchase Request & Purchase Order",
+    "description": "# JSView Purchase Request (PR) and Purchase Order (PO)\n\nThere is **no separate PR URL**. PR and PO share the same jewelry API. The only difference is `potype`:\n\n| Type | `potype` | Meaning |\n|---|---|---|\n| Purchase Request | `REQUEST` | Uses the live cost card. No frozen snapshot. |\n| Purchase Order | `ORDER` | Frozen cost-card snapshot is created when a line with `costcardid` is saved. |\n\nPrefix: `{{baseUrl}}/api/purchase-order/`\n\n**Auth:** InvenTree requires login. Set collection variable `token` (from `/api/user/token/` or the UI) and send header `Authorization: Token {{token}}`.\n\n**Not these URLs:** frontend `ApiEndpoints.purchase_order_list` (`/api/order/po/`) is upstream InvenTree purchasing, not this jewelry PO app.\n\n## Endpoints\n\n| Method | Path | Notes |\n|---|---|---|\n| GET/POST | `/api/purchase-order/po/` | List / create header. Filter PR with `?potype=REQUEST`, PO with `?potype=ORDER`. |\n| GET/PATCH/PUT/DELETE | `/api/purchase-order/po/{{id}}/` | Header detail. GET includes nested `lines`. |\n| GET | `/api/purchase-order/po/{{id}}/lines/` | Lines for that header only. |\n| GET/POST | `/api/purchase-order/po-line/` | All lines, or create a line (`poid` required). |\n| GET/PATCH/PUT/DELETE | `/api/purchase-order/po-line/{{id}}/` | Single line. |\n\nPagination: `limit` (default 10, max 100), `offset`.\n\nList filters: `potype`, `pocategory`, `customerid`, `vendorid`, `stampid`, `acexeid`, `termsid`, `active`.\nSearch: `search` on `pono`, `customer_pono`, `rem`, `note`.\nOrdering: `ordering` e.g. `-podate`, `npono`, `tqty`.\n\n## Header body (POST/PATCH)\n\n**Required:** `podate` (`YYYY-MM-DD`).\n**Do not send:** `pono`, `npono`, `nyear` (auto), `lines`, `*_name` fields, `pk` on create, `created_at`, `updated_at`.\n\n| Field | Type | Notes |\n|---|---|---|\n| potype | `REQUEST` or `ORDER` | Default `ORDER`. |\n| podate | date | Required. |\n| linkid | int or null | On an ORDER, PK of the source REQUEST. |\n| prepby | string | Prepared by. |\n| ddate | date | Delivery date. |\n| vcsdate | date | Vendor confirmed ship date. |\n| esdstone | date | Expected stone delivery. |\n| customerid | int | `company.Company` PK (customer). |\n| customer_pono | string | Customer PO reference. |\n| pocategory | string | e.g. Production, Sample. Sample categories (`Sample`, `CZ Sample`, `CZ Host Sample`, `Photo Sample`) get PO number prefix `S`, others `P`. |\n| rem | string | Remarks. |\n| note | string | Internal notes. |\n| stampid | int | `master.Stamp` PK. |\n| acexeid | int | `master.ACExecutive` PK. |\n| vendorid | int | `company.Company` PK (vendor). |\n| tqty | int | Total qty. |\n| termsid | int | `master.Terms` PK. |\n| luser | string | Last user. |\n| canc_dt / canc_rem / canc_user | date / string / string | Cancellation. |\n| active | bool | Default true. |\n\n`pono` format: `{customer_code} {year}-{npono:04d} {P|S}` e.g. `UNK 2026-0001 P`.\n\nConvert REQUEST → ORDER: create ORDER with `potype: ORDER` and `linkid: <request pk>`. The REQUEST `linkid` is updated to point at the new ORDER.\n\n## Line body (POST/PATCH)\n\n| Field | Type | Notes |\n|---|---|---|\n| poid | int | Header PK. Required on create. |\n| costcardid | int | `costcard.CostCard` PK. ORDER lines with this freeze a snapshot. REQUEST does not snapshot. |\n| styleno | string | Internal style no. |\n| vstyleno | string | Vendor style no. |\n| vendorid | int | Line vendor company PK. |\n| qty | int | Quantity. |\n| size | string | e.g. `\"7,8,9\"`. |\n| spcs | string | Pieces per size e.g. `\"100,200,300\"`. |\n| stnoauto | int | Stone sequence. |\n| active | bool | |\n\n## Suggested flow\n\n1. POST PR (`potype: REQUEST`). Collection saves `prId`.\n2. POST line with `poid = {{prId}}`.\n3. POST PO (`potype: ORDER`, `linkid = {{prId}}`). Collection saves `poId`.\n4. POST line with `poid = {{poId}}` and `costcardid` to freeze the cost card.\n\nLookup helpers: `GET {{baseUrl}}/api/company/?is_customer=true`, `GET {{baseUrl}}/api/company/?is_supplier=true`, `GET {{baseUrl}}/api/costcard/`, `GET {{baseUrl}}/api/master/stamp/`, `GET {{baseUrl}}/api/master/terms/` (exact master paths may differ; use the OpenAPI schema if a path 404s).\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "Authorization", "type": "string" },
+      { "key": "value", "value": "Token {{token}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "token", "value": "" },
+    { "key": "prId", "value": "1" },
+    { "key": "poId", "value": "1" },
+    { "key": "lineId", "value": "1" },
+    { "key": "customerId", "value": "1" },
+    { "key": "vendorId", "value": "1" },
+    { "key": "costcardId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "0. Auth",
+      "item": [
+        {
+          "name": "Get API token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "If this 401s, log in via the JSView UI and copy the API token from the user profile, then paste it into collection variable `token`.\n\nSome InvenTree setups accept:\n`POST {{baseUrl}}/api-token-auth/` with `{ \"username\", \"password\" }`.\n",
+            "url": "{{baseUrl}}/api/user/token/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Purchase Request (potype=REQUEST)",
+      "item": [
+        {
+          "name": "List purchase requests",
+          "request": {
+            "method": "GET",
+            "description": "Returns paginated PR headers. Always send `potype=REQUEST` so ORDER rows are excluded.",
+            "url": "{{baseUrl}}/api/purchase-order/po/?potype=REQUEST&active=true&limit=20&offset=0&search=&ordering=-podate"
+          }
+        },
+        {
+          "name": "Create purchase request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.pk) pm.collectionVariables.set('prId', String(j.pk));",
+                  "  pm.test('PR created', () => pm.expect(j.potype).to.eql('REQUEST'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "Creates the PR header then its `items` in one POST. Do not send `prepby` (set from the logged-in user) or `poid` on items. `vendorid` is null on PR. Saves `prId` on 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"potype\": \"REQUEST\",\n  \"podate\": \"2026-09-12\",\n  \"ddate\": \"2026-10-01\",\n  \"customerid\": {{customerId}},\n  \"customer_pono\": \"CUST-PR-001\",\n  \"pocategory\": \"Production\",\n  \"stampid\": null,\n  \"acexeid\": null,\n  \"termsid\": null,\n  \"vendorid\": null,\n  \"vcsdate\": null,\n  \"rem\": \"Sample purchase request\",\n  \"note\": \"Internal notes from the Note UI\",\n  \"tqty\": 0,\n  \"active\": true,\n  \"items\": [\n    {\n      \"costcardid\": {{costcardId}},\n      \"styleno\": \"JS-001\",\n      \"vstyleno\": \"V-001\",\n      \"vendorid\": {{vendorId}},\n      \"qty\": 10,\n      \"size\": \"7,8,9\",\n      \"spcs\": \"4,3,3\"\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/"
+          }
+        },
+        {
+          "name": "Get purchase request detail",
+          "request": {
+            "method": "GET",
+            "description": "Nested `lines` are included. `customer_name`, `vendor_name`, `stamp_name`, `acexe_name`, `terms_name` are read-only.",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{prId}}/"
+          }
+        },
+        {
+          "name": "Update purchase request",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "Partial update. Do not change `potype` to ORDER here — create a new ORDER with `linkid` instead.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rem\": \"Updated remarks\",\n  \"ddate\": \"2026-10-15\",\n  \"luser\": \"postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/{{prId}}/"
+          }
+        },
+        {
+          "name": "List lines for this PR",
+          "request": {
+            "method": "GET",
+            "description": "Only lines whose `poid` is this request.",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{prId}}/lines/"
+          }
+        },
+        {
+          "name": "Add line to this PR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.pk) pm.collectionVariables.set('lineId', String(j.pk));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "REQUEST lines do **not** freeze a cost-card snapshot. `costcardid` still links to the live card.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poid\": {{prId}},\n  \"costcardid\": {{costcardId}},\n  \"styleno\": \"JS-001\",\n  \"vstyleno\": \"V-001\",\n  \"qty\": 10,\n  \"size\": \"7,8,9\",\n  \"spcs\": \"4,3,3\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po-line/"
+          }
+        },
+        {
+          "name": "Delete purchase request",
+          "request": {
+            "method": "DELETE",
+            "description": "Cascades header lines. Run last if you are cleaning up test data.",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{prId}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Purchase Order (potype=ORDER)",
+      "item": [
+        {
+          "name": "List purchase orders",
+          "request": {
+            "method": "GET",
+            "description": "Always send `potype=ORDER`.",
+            "url": "{{baseUrl}}/api/purchase-order/po/?potype=ORDER&active=true&limit=20&offset=0&ordering=-podate"
+          }
+        },
+        {
+          "name": "Create purchase order (from PR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.pk) pm.collectionVariables.set('poId', String(j.pk));",
+                  "  pm.test('PO created', () => pm.expect(j.potype).to.eql('ORDER'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "Creates the ORDER header then `items` in one POST. Pass `vendorid`. Set `linkid` to the REQUEST pk. Do not send `prepby`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"potype\": \"ORDER\",\n  \"linkid\": {{prId}},\n  \"podate\": \"2026-09-12\",\n  \"ddate\": \"2026-10-01\",\n  \"customerid\": {{customerId}},\n  \"customer_pono\": \"CUST-PO-001\",\n  \"pocategory\": \"Production\",\n  \"vendorid\": {{vendorId}},\n  \"rem\": \"Converted from PR\",\n  \"note\": \"\",\n  \"tqty\": 0,\n  \"active\": true,\n  \"items\": [\n    {\n      \"costcardid\": {{costcardId}},\n      \"styleno\": \"JS-001\",\n      \"vstyleno\": \"V-001\",\n      \"vendorid\": {{vendorId}},\n      \"qty\": 5,\n      \"size\": \"7,8\",\n      \"spcs\": \"3,2\"\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/"
+          }
+        },
+        {
+          "name": "Create purchase order (standalone)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.pk) pm.collectionVariables.set('poId', String(j.pk));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "ORDER with no `linkid` (not converted from a request).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"potype\": \"ORDER\",\n  \"podate\": \"2026-09-12\",\n  \"customerid\": {{customerId}},\n  \"vendorid\": {{vendorId}},\n  \"pocategory\": \"Production\",\n  \"note\": \"\",\n  \"active\": true,\n  \"items\": [\n    {\n      \"costcardid\": {{costcardId}},\n      \"styleno\": \"JS-001\",\n      \"qty\": 5\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/"
+          }
+        },
+        {
+          "name": "Get purchase order detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{poId}}/"
+          }
+        },
+        {
+          "name": "Update purchase order",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vcsdate\": \"2026-09-20\",\n  \"luser\": \"postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/{{poId}}/"
+          }
+        },
+        {
+          "name": "Cancel purchase order",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "There is no `/cancel/` action. Set cancellation fields on the header.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canc_dt\": \"2026-09-12\",\n  \"canc_rem\": \"Cancelled from Postman\",\n  \"canc_user\": \"postman\",\n  \"active\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po/{{poId}}/"
+          }
+        },
+        {
+          "name": "List lines for this PO",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{poId}}/lines/"
+          }
+        },
+        {
+          "name": "Add line to this PO (snapshots cost card)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.pk) pm.collectionVariables.set('lineId', String(j.pk));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "description": "For `potype=ORDER`, saving a line with `costcardid` copies the cost card into `POCostCard` / `POCostCardLine` (frozen names). Re-saving the same poid+costcard does not duplicate. There is **no** snapshot list API yet.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poid\": {{poId}},\n  \"costcardid\": {{costcardId}},\n  \"styleno\": \"JS-001\",\n  \"vstyleno\": \"V-001\",\n  \"qty\": 5,\n  \"size\": \"7,8\",\n  \"spcs\": \"3,2\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po-line/"
+          }
+        },
+        {
+          "name": "Delete purchase order",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/purchase-order/po/{{poId}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Lines (shared)",
+      "item": [
+        {
+          "name": "List all lines",
+          "request": {
+            "method": "GET",
+            "description": "Optional `?poid={{poId}}` or `{{prId}}`.",
+            "url": "{{baseUrl}}/api/purchase-order/po-line/?poid={{poId}}&limit=20"
+          }
+        },
+        {
+          "name": "Get line detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/purchase-order/po-line/{{lineId}}/"
+          }
+        },
+        {
+          "name": "Update line",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qty\": 12,\n  \"size\": \"7,8,9\"\n}"
+            },
+            "url": "{{baseUrl}}/api/purchase-order/po-line/{{lineId}}/"
+          }
+        },
+        {
+          "name": "Delete line",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/purchase-order/po-line/{{lineId}}/"
+          }
+        }
+      ]
+    }
+  ]
+}
