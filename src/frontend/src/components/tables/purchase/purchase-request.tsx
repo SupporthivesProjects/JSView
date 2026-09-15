@@ -21,13 +21,15 @@ import {
   PURCHASE_REQUEST_MODAL_SIZE,
   processPurchaseRequestData,
   purchaseRequestFields,
-  purchaseRequestHeaderFields,
+  savePurchaseRequestLines,
 } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
+import { useApi } from "@context/ApiContext";
+import { showApiErrorMessage } from "@helpers/notifications";
 import { useUserState } from "@store/UserState";
 
 /**
@@ -39,6 +41,7 @@ export default function PurchaseRequestTable() {
   const table = useTable("purchase-request");
 
   const user = useUserState();
+  const api = useApi();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -106,15 +109,36 @@ export default function PurchaseRequestTable() {
     number | undefined
   >(undefined);
 
+  // The line items the edit modal was opened with, used to work out which
+  // rows the user deleted from the grid
+  const [selectedLines, setSelectedLines] = useState<any[]>([]);
+
   const editPurchaseRequest = useEditApiFormModal({
     url: ApiEndpoints.purchase_api,
     pk: selectedPurchaseRequest,
     title: t`Edit Purchase Request`,
-    fields:  purchaseRequestFields(),
+    fields: purchaseRequestFields(true),
     successMessage: t`Purchase request updated`,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
     size: PURCHASE_REQUEST_MODAL_SIZE,
-    table: table,
+    // The header endpoint ignores line data, so the edited rows are written
+    // separately once the header itself has saved
+    onFormSuccess: (data: any, form: any) => {
+      savePurchaseRequestLines({
+        api: api,
+        poPk: data?.pk ?? selectedPurchaseRequest,
+        originalLines: selectedLines,
+        rows: form?.getValues("lines") ?? [],
+      })
+        .then(() => table.refreshTable())
+        .catch((error: any) => {
+          showApiErrorMessage({
+            error: error,
+            title: t`Error saving line items`,
+          });
+          table.refreshTable();
+        });
+    },
   });
 
   const deletePurchaseRequest = useDeleteApiFormModal({
@@ -133,6 +157,7 @@ export default function PurchaseRequestTable() {
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
             setSelectedPurchaseRequest(record.pk);
+            setSelectedLines(record.lines ?? []);
             editPurchaseRequest.open();
           },
         }),

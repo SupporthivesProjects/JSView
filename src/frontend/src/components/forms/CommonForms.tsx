@@ -541,34 +541,86 @@ export function purchaseRequestHeaderFields(): ApiFormFieldSet {
   };
 }
 
+/** The editable grid of line items, shared by the create and edit forms */
+function purchaseRequestLineTable(): ApiFormFieldType {
+  return {
+    label: "Line Items",
+    description: "Styles requested against this purchase request",
+    field_type: "table",
+    required: false,
+    gridSpan: "full",
+    headers: [
+      { title: "Cost Card", style: { minWidth: "180px" } },
+      { title: "Style No", style: { minWidth: "120px" } },
+      { title: "Vendor Style No", style: { minWidth: "120px" } },
+      { title: "Vendor", style: { minWidth: "160px" } },
+      { title: "Quantity", style: { minWidth: "90px" } },
+      { title: "Size", style: { minWidth: "100px" } },
+      { title: "Size Pcs", style: { minWidth: "100px" } },
+      { title: "", style: { width: "50px" } },
+    ],
+    modelRenderer: (row: TableFieldRowProps) => (
+      <PurchaseRequestLineRow key={row.rowId} props={row} />
+    ),
+    addRow: newPurchaseRequestLineItem,
+  };
+}
+
 /**
- * Purchase request fields for creation, together with the nested line items.
+ * Purchase request fields, with the line item grid plumbed to whichever API
+ * contract the form is targeting.
+ *
+ * The two modes differ only in how the lines travel, because the API accepts
+ * them nested on create but ignores them on update:
+ *
+ * - create: the rows are submitted with the header under the write-only
+ *   `items` key, in a single request.
+ * - editing: the field is named `lines` so it prefills straight from the
+ *   record fetched for the form, and is excluded from the submitted payload -
+ *   the rows are written separately by {@link savePurchaseRequestLines}.
+ *
+ * The editing field must not declare a `value`: ApiForm treats a
+ * caller-supplied value as live and caller-owned, and would keep it in place
+ * of the fetched rows, leaving the grid permanently empty.
  */
-export function purchaseRequestFields(): ApiFormFieldSet {
+export function purchaseRequestFields(editing = false): ApiFormFieldSet {
   return {
     ...purchaseRequestHeaderFields(),
-    items: {
-      label: "Line Items",
-      description: "Styles requested against this purchase request",
-      field_type: "table",
-      required: false,
-      gridSpan: "full",
-      value: [],
-      headers: [
-        { title: "Cost Card", style: { minWidth: "180px" } },
-        { title: "Style No", style: { minWidth: "120px" } },
-        { title: "Vendor Style No", style: { minWidth: "120px" } },
-        { title: "Vendor", style: { minWidth: "160px" } },
-        { title: "Quantity", style: { minWidth: "90px" } },
-        { title: "Size", style: { minWidth: "100px" } },
-        { title: "Size Pcs", style: { minWidth: "100px" } },
-        { title: "", style: { width: "50px" } },
-      ],
-      modelRenderer: (row: TableFieldRowProps) => (
-        <PurchaseRequestLineRow key={row.rowId} props={row} />
-      ),
-      addRow: newPurchaseRequestLineItem,
-    },
+    ...(editing
+      ? {
+          lines: {
+            ...purchaseRequestLineTable(),
+            exclude: true,
+            disabled: false,
+            default: [],
+          },
+        }
+      : {
+          items: {
+            ...purchaseRequestLineTable(),
+            value: [],
+          },
+        }),
+  };
+}
+
+/**
+ * Reduce a row to the payload the line endpoint accepts, dropping the row key
+ * and anything else the grid carries around.
+ *
+ * The blanks are type-specific on purpose: the two FKs are nullable, but the
+ * text columns are `blank=True` rather than `null=True`, so they have to go
+ * out as empty strings rather than null.
+ */
+function purchaseRequestLinePayload(row: any) {
+  return {
+    costcardid: row.costcardid ?? null,
+    styleno: row.styleno ?? "",
+    vstyleno: row.vstyleno ?? "",
+    vendorid: row.vendorid ?? null,
+    qty: row.qty ?? 0,
+    size: row.size ?? "",
+    spcs: row.spcs ?? "",
   };
 }
 
@@ -576,8 +628,60 @@ export function purchaseRequestFields(): ApiFormFieldSet {
 export function processPurchaseRequestData(data: any) {
   return {
     ...data,
-    items: (data.items ?? []).map(({ uuid, ...item }: any) => item),
+    items: (data.items ?? []).map(purchaseRequestLinePayload),
   };
+}
+
+/**
+ * Write the edited line items back against a saved purchase request.
+ *
+ * The header endpoint drops line data on update, so each row is sent to the
+ * line endpoint instead: existing rows are patched, new rows created, and
+ * rows the user removed from the grid are deleted.
+ */
+export async function savePurchaseRequestLines({
+  api,
+  poPk,
+  originalLines,
+  rows,
+}: {
+  api: any;
+  poPk: number;
+  originalLines: any[];
+  rows: any[];
+}) {
+  const url = apiUrl(ApiEndpoints.purchase_api_line);
+  const keptPks = new Set(
+    (rows ?? []).map((row: any) => row.pk).filter((pk: any) => !!pk),
+  );
+
+  const requests: Promise<any>[] = [];
+
+  // Rows the user removed from the grid. A row that something else already
+  // deleted is treated as done rather than as a failure.
+  for (const line of originalLines ?? []) {
+    if (line.pk && !keptPks.has(line.pk)) {
+      requests.push(
+        api.delete(`${url}${line.pk}/`).catch((error: any) => {
+          if (error?.response?.status !== 404) {
+            throw error;
+          }
+        }),
+      );
+    }
+  }
+
+  for (const row of rows ?? []) {
+    const payload = purchaseRequestLinePayload(row);
+
+    if (row.pk) {
+      requests.push(api.patch(`${url}${row.pk}/`, payload));
+    } else {
+      requests.push(api.post(url, { ...payload, poid: poPk }));
+    }
+  }
+
+  await Promise.all(requests);
 }
 
 export function jewelleryCategoryFields(): ApiFormFieldSet {

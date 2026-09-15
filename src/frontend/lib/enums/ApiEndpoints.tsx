@@ -184,6 +184,7 @@ export enum ApiEndpoints {
 
   // Purchase API endpoints
   purchase_api = "purchase-order/po/",
+  purchase_api_line = "purchase-order/po-line/",
 
   // Stock location endpoints
   stock_location_list = "stock/location/",
