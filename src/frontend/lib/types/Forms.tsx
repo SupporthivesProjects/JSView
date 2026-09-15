@@ -155,6 +155,13 @@ export type ApiFormFieldType = {
   singleFetchFunction?: (value: any) => Promise<any> | null;
   disableWhen?: (formValues: FieldValues) => boolean;
   valueFromCaller?: boolean;
+  /**
+   * How many columns this field occupies when the form is laid out in a grid
+   * (see the form-level `gridColumns` prop). 'full' spans the entire row -
+   * useful for a wide field such as a nested "table" of line items.
+   * Ignored when the form is rendered as a single-column stack.
+   */
+  gridSpan?: number | 'full';
 };
 
 export type ApiFormFieldSet = Record<string, ApiFormFieldType>;

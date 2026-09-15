@@ -13,9 +13,16 @@ import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
-import { BooleanColumn, DescriptionColumn } from "../ColumnRenderers";
+import { BooleanColumn, DateColumn, UpdatedAtColumn } from "../ColumnRenderers";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { metalTypeFields, purchaseTableFields } from "../../forms/CommonForms";
+import {
+  PO_CATEGORY_CHOICES,
+  PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+  PURCHASE_REQUEST_MODAL_SIZE,
+  processPurchaseRequestData,
+  purchaseRequestFields,
+  purchaseRequestHeaderFields,
+} from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
@@ -24,7 +31,9 @@ import {
 import { useUserState } from "@store/UserState";
 
 /**
- * Table for displaying, creating, editing and deleting Metal Type records
+ * Table for displaying, creating, editing and deleting Purchase Request records
+ *
+ * A purchase request is a purchase order record with `potype = REQUEST`.
  */
 export default function PurchaseRequestTable() {
   const table = useTable("purchase-request");
@@ -37,76 +46,82 @@ export default function PurchaseRequestTable() {
       {
         accessor: "pono",
         title: t`P.R. No.`,
-        sortable: true,
+        sortable: false,
         switchable: false,
       },
-      {
+      DateColumn({
         accessor: "podate",
         title: t`P.R. Date`,
         sortable: true,
         switchable: false,
+      }),
+      {
+        accessor: "customer_name",
+        title: t`Customer`,
+        sortable: false,
+      },
+      {
+        accessor: "pocategory",
+        title: t`Category`,
+        sortable: false,
       },
       {
         accessor: "tqty",
-        title: t`Total. Qty.`,
+        title: t`Total Qty.`,
         sortable: true,
-        switchable: false,
       },
       {
         accessor: "prepby_username",
         title: t`Prepared By`,
-        sortable: true,
-        switchable: false,
-      },
-      {
-        accessor: "customerid",
-        title: t`Customer`,
-        sortable: true,
-        switchable: false,
+        sortable: false,
       },
       BooleanColumn({
         accessor: "active",
       }),
-      {
+      DateColumn({
         accessor: "created_at",
         title: t`Created`,
-        sortable: true,
-        switchable: true,
-      },
-      {
-        accessor: "updated_at",
-        title: t`Updated`,
-        sortable: true,
-        switchable: true,
-      },
+        sortable: false,
+        defaultVisible: false,
+        extra: { showTime: true },
+      }),
+      UpdatedAtColumn({ sortable: false }),
     ];
   }, []);
 
   // --- Create modal ----------------------------------------------------
-  const newMetalType = useCreateApiFormModal({
+  const newPurchaseRequest = useCreateApiFormModal({
     url: ApiEndpoints.purchase_api,
     title: t`Create New Purchase Request`,
-    fields: purchaseTableFields(),
+    fields: purchaseRequestFields(),
+    processFormData: processPurchaseRequestData,
+    successMessage: t`Purchase request created`,
+    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+    size: PURCHASE_REQUEST_MODAL_SIZE,
     table: table,
   });
 
   // --- Edit / Delete modals --------------------------------------------
-  const [selectedMetalType, setSelectedMetalType] = useState<
+  const [selectedPurchaseRequest, setSelectedPurchaseRequest] = useState<
     number | undefined
   >(undefined);
 
-  const editMetalType = useEditApiFormModal({
-    url: ApiEndpoints.metal_type_list,
-    pk: selectedMetalType,
-    title: t`Edit Metal Type`,
-    fields: metalTypeFields(),
+  const editPurchaseRequest = useEditApiFormModal({
+    url: ApiEndpoints.purchase_api,
+    pk: selectedPurchaseRequest,
+    title: t`Edit Purchase Request`,
+    fields:  purchaseRequestFields(),
+    successMessage: t`Purchase request updated`,
+    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+    size: PURCHASE_REQUEST_MODAL_SIZE,
     table: table,
   });
 
-  const deleteMetalType = useDeleteApiFormModal({
-    url: ApiEndpoints.metal_type_list,
-    pk: selectedMetalType,
-    title: t`Delete Metal Type`,
+  const deletePurchaseRequest = useDeleteApiFormModal({
+    url: ApiEndpoints.purchase_api,
+    pk: selectedPurchaseRequest,
+    title: t`Delete Purchase Request`,
+    successMessage: t`Purchase request deleted`,
     table: table,
   });
 
@@ -117,20 +132,20 @@ export default function PurchaseRequestTable() {
         RowEditAction({
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
-            setSelectedMetalType(record.pk);
-            editMetalType.open();
+            setSelectedPurchaseRequest(record.pk);
+            editPurchaseRequest.open();
           },
         }),
         RowDeleteAction({
           hidden: !user.hasDeleteRole(UserRoles.part),
           onClick: () => {
-            setSelectedMetalType(record.pk);
-            deleteMetalType.open();
+            setSelectedPurchaseRequest(record.pk);
+            deletePurchaseRequest.open();
           },
         }),
       ];
     },
-    [user],
+    [user, editPurchaseRequest.open, deletePurchaseRequest.open],
   );
 
   // --- Table-level filters ----------------------------------------------
@@ -139,8 +154,18 @@ export default function PurchaseRequestTable() {
       {
         name: "active",
         label: t`Active`,
-        description: t`Show active metal types`,
+        description: t`Show active purchase requests`,
         type: "boolean",
+      },
+      {
+        name: "pocategory",
+        label: t`Category`,
+        description: t`Filter by purchase request category`,
+        type: "choice",
+        choices: PO_CATEGORY_CHOICES.map((choice) => ({
+          value: choice.value,
+          label: choice.display_name,
+        })),
       },
     ];
   }, []);
@@ -149,24 +174,28 @@ export default function PurchaseRequestTable() {
   const tableActions = useMemo(() => {
     return [
       <AddItemButton
-        key="add-metal-type"
-        onClick={() => newMetalType.open()}
-        tooltip={t`Add Metal Type`}
+        key="add-purchase-request"
+        onClick={() => newPurchaseRequest.open()}
+        tooltip={t`Add Purchase Request`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
-  }, [user]);
+  }, [user, newPurchaseRequest.open]);
 
   return (
     <>
-      {newMetalType.modal}
-      {editMetalType.modal}
-      {deleteMetalType.modal}
+      {newPurchaseRequest.modal}
+      {editPurchaseRequest.modal}
+      {deletePurchaseRequest.modal}
       <InvenTreeTable
-        url={apiUrl(ApiEndpoints.metal_type_list)}
+        url={apiUrl(ApiEndpoints.purchase_api)}
         tableState={table}
         columns={columns}
         props={{
+          params: {
+            potype: "REQUEST",
+          },
+          defaultSortColumn: "podate",
           rowActions: rowActions,
           tableActions: tableActions,
           tableFilters: tableFilters,

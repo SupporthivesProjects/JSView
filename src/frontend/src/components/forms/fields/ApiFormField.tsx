@@ -123,6 +123,7 @@ export function ApiFormField({
       valueFromCaller: undefined,
       children: undefined,
       exclude: undefined,
+      gridSpan: undefined,
     };
   }, [fieldDefinition]);
 
@@ -352,12 +353,29 @@ export function ApiFormField({
     value,
   ]);
 
+  // When the parent form lays its fields out in a grid, a field may ask to
+  // occupy more than one column (a no-op in the default stacked layout)
+  const gridSpanStyle = useMemo(() => {
+    const span = fieldDefinition.gridSpan;
+
+    if (!span) {
+      return undefined;
+    }
+
+    return {
+      gridColumn: span === "full" ? "1 / -1" : `span ${span}`,
+      // Grid items default to min-width:auto, which lets a wide field (such
+      // as a table of line items) stretch the whole grid past its container
+      minWidth: 0,
+    };
+  }, [fieldDefinition.gridSpan]);
+
   if (fieldDefinition.hidden) {
     return null;
   }
 
   return (
-    <Stack>
+    <Stack style={gridSpanStyle}>
       {definition.preFieldContent}
       {fieldInstance}
       {definition.postFieldContent}

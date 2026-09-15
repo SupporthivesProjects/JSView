@@ -1,3 +1,5 @@
+import { Table, TextInput } from "@mantine/core";
+import { randomId } from "@mantine/hooks";
 import { IconUsers } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +20,12 @@ import { useApi } from "@context/ApiContext";
 import { useGlobalStatusState } from "@store/GlobalStatusState";
 import { useUserState } from "@store/UserState";
 import { ProjectCodeField } from "./CommonFields";
+import { StandaloneField } from "./StandaloneField";
+import {
+  TableFieldQuantityInput,
+  type TableFieldRowProps,
+} from "./fields/TableField";
+import RemoveRowButton from "../ui/buttons/RemoveRowButton";
 
 export function projectCodeFields(): ApiFormFieldSet {
   return {
@@ -284,40 +292,222 @@ export function masterCustomer(): ApiFormFieldSet {
   };
 }
 
-export function purchaseTableFields(): ApiFormFieldSet {
-  return {
-    pocategory: {
-      field_type: "choice",
-      default: "Production",
-      choices: [
-        { value: "Extra", display_name: "Extra" },
-        { value: "Master Sample", display_name: "Master Sample" },
-        { value: "Production", display_name: "Production" },
-        { value: "Sample", display_name: "Sample" },
-        { value: "Spl Order", display_name: "Spl Order" },
-        { value: "Casting", display_name: "Casting" },
-        { value: "CZ Sample", display_name: "CZ Sample" },
-        { value: "CZ Host Sample", display_name: "CZ Host Sample" },
-        { value: "Photo Sample", display_name: "Photo Sample" },
-      ],
-    },
-    pono:{hidden: true},
-    potype: { 
-      field_type: "boolean",
-      value: true,
-      hidden: false
-    },
-    podate: {
-      label: "P.R Date",
-      default: new Date().toISOString().split("T")[0],
-    },
-    ddate: {},
-    customerid: {
-      label: "Customer",
-      api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_customer=true`,
+// A purchase request is a purchase order record with `potype = REQUEST`. The
+// API takes the header and its line items in a single POST, with the lines
+// nested under a write-only `items` key - so the create form carries both,
+// while the edit form is header-only (the API ignores `items` on update).
+
+/**
+ * The request header carries too many fields for a single vertical stack, so
+ * it lays them out in a responsive grid - one column on a phone, three on a
+ * wide screen.
+ */
+export const PURCHASE_REQUEST_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
+
+/** Width of the purchase request modal, sized to hold three columns. */
+export const PURCHASE_REQUEST_MODAL_SIZE = "72rem";
+
+/** Categories which can be assigned to a purchase request */
+export const PO_CATEGORY_CHOICES: ApiFormFieldChoice[] = [
+  { value: "Extra", display_name: "Extra" },
+  { value: "Master Sample", display_name: "Master Sample" },
+  { value: "Production", display_name: "Production" },
+  { value: "Sample", display_name: "Sample" },
+  { value: "Spl Order", display_name: "Spl Order" },
+  { value: "Casting", display_name: "Casting" },
+  { value: "CZ Sample", display_name: "CZ Sample" },
+  { value: "CZ Host Sample", display_name: "CZ Host Sample" },
+  { value: "Photo Sample", display_name: "Photo Sample" },
+];
+
+/**
+ * A single (as yet unsaved) line item row in the purchase request form.
+ * Each row maps to one entry of the `items` payload.
+ */
+function PurchaseRequestLineRow({
+  props,
+}: Readonly<{ props: TableFieldRowProps }>) {
+  const { item, rowId, rowErrors, changeFn, removeFn } = props;
+
+  const costCardField: ApiFormFieldType = useMemo(() => {
+    return {
+      field_type: "related field",
+      api_url: apiUrl(ApiEndpoints.cost_card),
+      required: false,
+      value: item.costcardid,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
-        return instance?.code ?? (instance?.name ? `#${instance.name}` : "");
+        return instance?.cost_card_no ?? "";
+      },
+      onValueChange: (value: any, instance: any) => {
+        changeFn(rowId, "costcardid", value);
+
+        // Carry the style numbers and vendor across from the selected cost card
+        if (instance) {
+          changeFn(rowId, "styleno", instance.our_style_no ?? "");
+          changeFn(rowId, "vstyleno", instance.vendor_style_no ?? "");
+          changeFn(rowId, "vendorid", instance.vendor ?? null);
+        }
+      },
+    };
+  }, [item.costcardid, rowId, changeFn]);
+
+  // Vendor for this specific line - overrides the PO level vendor
+  const vendorField: ApiFormFieldType = useMemo(() => {
+    return {
+      field_type: "related field",
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      required: false,
+      filters: {
+        active: true,
+        is_supplier: true,
+      },
+      value: item.vendorid,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? instance?.code ?? "";
+      },
+      onValueChange: (value: any) => {
+        changeFn(rowId, "vendorid", value);
+      },
+    };
+  }, [item.vendorid, rowId, changeFn]);
+
+  return (
+    <Table.Tr key={`table-row-${rowId}`}>
+      <Table.Td>
+        <StandaloneField
+          fieldName="costcardid"
+          fieldDefinition={costCardField}
+          error={rowErrors?.costcardid?.message}
+          hideLabels
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          aria-label="text-field-styleno"
+          value={item.styleno ?? ""}
+          onChange={(event) =>
+            changeFn(rowId, "styleno", event.currentTarget.value)
+          }
+          error={rowErrors?.styleno?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          aria-label="text-field-vstyleno"
+          value={item.vstyleno ?? ""}
+          onChange={(event) =>
+            changeFn(rowId, "vstyleno", event.currentTarget.value)
+          }
+          error={rowErrors?.vstyleno?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <StandaloneField
+          fieldName="vendorid"
+          fieldDefinition={vendorField}
+          error={rowErrors?.vendorid?.message}
+          hideLabels
+        />
+      </Table.Td>
+      <Table.Td>
+        <TableFieldQuantityInput
+          min={0}
+          value={item.qty ?? 0}
+          onChange={(value) => changeFn(rowId, "qty", value === "" ? 0 : value)}
+          error={rowErrors?.qty?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          aria-label="text-field-size"
+          placeholder="7,8,9"
+          value={item.size ?? ""}
+          onChange={(event) =>
+            changeFn(rowId, "size", event.currentTarget.value)
+          }
+          error={rowErrors?.size?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          aria-label="text-field-spcs"
+          placeholder="1,2,3"
+          value={item.spcs ?? ""}
+          onChange={(event) =>
+            changeFn(rowId, "spcs", event.currentTarget.value)
+          }
+          error={rowErrors?.spcs?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <RemoveRowButton onClick={() => removeFn(rowId)} />
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+/**
+ * Construct a blank line item row.
+ *
+ * `uuid` is a client-side row key only - it keeps the row mounted (and so
+ * keeps input focus) while it is edited, and is stripped again by
+ * {@link processPurchaseRequestData}.
+ */
+function newPurchaseRequestLineItem() {
+  return {
+    uuid: randomId(),
+    costcardid: null,
+    styleno: "",
+    vstyleno: "",
+    vendorid: null,
+    qty: 1,
+    size: "",
+    spcs: "",
+  };
+}
+
+/**
+ * Purchase request header fields.
+ *
+ * Used on its own when editing: the API only accepts nested line items when
+ * the header is first created, so an edit form must not offer them.
+ */
+export function purchaseRequestHeaderFields(): ApiFormFieldSet {
+  return {
+    // `potype` decides whether the record is a request or an order, and it
+    // drives the generated PO number - so pin it rather than let the model
+    // default (ORDER) come through from the API metadata
+    potype: {
+      value: "REQUEST",
+      hidden: true,
+    },
+    // Row 1 - the request's own particulars
+    podate: {
+      label: "P.R. Date",
+      default: new Date().toISOString().split("T")[0],
+    },
+    ddate: {
+      label: "Delivery Date",
+    },
+    pocategory: {
+      label: "Category",
+      field_type: "choice",
+      default: "Production",
+      choices: PO_CATEGORY_CHOICES,
+    },
+    // Row 2 - who the request is for, and on what terms
+    customerid: {
+      label: "Customer",
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      filters: {
+        active: true,
+        is_customer: true,
+      },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? instance?.name ?? "";
       },
     },
     acexeid: {
@@ -328,7 +518,6 @@ export function purchaseTableFields(): ApiFormFieldSet {
         return instance?.name ?? "";
       },
     },
-    // customer_pono: {},
     termsid: {
       label: "Terms",
       api_url: apiUrl(ApiEndpoints.master_terms),
@@ -345,44 +534,51 @@ export function purchaseTableFields(): ApiFormFieldSet {
         return instance?.name ?? "";
       },
     },
-    // vendorid: {
-    //   label: "Vendor",
-    //   api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_supplier=true`,
-    //   modelRenderer: (arg: any) => {
-    //     const instance = arg?.instance ?? arg;
-    //     return instance?.code ?? "";
-    //   },
-    // },
-    // vcsdate: {default: null},
-    rem: {label: "Remarks",},
-    // note: {
-    //   multiline: true,
-    // },
-    tqty: {
-      read_only: true,
-      disabled: true,
-      hidden: true
+    rem: {
+      label: "Remarks",
+      gridSpan: "full",
     },
-
-
-    costcardid: {
-      label: "Cost Card",
-      // Reference to the cost card endpoint
-      api_url: apiUrl(ApiEndpoints.cost_card),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.cost_card_no ?? "";
-      },
-    },
-    styleno: {},
-    vstyleno: {},
-    vendorid: {},
-    qty: {},
-    size: {},
-    spcs: {},
   };
 }
 
+/**
+ * Purchase request fields for creation, together with the nested line items.
+ */
+export function purchaseRequestFields(): ApiFormFieldSet {
+  return {
+    ...purchaseRequestHeaderFields(),
+    items: {
+      label: "Line Items",
+      description: "Styles requested against this purchase request",
+      field_type: "table",
+      required: false,
+      gridSpan: "full",
+      value: [],
+      headers: [
+        { title: "Cost Card", style: { minWidth: "180px" } },
+        { title: "Style No", style: { minWidth: "120px" } },
+        { title: "Vendor Style No", style: { minWidth: "120px" } },
+        { title: "Vendor", style: { minWidth: "160px" } },
+        { title: "Quantity", style: { minWidth: "90px" } },
+        { title: "Size", style: { minWidth: "100px" } },
+        { title: "Size Pcs", style: { minWidth: "100px" } },
+        { title: "", style: { width: "50px" } },
+      ],
+      modelRenderer: (row: TableFieldRowProps) => (
+        <PurchaseRequestLineRow key={row.rowId} props={row} />
+      ),
+      addRow: newPurchaseRequestLineItem,
+    },
+  };
+}
+
+/** Strip the client-side row keys from the line items before submission */
+export function processPurchaseRequestData(data: any) {
+  return {
+    ...data,
+    items: (data.items ?? []).map(({ uuid, ...item }: any) => item),
+  };
+}
 
 export function jewelleryCategoryFields(): ApiFormFieldSet {
   return {
