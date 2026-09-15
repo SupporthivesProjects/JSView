@@ -10,6 +10,8 @@ from data_exporter.mixins import DataExportSerializerMixin
 from importer.mixins import DataImportSerializerMixin
 from importer.registry import register_importer
 
+from revision.costcard.services import create_cost_card_version
+
 from .models import (
     CostCard,
     CostCardColorStoneLine,
@@ -323,6 +325,15 @@ class CostCardSerializer(
             'updated_at',
         ]
 
+    def _current_user(self):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+
+        if user is not None and getattr(user, 'is_authenticated', False):
+            return user
+
+        return None
+
     @staticmethod
     def _normalize_nested_payload(value):
         if value is None:
@@ -435,6 +446,11 @@ class CostCardSerializer(
                 **line_data,
             )
 
+        create_cost_card_version(
+            cost_card=cost_card,
+            user=self._current_user(),
+        )
+
         return cost_card
 
     @transaction.atomic
@@ -473,6 +489,11 @@ class CostCardSerializer(
                 finish_lines,
                 True,
             )
+
+        create_cost_card_version(
+            cost_card=instance,
+            user=self._current_user(),
+        )
 
         return instance
 
@@ -538,3 +559,22 @@ class CostCardImageSerializer(InvenTreeModelSerializer):
             'side_view',
             'back_view',
         ]
+
+    def _current_user(self):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+
+        if user is not None and getattr(user, 'is_authenticated', False):
+            return user
+
+        return None
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+
+        create_cost_card_version(
+            cost_card=instance,
+            user=self._current_user(),
+        )
+
+        return instance
