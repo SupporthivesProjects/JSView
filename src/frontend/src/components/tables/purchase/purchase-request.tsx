@@ -22,6 +22,7 @@ import {
   processPurchaseRequestData,
   purchaseRequestFields,
   savePurchaseRequestLines,
+  validatePurchaseRequestLines,
 } from "../../forms/CommonForms";
 import {
   useCreateApiFormModal,
@@ -97,6 +98,7 @@ export default function PurchaseRequestTable() {
     url: ApiEndpoints.purchase_api,
     title: t`Create New Purchase Request`,
     fields: purchaseRequestFields(),
+    validateFormData: validatePurchaseRequestLines("items"),
     processFormData: processPurchaseRequestData,
     successMessage: t`Purchase request created`,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
@@ -118,6 +120,7 @@ export default function PurchaseRequestTable() {
     pk: selectedPurchaseRequest,
     title: t`Edit Purchase Request`,
     fields: purchaseRequestFields(true),
+    validateFormData: validatePurchaseRequestLines("lines"),
     successMessage: t`Purchase request updated`,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
     size: PURCHASE_REQUEST_MODAL_SIZE,

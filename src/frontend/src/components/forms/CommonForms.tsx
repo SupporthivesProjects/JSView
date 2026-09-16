@@ -310,6 +310,22 @@ export const PO_CATEGORY_CHOICES: ApiFormFieldChoice[] = [
   { value: "Photo Sample", display_name: "Photo Sample" },
 ];
 
+/** Split a comma separated list ("7, 8, 9") into its trimmed, non-blank entries */
+function splitCommaList(value: any): string[] {
+  return String(value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== "");
+}
+
+/** Total quantity for a line - the sum of its Size Pcs entries */
+function sumSizePcs(spcs: any): number {
+  return splitCommaList(spcs).reduce((total, entry) => {
+    const pcs = Number(entry);
+    return Number.isFinite(pcs) ? total + pcs : total;
+  }, 0);
+}
+
 /**
  * A single (as yet unsaved) line item row in the purchase request form.
  * Each row maps to one entry of the `items` payload.
@@ -428,9 +444,12 @@ function PurchaseRequestLineRow({
           aria-label="text-field-spcs"
           placeholder="1,2,3"
           value={item.spcs ?? ""}
-          onChange={(event) =>
-            changeFn(rowId, "spcs", event.currentTarget.value)
-          }
+          onChange={(event) => {
+            const spcs = event.currentTarget.value;
+            changeFn(rowId, "spcs", spcs);
+            // Quantity is always the total of the Size Pcs entries
+            changeFn(rowId, "qty", sumSizePcs(spcs));
+          }}
           error={rowErrors?.spcs?.message}
         />
       </Table.Td>
@@ -448,7 +467,7 @@ function newPurchaseRequestLineItem() {
     styleno: "",
     vstyleno: "",
     vendorid: null,
-    qty: 1,
+    qty: 0,
     size: "",
     spcs: "",
   };
@@ -577,6 +596,68 @@ function purchaseRequestLinePayload(row: any) {
     qty: row.qty ?? 0,
     size: row.size ?? "",
     spcs: row.spcs ?? "",
+  };
+}
+
+/** A row with nothing entered in any of its editable columns */
+function isEmptyPurchaseRequestLine(row: any): boolean {
+  return (
+    !row?.costcardid &&
+    !String(row?.styleno ?? "").trim() &&
+    !String(row?.vstyleno ?? "").trim() &&
+    !row?.vendorid &&
+    splitCommaList(row?.size).length === 0 &&
+    splitCommaList(row?.spcs).length === 0
+  );
+}
+
+/**
+ * Validate the line items of a purchase request before it is submitted.
+ * Errors are attached to the offending rows, and false cancels the submit.
+ *
+ * @param fieldName : The table field holding the rows ("items" or "lines")
+ */
+export function validatePurchaseRequestLines(fieldName: string) {
+  return (data: any, form: any): boolean => {
+    let valid = true;
+
+    (data?.[fieldName] ?? []).forEach((row: any, idx: number) => {
+      const path = `${fieldName}.${idx}`;
+
+      if (isEmptyPurchaseRequestLine(row)) {
+        form.setError(`${path}.non_field_errors`, {
+          message: "Empty row cannot be saved - fill it in or remove it",
+        });
+        valid = false;
+        return;
+      }
+
+      if (!row.costcardid) {
+        form.setError(`${path}.costcardid`, {
+          message: "Cost card is required",
+        });
+        valid = false;
+      }
+
+      const sizes = splitCommaList(row.size);
+      const pcs = splitCommaList(row.spcs);
+
+      if (pcs.some((entry) => !Number.isFinite(Number(entry)))) {
+        form.setError(`${path}.spcs`, {
+          message: "Size Pcs must be comma separated numbers",
+        });
+        valid = false;
+      }
+
+      if (sizes.length !== pcs.length) {
+        const message = `Size has ${sizes.length} value(s) but Size Pcs has ${pcs.length}`;
+        form.setError(`${path}.size`, { message });
+        form.setError(`${path}.spcs`, { message });
+        valid = false;
+      }
+    });
+
+    return valid;
   };
 }
 

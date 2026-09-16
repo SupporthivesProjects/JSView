@@ -428,6 +428,11 @@ export function ApiForm({
   const submitForm: SubmitHandler<FieldValues> = async (data) => {
     setNonFieldErrors([]);
 
+    // Client-side checks which must pass before anything is sent to the server
+    if (props.validateFormData && !props.validateFormData(data, form)) {
+      return;
+    }
+
     const method = props.method?.toLowerCase() ?? 'get';
 
     let hasFiles = false;

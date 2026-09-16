@@ -183,6 +183,7 @@ export type ApiFormFieldSet = Record<string, ApiFormFieldType>;
  * @param onFormSuccess : A callback function to call when the form is submitted successfully.
  * @param onFormError : A callback function to call when the form is submitted with errors.
  * @param processFormData : A callback function to process the form data before submission
+ * @param validateFormData : A callback to validate the form data before submission - return false to cancel the submit
  * @param checkClose: A callback function to check if the form can be closed after submission
  * @param modelType : Define a model type for this form
  * @param follow : Boolean, follow the result of the form (if possible)
@@ -211,6 +212,7 @@ export interface ApiFormProps {
   onFormSuccess?: (data: any, form: UseFormReturn) => void;
   onFormError?: (response: any, form: UseFormReturn) => void;
   processFormData?: (data: any, form: UseFormReturn) => any;
+  validateFormData?: (data: any, form: UseFormReturn) => boolean;
   checkClose?: (data: any, form: UseFormReturn) => boolean;
   table?: TableState;
   modelType?: ModelType;
