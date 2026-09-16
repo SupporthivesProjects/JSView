@@ -292,16 +292,6 @@ export function masterCustomer(): ApiFormFieldSet {
   };
 }
 
-// A purchase request is a purchase order record with `potype = REQUEST`. The
-// API takes the header and its line items in a single POST, with the lines
-// nested under a write-only `items` key - so the create form carries both,
-// while the edit form is header-only (the API ignores `items` on update).
-
-/**
- * The request header carries too many fields for a single vertical stack, so
- * it lays them out in a responsive grid - one column on a phone, three on a
- * wide screen.
- */
 export const PURCHASE_REQUEST_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
 
 /** Width of the purchase request modal, sized to hold three columns. */
@@ -451,13 +441,6 @@ function PurchaseRequestLineRow({
   );
 }
 
-/**
- * Construct a blank line item row.
- *
- * `uuid` is a client-side row key only - it keeps the row mounted (and so
- * keeps input focus) while it is edited, and is stripped again by
- * {@link processPurchaseRequestData}.
- */
 function newPurchaseRequestLineItem() {
   return {
     uuid: randomId(),
@@ -473,15 +456,15 @@ function newPurchaseRequestLineItem() {
 
 /**
  * Purchase request header fields.
- *
- * Used on its own when editing: the API only accepts nested line items when
- * the header is first created, so an edit form must not offer them.
  */
 export function purchaseRequestHeaderFields(): ApiFormFieldSet {
   return {
-    // `potype` decides whether the record is a request or an order, and it
-    // drives the generated PO number - so pin it rather than let the model
-    // default (ORDER) come through from the API metadata
+    pocategory: {
+      label: "Category",
+      field_type: "choice",
+      default: "Production",
+      choices: PO_CATEGORY_CHOICES,
+    },
     potype: {
       value: "REQUEST",
       hidden: true,
@@ -494,12 +477,7 @@ export function purchaseRequestHeaderFields(): ApiFormFieldSet {
     ddate: {
       label: "Delivery Date",
     },
-    pocategory: {
-      label: "Category",
-      field_type: "choice",
-      default: "Production",
-      choices: PO_CATEGORY_CHOICES,
-    },
+
     // Row 2 - who the request is for, and on what terms
     customerid: {
       label: "Customer",
@@ -539,7 +517,7 @@ export function purchaseRequestHeaderFields(): ApiFormFieldSet {
     },
     rem: {
       label: "Remarks",
-      gridSpan: "full",
+      gridSpan: 2,
     },
   };
 }
@@ -569,23 +547,6 @@ function purchaseRequestLineTable(): ApiFormFieldType {
   };
 }
 
-/**
- * Purchase request fields, with the line item grid plumbed to whichever API
- * contract the form is targeting.
- *
- * The two modes differ only in how the lines travel, because the API accepts
- * them nested on create but ignores them on update:
- *
- * - create: the rows are submitted with the header under the write-only
- *   `items` key, in a single request.
- * - editing: the field is named `lines` so it prefills straight from the
- *   record fetched for the form, and is excluded from the submitted payload -
- *   the rows are written separately by {@link savePurchaseRequestLines}.
- *
- * The editing field must not declare a `value`: ApiForm treats a
- * caller-supplied value as live and caller-owned, and would keep it in place
- * of the fetched rows, leaving the grid permanently empty.
- */
 export function purchaseRequestFields(editing = false): ApiFormFieldSet {
   return {
     ...purchaseRequestHeaderFields(),
@@ -607,14 +568,6 @@ export function purchaseRequestFields(editing = false): ApiFormFieldSet {
   };
 }
 
-/**
- * Reduce a row to the payload the line endpoint accepts, dropping the row key
- * and anything else the grid carries around.
- *
- * The blanks are type-specific on purpose: the two FKs are nullable, but the
- * text columns are `blank=True` rather than `null=True`, so they have to go
- * out as empty strings rather than null.
- */
 function purchaseRequestLinePayload(row: any) {
   return {
     costcardid: row.costcardid ?? null,
@@ -635,13 +588,6 @@ export function processPurchaseRequestData(data: any) {
   };
 }
 
-/**
- * Write the edited line items back against a saved purchase request.
- *
- * The header endpoint drops line data on update, so each row is sent to the
- * line endpoint instead: existing rows are patched, new rows created, and
- * rows the user removed from the grid are deleted.
- */
 export async function savePurchaseRequestLines({
   api,
   poPk,
