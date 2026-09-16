@@ -408,8 +408,13 @@ export function ApiForm({
           return;
         }
 
-        // Do not auto-focus on a 'choice' field
-        if (field.field_type == 'choice') {
+        // Do not auto-focus on a 'choice' or date field - focusing a date
+        // field pops its picker open as soon as the form appears
+        if (
+          field.field_type == 'choice' ||
+          field.field_type == 'date' ||
+          field.field_type == 'datetime'
+        ) {
           return;
         }
 
