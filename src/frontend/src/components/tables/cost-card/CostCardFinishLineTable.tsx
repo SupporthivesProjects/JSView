@@ -21,6 +21,7 @@ import {
 } from "../../../hooks/UseForm";
 import useNameLookup from "../../../hooks/UseNameLookup";
 import { useUserState } from "@store/UserState";
+import { BooleanColumn } from "../ColumnRenderers";
 
 /**
  * Finish Type tab — one row per finish applied to a cost card.
@@ -52,6 +53,9 @@ export default function CostCardFinishLineTable({
         sortable: true,
         switchable: false,
       },
+      // BooleanColumn({
+      //   accessor: "active",
+      // }),
     ];
   }, [finishTypeByPk]);
 
