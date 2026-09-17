@@ -117,7 +117,6 @@ class FindingItemSerializer(
             'pk',
             'finding_type',
             'name',
-            'type',
             'weight',
             'metal',
             'price',

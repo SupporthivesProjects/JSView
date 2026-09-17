@@ -66,8 +66,8 @@ class FindingTypeAdmin(admin.ModelAdmin):
 class FindingItemAdmin(admin.ModelAdmin):
     """Admin class for the FindingItem model."""
 
-    list_display = ('finding_type', 'name', 'type', 'weight', 'metal', 'price', 'active', 'created_at', 'updated_at')
-    search_fields = ('name', 'type', 'metal', 'finding_type__name')
+    list_display = ('finding_type', 'name', 'weight', 'metal', 'price', 'active', 'created_at', 'updated_at')
+    search_fields = ('name', 'metal', 'finding_type__name')
     autocomplete_fields = ('finding_type',)
     list_filter = ('active',)
 

@@ -571,6 +571,15 @@ class UserProfile(InvenTree.models.MetadataMixin):
         verbose_name=_('Organisation'),
         help_text=_('Users primary organisation/affiliation'),
     )
+    executive = models.ForeignKey(
+        'master.ACExecutive',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name=_('Executive'),
+        help_text=_('Executive assigned to this ERP user.'),
+    )
     primary_group = models.ForeignKey(
         Group,
         on_delete=models.SET_NULL,

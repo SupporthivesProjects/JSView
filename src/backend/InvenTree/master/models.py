@@ -196,30 +196,32 @@ class FindingType(MasterFieldsMixin):
 
     def __str__(self):
         return self.name
-
 class FindingItem(MasterFieldsMixin):
     """Jewelry finding item belonging to a finding type."""
 
     finding_type = models.ForeignKey(FindingType, on_delete=models.CASCADE, related_name='items', verbose_name=_('Finding Type'))
     name = models.CharField(max_length=100, verbose_name=_('Finding Item'))
-    type = models.CharField(max_length=100, blank=True, null=True, verbose_name=_('Type'), help_text=_('Type or specification of the finding, e.g. CABLE - 30.'))
     weight = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Wt.'), help_text=_('Weight of the finding in grams.'))
-    metal = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal of the finding, e.g. 14 KT Gold.'))
+    metal = models.ForeignKey(MetalPurity, on_delete=models.PROTECT, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal purity of the finding.'))
     price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Price'), help_text=_('Price of the finding.'))
 
     class Meta:
         verbose_name = _('Finding Item')
         verbose_name_plural = _('Finding Items')
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(fields=['finding_type', 'name', 'metal'], name='unique_finding_item_metal'),
+        ]
         indexes = [
             models.Index(fields=['finding_type']),
             models.Index(fields=['name']),
+            models.Index(fields=['metal']),
             models.Index(fields=['active']),
         ]
 
     def __str__(self):
         return self.name
-        
+            
 
 class FinishType(MasterFieldsMixin):
     """Surface finish type (e.g. Matte, Glossy, Antique)."""

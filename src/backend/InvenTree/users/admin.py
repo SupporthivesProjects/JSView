@@ -8,7 +8,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
-from users.models import ApiToken, Owner, RuleSet
+from users.models import ApiToken, Owner, RuleSet, UserProfile
 from users.ruleset import RULESET_CHOICES
 
 User = get_user_model()
@@ -115,6 +115,16 @@ class InvenTreeGroupAdminForm(forms.ModelForm):
         return instance
 
 
+class UserProfileInline(admin.StackedInline):
+    """Inline admin for the user's profile."""
+
+    model = UserProfile
+    can_delete = False
+    extra = 0
+    max_num = 1
+    fields = ('executive',)
+
+
 class InvenTreeUserAdmin(UserAdmin):
     """Custom admin page for the User model.
 
@@ -140,6 +150,8 @@ class InvenTreeUserAdmin(UserAdmin):
         ),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
+
+    inlines = [UserProfileInline]
 
     def get_readonly_fields(self, request, obj=None):
         """Make all fields read-only for non-superusers."""

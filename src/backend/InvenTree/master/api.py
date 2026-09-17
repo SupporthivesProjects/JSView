@@ -62,7 +62,7 @@ class MetalPurityList(DataExportViewMixin, ListCreateAPI):
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['metal_type', 'active']
     search_fields = ['name', 'metal_type__name']
-    ordering_fields = ['metal_type', 'name', 'purity','karat']
+    ordering_fields = ['metal_type', 'name', 'purity', 'karat']
     ordering = 'name'
 
 
@@ -115,8 +115,8 @@ class FindingItemList(DataExportViewMixin, ListCreateAPI):
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['finding_type', 'active']
-    search_fields = ['name', 'type', 'metal', 'finding_type__name']
-    ordering_fields = ['name', 'type', 'weight', 'price', 'active']
+    search_fields = ['name', 'metal', 'finding_type__name']
+    ordering_fields = ['name', 'weight', 'price', 'active']
     ordering = 'name'
 
 

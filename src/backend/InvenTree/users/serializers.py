@@ -165,6 +165,7 @@ class BriefUserProfileSerializer(InvenTreeModelSerializer):
             'contact',
             'type',
             'organisation',
+            'executive',
             'primary_group',
         ]
 
@@ -342,7 +343,8 @@ class ExtendedUserSerializer(UserSerializer):
     )
 
     is_superuser = serializers.BooleanField(
-        label=_('Superuser'), help_text=_('Is this user a superuser'), required=False
+        label=_('Superuser'), help_text=_('Is this user a superuser'),
+        required=False,
     )
 
     is_active = serializers.BooleanField(
@@ -478,7 +480,7 @@ def make_random_password(length=14):
     """Generate a random password of given length."""
     alphabet = string.ascii_letters + string.digits
     while True:
-        password = ''.join(secrets.choice(alphabet) for i in range(length))
+        password = ''.join(secrets.choice(alphabet) for _ in range(length))
         if (
             any(c.islower() for c in password)
             and any(c.isupper() for c in password)
