@@ -359,25 +359,21 @@ function PurchaseRequestLineRow({
   }, [item.costcardid, rowId, changeFn]);
 
   // Vendor for this specific line, carried over from the selected cost card.
-  // Disabled rather than editable, but still fetches and displays its own
-  // value - only the dropdown search is gated on `disabled`.
-  const vendorField: ApiFormFieldType = useMemo(() => {
-    return {
-      field_type: "related field",
-      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
-      required: false,
-      disabled: true,
-      filters: {
-        active: true,
-        is_supplier: true,
-      },
-      value: item.vendorid,
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? instance?.code ?? "";
-      },
-    };
-  }, [item.vendorid]);
+  // Only the pk is stored on the row, so look up the name for display.
+  const api = useApi();
+  const vendorQuery = useQuery({
+    queryKey: ["purchase-request-line-vendor", item.vendorid],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.master_vendor_customer, item.vendorid))
+        .then((response) => response.data),
+    enabled: !!item.vendorid,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vendorName = item.vendorid
+    ? (vendorQuery.data?.name ?? vendorQuery.data?.code ?? "")
+    : "";
 
   return (
     <Table.Tr key={`table-row-${rowId}`}>
@@ -410,11 +406,12 @@ function PurchaseRequestLineRow({
         />
       </Table.Td>
       <Table.Td>
-        <StandaloneField
-          fieldName="vendorid"
-          fieldDefinition={vendorField}
+        {/* Carried over from the selected cost card, never typed by hand */}
+        <TextInput
+          aria-label="text-field-vendorid"
+          disabled
+          value={vendorName}
           error={rowErrors?.vendorid?.message}
-          hideLabels
         />
       </Table.Td>
       <Table.Td>
