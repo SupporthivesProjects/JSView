@@ -16,24 +16,13 @@ import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn } from "../ColumnRenderers";
+import { ColumnSearchInput } from "../ColumnSearchInput";
 import { InvenTreeTable } from "../InvenTreeTable";
 import { useDeleteApiFormModal } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
 import { Thumbnail } from "@components/shared/images/Thumbnail";
-import {
-  ActionIcon,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
-import {
-  IconCircleCheck,
-  IconFilterOff,
-  IconSearch,
-  IconX,
-} from "@tabler/icons-react";
+import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { IconCircleCheck, IconFilterOff } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
@@ -62,66 +51,6 @@ const FILTERABLE_COLUMNS: { accessor: string; searchKey: string }[] = [
   { accessor: "sub_category", searchKey: "sub_category_name" },
   { accessor: "karat", searchKey: "karat" },
 ];
-
-/*
- * Search box rendered inside a column header filter popover.
- *
- * The typed value is held locally and pushed upwards after a short delay, so
- * that re-rendering the (filtered) table does not interfere with typing.
- */
-function ColumnSearchInput({
-  label,
-  value,
-  onChange,
-}: Readonly<{
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}>) {
-  const [text, setText] = useState<string>(value);
-
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-
-  useEffect(() => {
-    if (text === value) {
-      return;
-    }
-
-    const timer = setTimeout(() => onChangeRef.current(text), 250);
-
-    return () => clearTimeout(timer);
-  }, [text, value]);
-
-  return (
-    <Stack gap={5} p={3} miw={230}>
-      <Text size="sm" fw={600}>
-        {label}
-      </Text>
-      <TextInput
-        autoFocus
-        value={text}
-        placeholder={t`Search`}
-        aria-label={`column-search-${label}`}
-        leftSection={<IconSearch size={14} />}
-        onChange={(event) => setText(event.currentTarget.value)}
-        rightSection={
-          text ? (
-            <ActionIcon
-              color="red"
-              variant="transparent"
-              size="sm"
-              aria-label="clear-column-search"
-              onClick={() => setText("")}
-            >
-              <IconX size={14} />
-            </ActionIcon>
-          ) : null
-        }
-      />
-    </Stack>
-  );
-}
 
 export default function CostCardTable() {
   const table = useTable("cost-card");

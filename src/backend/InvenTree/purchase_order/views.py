@@ -1,3 +1,5 @@
+import django_filters.rest_framework.filters as rest_filters
+from django_filters.rest_framework.filterset import FilterSet
 from rest_framework.pagination import LimitOffsetPagination
 
 from data_exporter.mixins import DataExportViewMixin
@@ -15,6 +17,51 @@ class PurchaseOrderPagination(LimitOffsetPagination):
     max_limit = 100
 
 
+class PurchaseOrderFilter(FilterSet):
+    """Filters for the PurchaseOrder list endpoint.
+
+    Besides the exact-match fields, each table column has its own text filter,
+    so that several columns can be searched at once (combined with AND).
+    """
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'potype', 'pocategory', 'customerid', 'vendorid',
+            'stampid', 'acexeid', 'termsid', 'prepby', 'active',
+        ]
+
+    pono_search = rest_filters.CharFilter(field_name='pono', lookup_expr='icontains')
+
+    # Matches against the ISO date text, e.g. "2026-09" or "2026-09-17"
+    podate_search = rest_filters.CharFilter(
+        field_name='podate', lookup_expr='icontains',
+    )
+
+    customer_search = rest_filters.CharFilter(
+        field_name='customerid__name', lookup_expr='icontains',
+    )
+
+    pocategory_search = rest_filters.CharFilter(
+        field_name='pocategory', lookup_expr='icontains',
+    )
+
+    tqty_search = rest_filters.CharFilter(method='filter_tqty_search')
+
+    def filter_tqty_search(self, queryset, name, value):
+        """Exact match on total quantity; non-numeric input matches nothing."""
+        value = value.strip()
+
+        if not value.isdigit():
+            return queryset.none()
+
+        return queryset.filter(tqty=int(value))
+
+    prepby_search = rest_filters.CharFilter(
+        field_name='prepby__username', lookup_expr='icontains',
+    )
+
+
 class PurchaseOrderList(DataExportViewMixin, ListCreateAPI):
     """API endpoint for listing / creating PurchaseOrder objects."""
 
@@ -24,10 +71,7 @@ class PurchaseOrderList(DataExportViewMixin, ListCreateAPI):
     serializer_class = po_serializers.PurchaseOrderSerializer
     pagination_class = PurchaseOrderPagination
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = [
-        'potype', 'pocategory', 'customerid', 'vendorid',
-        'stampid', 'acexeid', 'termsid', 'prepby', 'active',
-    ]
+    filterset_class = PurchaseOrderFilter
     search_fields = ['pono', 'customer_pono', 'rem', 'note', 'prepby__username']
     ordering_fields = ['podate', 'npono', 'createdat', 'tqty']
     ordering = ['-podate', '-npono']

@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
 import {
@@ -14,6 +14,7 @@ import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn, DateColumn, UpdatedAtColumn } from "../ColumnRenderers";
+import { ColumnSearchInput } from "../ColumnSearchInput";
 import { InvenTreeTable } from "../InvenTreeTable";
 import {
   PO_CATEGORY_CHOICES,
@@ -32,6 +33,8 @@ import {
 import { useApi } from "@context/ApiContext";
 import { showApiErrorMessage } from "@helpers/notifications";
 import { useUserState } from "@store/UserState";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconFilterOff } from "@tabler/icons-react";
 
 /**
  * Table for displaying, creating, editing and deleting Purchase Request records
@@ -44,40 +47,100 @@ export default function PurchaseRequestTable() {
   const user = useUserState();
   const api = useApi();
 
+  // Per-column search terms, keyed by the API query parameter they are sent as.
+  // Every active term is applied together (multi-level / AND filtering).
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>(
+    {},
+  );
+
+  const setColumnFilter = useCallback((key: string, value: string) => {
+    setColumnFilters((filters) => {
+      if ((filters[key] ?? "") === value) {
+        return filters;
+      }
+
+      const updated = { ...filters };
+
+      if (value.trim()) {
+        updated[key] = value;
+      } else {
+        delete updated[key];
+      }
+
+      return updated;
+    });
+  }, []);
+
+  const activeColumnFilters = useMemo(() => {
+    const active: Record<string, string> = {};
+
+    Object.entries(columnFilters).forEach(([key, value]) => {
+      if (value.trim()) {
+        active[key] = value.trim();
+      }
+    });
+
+    return active;
+  }, [columnFilters]);
+
+  // Jump back to the first page whenever the column search terms change
+  useEffect(() => {
+    table.setPage(1);
+  }, [activeColumnFilters]);
+
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
+    // Build the inline search popover for a given column
+    const columnFilter = (key: string, label: string, placeholder?: string) => ({
+      filtering: !!activeColumnFilters[key],
+      filter: () => (
+        <ColumnSearchInput
+          label={label}
+          placeholder={placeholder}
+          value={columnFilters[key] ?? ""}
+          onChange={(value: string) => setColumnFilter(key, value)}
+        />
+      ),
+    });
+
     return [
       {
         accessor: "pono",
         title: t`P.R. No.`,
         sortable: false,
         switchable: false,
+        ...columnFilter("pono_search", t`P.R. No.`),
       },
       DateColumn({
         accessor: "podate",
         title: t`P.R. Date`,
         sortable: true,
         switchable: false,
+        ...columnFilter("podate_search", t`P.R. Date`, "YYYY-MM-DD"),
       }),
       {
         accessor: "customer_name",
         title: t`Customer`,
         sortable: false,
+        ...columnFilter("customer_search", t`Customer`),
       },
       {
         accessor: "pocategory",
         title: t`Category`,
         sortable: false,
+        ...columnFilter("pocategory_search", t`Category`),
       },
       {
         accessor: "tqty",
         title: t`Total Qty.`,
         sortable: true,
+        ...columnFilter("tqty_search", t`Total Qty.`),
       },
       {
         accessor: "prepby_username",
         title: t`Prepared By`,
         sortable: false,
+        ...columnFilter("prepby_search", t`Prepared By`),
       },
       BooleanColumn({
         accessor: "active",
@@ -91,7 +154,7 @@ export default function PurchaseRequestTable() {
       }),
       UpdatedAtColumn({ sortable: false }),
     ];
-  }, []);
+  }, [columnFilters, activeColumnFilters, setColumnFilter]);
 
   // --- Create modal ----------------------------------------------------
   const newPurchaseRequest = useCreateApiFormModal({
@@ -201,6 +264,16 @@ export default function PurchaseRequestTable() {
   // --- Toolbar actions (Add button) --------------------------------------
   const tableActions = useMemo(() => {
     return [
+      <Tooltip key="clear-column-filters" label={t`Clear column filters`}>
+        <ActionIcon
+          variant="transparent"
+          aria-label="clear-column-filters"
+          disabled={Object.keys(activeColumnFilters).length === 0}
+          onClick={() => setColumnFilters({})}
+        >
+          <IconFilterOff />
+        </ActionIcon>
+      </Tooltip>,
       <AddItemButton
         key="add-purchase-request"
         onClick={() => newPurchaseRequest.open()}
@@ -208,7 +281,7 @@ export default function PurchaseRequestTable() {
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
     ];
-  }, [user, newPurchaseRequest.open]);
+  }, [user, newPurchaseRequest.open, activeColumnFilters]);
 
   return (
     <>
@@ -222,6 +295,7 @@ export default function PurchaseRequestTable() {
         props={{
           params: {
             potype: "REQUEST",
+            ...activeColumnFilters,
           },
           defaultSortColumn: "podate",
           rowActions: rowActions,
