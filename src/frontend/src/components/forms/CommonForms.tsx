@@ -359,25 +359,21 @@ function PurchaseRequestLineRow({
   }, [item.costcardid, rowId, changeFn]);
 
   // Vendor for this specific line, carried over from the selected cost card.
-  // Disabled rather than editable, but still fetches and displays its own
-  // value - only the dropdown search is gated on `disabled`.
-  const vendorField: ApiFormFieldType = useMemo(() => {
-    return {
-      field_type: "related field",
-      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
-      required: false,
-      disabled: true,
-      filters: {
-        active: true,
-        is_supplier: true,
-      },
-      value: item.vendorid,
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? instance?.code ?? "";
-      },
-    };
-  }, [item.vendorid]);
+  // Only the pk is stored on the row, so look up the name for display.
+  const api = useApi();
+  const vendorQuery = useQuery({
+    queryKey: ["purchase-request-line-vendor", item.vendorid],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.master_vendor_customer, item.vendorid))
+        .then((response) => response.data),
+    enabled: !!item.vendorid,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vendorName = item.vendorid
+    ? (vendorQuery.data?.name ?? vendorQuery.data?.code ?? "")
+    : "";
 
   return (
     <Table.Tr key={`table-row-${rowId}`}>
@@ -410,11 +406,12 @@ function PurchaseRequestLineRow({
         />
       </Table.Td>
       <Table.Td>
-        <StandaloneField
-          fieldName="vendorid"
-          fieldDefinition={vendorField}
+        {/* Carried over from the selected cost card, never typed by hand */}
+        <TextInput
+          aria-label="text-field-vendorid"
+          disabled
+          value={vendorName}
           error={rowErrors?.vendorid?.message}
-          hideLabels
         />
       </Table.Td>
       <Table.Td>
@@ -902,31 +899,11 @@ export function stampFields(
   return fields;
 }
 
-// Cost Card is edited as a full page with a tab per section (see
-// containers/cost-card-detail) rather than a single modal, so its fields are
-// split into one set per tab instead of one flat costCardFields() blob.
-
-/**
- * Cost Card forms carry far too many fields for a single vertical stack, so
- * they lay their fields out in a responsive grid - one column on a phone,
- * three on a wide screen.
- */
 export const COST_CARD_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
 
 /** Width of a cost card line modal, sized to hold three columns of fields. */
 export const COST_CARD_LINE_MODAL_SIZE = "72rem";
 
-/**
- * General tab — core identity, party, and measurement fields.
- *
- * Metal Grams drives Gross Weight and Net Weight: whatever is typed into
- * Metal Grams is mirrored into both, and those two fields are read-only so
- * they can only ever be set that way.
- *
- * Metal Purity drives Kt in the same way: selecting a purity copies that
- * record's karat into the Kt field, which is read-only so it can only ever be
- * set that way.
- */
 export function useCostCardGeneralFields(): ApiFormFieldSet {
   const [metalGrams, setMetalGrams] = useState<any>(undefined);
   const [karat, setKarat] = useState<any>(undefined);
@@ -1051,19 +1028,6 @@ function costCardGeneralFieldSet(
   };
 }
 
-/**
- * Labour Details tab — read-only rollups from the Finish / Diamond / Color
- * Stone tabs.
- *
- * None of the rollups have server-side computation, so each is summed here
- * from the cost card's own lines (finish lines by `rate`, diamond and color
- * stone lines by `labour_amount`) and mirrored into the matching read-only
- * labour_finish_amount / labour_diamond_amount / labour_colorstone_amount
- * field. Pass `refreshOn` (e.g. whether the Labour Details tab is the
- * active tab) to have it re-fetch those lines - keep-mounted tabs don't
- * remount on switch, so this is what picks up edits made on the Finish
- * Type / Diamond / Color Stone tabs.
- */
 export function useCostCardLabourFields(
   costCardId: number | undefined,
   refreshOn?: boolean,
@@ -1279,7 +1243,7 @@ function costCardStoneLineFields(
       modelRenderer: nameRenderer,
     },
     default_rate: { boxed: true },
-    active: { boxed: true },
+    active: { boxed: true, default: true, hidden: true },
   };
 }
 
@@ -1326,37 +1290,6 @@ const COLOR_STONE_LINE_ENDPOINTS: CostCardStoneLineEndpoints = {
   rate: ApiEndpoints.color_stone_rate_list,
 };
 
-/**
- * Line fields for a stone tab (Diamond or Color Stone) - the two tabs behave
- * identically, over their own properties endpoints.
- *
- * Amount and L.Amount are read-only: they are computed live from Pcs, Rate,
- * L.Rate and the P/C (rate unit) selector, and can only ever come from those.
- *
- *   P (per piece): Amount = Pcs × Rate
- *   C (per carat): Amount is blanked out — a per-carat line is not priced by
- *                  piece count. It is stored as 0, see
- *                  processCostCardStoneLineData().
- *
- * L.Amount = Pcs × L.Rate either way.
- *
- * Rate is read-only too: a rate table row is unique on (stone, shape, mm size),
- * so picking all three is what prices the line — see the rate lookup below.
- *
- * MM Size and Sieve Size are two views of the same size record in Properties
- * (each record pairs an mm size with a sieve size), so both are dropdowns over
- * that master list and each prefills the other. The line stores the sieve size
- * as plain text, so Sieve Size is a choice field over the sieve sizes on those
- * records rather than a related field.
- *
- * Pass `loadsExistingLine` on a form that fetches an existing line (the edit
- * modal), so the stored MM Size arriving on load is not read as the user
- * picking one and does not overwrite the line's stored Sieve Size.
- *
- * This state outlives the modal - the modal unmounts its form on close, but
- * this hook lives in the table - so wire the returned `reset` up to the
- * modal's onClose, or the next line opens with the previous one's values.
- */
 function useCostCardStoneLineFields(
   costCardId: number,
   endpoints: CostCardStoneLineEndpoints,
@@ -1717,7 +1650,7 @@ export function costCardFinishLineFields(costCardId: number): ApiFormFieldSet {
       },
     },
     rate: {},
-    active: { boxed: true },
+    active: { boxed: true, default: true, hidden: true },
   };
 }
 

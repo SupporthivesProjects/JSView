@@ -3,6 +3,7 @@ import { Trans } from '@lingui/react/macro';
 import {
   ActionIcon,
   Alert,
+  Button,
   Container,
   Group,
   NumberInput,
@@ -12,7 +13,8 @@ import {
 } from '@mantine/core';
 import {
   IconCornerDownRight,
-  IconExclamationCircle
+  IconExclamationCircle,
+  IconPlus
 } from '@tabler/icons-react';
 import {
   type ReactNode,
@@ -23,7 +25,6 @@ import {
   useRef
 } from 'react';
 
-import { AddItemButton } from '@lib/components/AddItemButton';
 import { identifierString } from '@lib/functions/Conversion';
 import type { ApiFormFieldType } from '@lib/types/Forms';
 import { isEquivalent } from '@helpers/comparison';
@@ -272,6 +273,14 @@ function TableFieldComponent({
     [error]
   );
 
+  const addNewRow = useCallback(() => {
+    if (definition.addRow === undefined) return;
+    const ret = definition.addRow();
+    if (ret) {
+      onChange([...(valueRef.current ?? []), ret]);
+    }
+  }, [definition, onChange]);
+
   return (
     <Table
       highlightOnHover
@@ -281,13 +290,41 @@ function TableFieldComponent({
     >
       <Table.Thead>
         <Table.Tr>
-          {definition.headers?.map((header, index) => {
+          {definition.headers?.map((header, index, headers) => {
+            // The add button lives in the last header cell, above the
+            // per-row delete buttons
+            const showAddButton =
+              !!definition.addRow && index === headers.length - 1;
+
             return (
               <Table.Th
                 key={`table-header-${identifierString(header.title)}-${index}`}
-                style={header.style}
+                style={
+                  showAddButton
+                    ? {
+                        ...header.style,
+                        width: 'auto',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap'
+                      }
+                    : header.style
+                }
               >
-                {header.title}
+                {showAddButton ? (
+                  <Button
+                    size='compact-xs'
+                    radius='xl'
+                    variant='outline'
+                    color='teal'
+                    leftSection={<IconPlus size={12} stroke={2.5} />}
+                    aria-label={`table-field-${fieldName}-add-row`}
+                    onClick={addNewRow}
+                  >
+                    {t`Add Row`}
+                  </Button>
+                ) : (
+                  header.title
+                )}
               </Table.Th>
             );
           })}
@@ -332,24 +369,6 @@ function TableFieldComponent({
           </Table.Tr>
         )}
       </Table.Tbody>
-      {definition.addRow && (
-        <Table.Tfoot>
-          <Table.Tr>
-            <Table.Td colSpan={definition.headers?.length}>
-              <AddItemButton
-                tooltip={t`Add new row`}
-                onClick={() => {
-                  if (definition.addRow === undefined) return;
-                  const ret = definition.addRow();
-                  if (ret) {
-                    onChange([...(value ?? []), ret]);
-                  }
-                }}
-              />
-            </Table.Td>
-          </Table.Tr>
-        </Table.Tfoot>
-      )}
     </Table>
   );
 }
