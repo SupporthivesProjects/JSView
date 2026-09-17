@@ -64,7 +64,7 @@ class CostCardAdmin(admin.ModelAdmin):
 class CostCardDiamondLineAdmin(admin.ModelAdmin):
     """Admin class for the CostCardDiamondLine model."""
 
-    list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'amount', 'active', 'created_at')
+    list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'default_rate', 'amount', 'active', 'created_at')
     search_fields = ('cost_card__cost_card_no', 'cost_card__our_style_no')
     # NOTE: 'rate_source' (-> properties.DiamondStoneRate) is deliberately left
     # out of autocomplete_fields. Django's admin checks (admin.E040) require the
@@ -81,7 +81,7 @@ class CostCardDiamondLineAdmin(admin.ModelAdmin):
 class CostCardColorStoneLineAdmin(admin.ModelAdmin):
     """Admin class for the CostCardColorStoneLine model."""
 
-    list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'amount', 'active', 'created_at')
+    list_display = ('cost_card', 'stone', 'shape', 'pcs', 'cts', 'rate', 'default_rate', 'amount', 'active', 'created_at')
     search_fields = ('cost_card__cost_card_no', 'cost_card__our_style_no')
     autocomplete_fields = ('cost_card', 'stone', 'shape', 'mm_size', 'color', 'cut', 'quality', 'setting', 'stone_place')
     raw_id_fields = ('rate_source',)
