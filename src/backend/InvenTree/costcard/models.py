@@ -175,7 +175,7 @@ class CostCardStoneLineMixin(CardsFieldsMixin):
     sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size of the stone.'))
     pcs = models.PositiveIntegerField(default=0, verbose_name=_('Pcs'), help_text=_('Number of pieces on this line.'))
     cts = models.DecimalField(max_digits=10, decimal_places=4, default=Decimal('0'), blank=True, verbose_name=_('Cts'), help_text=_('Total carat weight on this line.'))
-    default_rate = models.BooleanField(default=True, verbose_name=_('D.R.'), help_text=_('Whether the rate was pulled from the rate table (Y) or entered manually (N).'))
+    default_rate = models.CharField(max_length=3, choices=[('yes', _('Yes')), ('no', _('No'))], default='no', verbose_name=_('D.R.'), help_text=_('Yes if rate is found for stone, shape, and MM size; No for custom rate.'))
     pc = models.CharField(max_length=1, choices=[('P', _('Per Piece')), ('C', _('Per Carat'))], default='C', verbose_name=_('P/C'), help_text=_('Rate unit: P = Per Piece, C = Per Carat.'))
     rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), blank=True, verbose_name=_('Rate'), help_text=_('Rate applied for this line, per piece or per carat.'))
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Amount'), help_text=_('Computed amount for this line.'))
