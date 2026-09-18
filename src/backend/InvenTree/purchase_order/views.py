@@ -42,6 +42,10 @@ class PurchaseOrderFilter(FilterSet):
         field_name='customerid__name', lookup_expr='icontains',
     )
 
+    vendor_search = rest_filters.CharFilter(
+        field_name='vendorid__name', lookup_expr='icontains',
+    )
+
     pocategory_search = rest_filters.CharFilter(
         field_name='pocategory', lookup_expr='icontains',
     )

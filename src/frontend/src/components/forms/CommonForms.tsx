@@ -297,6 +297,11 @@ export const PURCHASE_REQUEST_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
 /** Width of the purchase request modal, sized to hold three columns. */
 export const PURCHASE_REQUEST_MODAL_SIZE = "72rem";
 
+/* A purchase order is laid out exactly like a purchase request */
+export const PURCHASE_ORDER_FORM_GRID_COLUMNS =
+  PURCHASE_REQUEST_FORM_GRID_COLUMNS;
+export const PURCHASE_ORDER_MODAL_SIZE = PURCHASE_REQUEST_MODAL_SIZE;
+
 /** Categories which can be assigned to a purchase request */
 export const PO_CATEGORY_CHOICES: ApiFormFieldChoice[] = [
   { value: "Extra", display_name: "Extra" },
@@ -470,10 +475,19 @@ function newPurchaseRequestLineItem() {
   };
 }
 
+/** The two kinds of record held by the purchase order endpoint */
+export type POType = "REQUEST" | "ORDER";
+
 /**
- * Purchase request header fields.
+ * Header fields shared by the purchase request and purchase order forms.
+ *
+ * A request and an order are the same record with a different `potype`; an
+ * order additionally names the vendor it is placed with, and the customer's
+ * own reference number for it.
  */
-export function purchaseRequestHeaderFields(): ApiFormFieldSet {
+function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
+  const isOrder = potype === "ORDER";
+
   return {
     pocategory: {
       label: "Category",
@@ -482,19 +496,27 @@ export function purchaseRequestHeaderFields(): ApiFormFieldSet {
       choices: PO_CATEGORY_CHOICES,
     },
     potype: {
-      value: "REQUEST",
+      value: potype,
       hidden: true,
     },
-    // Row 1 - the request's own particulars
+    // Row 1 - the record's own particulars
     podate: {
-      label: "P.R. Date",
+      label: isOrder ? "P.O. Date" : "P.R. Date",
       default: new Date().toISOString().split("T")[0],
     },
     ddate: {
       label: "Delivery Date",
     },
+    
+    ...(isOrder
+      ? {
+          vcsdate: {
+            label: "Vendor Confirmed Ship Date",
+          },
+        }
+      : {}),
 
-    // Row 2 - who the request is for, and on what terms
+    // Row 2 - who the record is for, and on what terms
     customerid: {
       label: "Customer",
       api_url: apiUrl(ApiEndpoints.master_vendor_customer),
@@ -539,10 +561,13 @@ export function purchaseRequestHeaderFields(): ApiFormFieldSet {
 }
 
 /** The editable grid of line items, shared by the create and edit forms */
-function purchaseRequestLineTable(): ApiFormFieldType {
+function purchaseRequestLineTable(potype: POType): ApiFormFieldType {
   return {
     label: "Line Items",
-    description: "Styles requested against this purchase request",
+    description:
+      potype === "ORDER"
+        ? "Styles ordered against this purchase order"
+        : "Styles requested against this purchase request",
     field_type: "table",
     required: false,
     gridSpan: "full",
@@ -563,13 +588,13 @@ function purchaseRequestLineTable(): ApiFormFieldType {
   };
 }
 
-export function purchaseRequestFields(editing = false): ApiFormFieldSet {
+function purchaseFields(potype: POType, editing: boolean): ApiFormFieldSet {
   return {
-    ...purchaseRequestHeaderFields(),
+    ...purchaseHeaderFields(potype),
     ...(editing
       ? {
           lines: {
-            ...purchaseRequestLineTable(),
+            ...purchaseRequestLineTable(potype),
             exclude: true,
             disabled: false,
             default: [],
@@ -577,11 +602,27 @@ export function purchaseRequestFields(editing = false): ApiFormFieldSet {
         }
       : {
           items: {
-            ...purchaseRequestLineTable(),
+            ...purchaseRequestLineTable(potype),
             value: [],
           },
         }),
   };
+}
+
+export function purchaseRequestHeaderFields(): ApiFormFieldSet {
+  return purchaseHeaderFields("REQUEST");
+}
+
+export function purchaseOrderHeaderFields(): ApiFormFieldSet {
+  return purchaseHeaderFields("ORDER");
+}
+
+export function purchaseRequestFields(editing = false): ApiFormFieldSet {
+  return purchaseFields("REQUEST", editing);
+}
+
+export function purchaseOrderFields(editing = false): ApiFormFieldSet {
+  return purchaseFields("ORDER", editing);
 }
 
 function purchaseRequestLinePayload(row: any) {
