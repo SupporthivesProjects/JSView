@@ -507,7 +507,7 @@ function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
     ddate: {
       label: "Delivery Date",
     },
-    
+
     ...(isOrder
       ? {
           vcsdate: {
@@ -555,8 +555,16 @@ function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
     },
     rem: {
       label: "Remarks",
-      gridSpan: 2,
     },
+    ...(isOrder
+      ? {
+          note: {
+            label: "Add note",
+            multiline: true,
+            gridSpan: "full",
+          },
+        }
+      : {}),
   };
 }
 
