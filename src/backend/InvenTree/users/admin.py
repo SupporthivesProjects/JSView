@@ -169,6 +169,5 @@ class OwnerAdmin(admin.ModelAdmin):
 
     search_fields = ['name']
 
-
 admin.site.unregister(User)
 admin.site.register(User, InvenTreeUserAdmin)
