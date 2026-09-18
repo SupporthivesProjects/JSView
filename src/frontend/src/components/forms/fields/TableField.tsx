@@ -281,95 +281,108 @@ function TableFieldComponent({
     }
   }, [definition, onChange]);
 
+  // An error against the table as a whole, rather than one of its rows
+  const tableError =
+    error && !Array.isArray(error)
+      ? (error.message ?? error.root?.message)
+      : undefined;
+
   return (
-    <Table
-      highlightOnHover
-      striped
-      aria-label={`table-field-${fieldName}`}
-      style={{ width: '100%' }}
-    >
-      <Table.Thead>
-        <Table.Tr>
-          {definition.headers?.map((header, index, headers) => {
-            // The add button lives in the last header cell, above the
-            // per-row delete buttons
-            const showAddButton =
-              !!definition.addRow && index === headers.length - 1;
+    <Stack gap='xs'>
+      <Table
+        highlightOnHover
+        striped
+        aria-label={`table-field-${fieldName}`}
+        style={{ width: '100%' }}
+      >
+        <Table.Thead>
+          <Table.Tr>
+            {definition.headers?.map((header, index, headers) => {
+              // The add button lives in the last header cell, above the
+              // per-row delete buttons
+              const showAddButton =
+                !!definition.addRow && index === headers.length - 1;
 
-            return (
-              <Table.Th
-                key={`table-header-${identifierString(header.title)}-${index}`}
-                style={
-                  showAddButton
-                    ? {
-                        ...header.style,
-                        width: 'auto',
-                        textAlign: 'right',
-                        whiteSpace: 'nowrap'
-                      }
-                    : header.style
-                }
-              >
-                {showAddButton ? (
-                  <Button
-                    size='compact-xs'
-                    radius='xl'
-                    variant='outline'
-                    color='teal'
-                    leftSection={<IconPlus size={12} stroke={2.5} />}
-                    aria-label={`table-field-${fieldName}-add-row`}
-                    onClick={addNewRow}
-                  >
-                    {t`Add Row`}
-                  </Button>
-                ) : (
-                  header.title
-                )}
-              </Table.Th>
-            );
-          })}
-        </Table.Tr>
-      </Table.Thead>
-
-      <Table.Tbody>
-        {(value?.length ?? 0) > 0 ? (
-          value.map((item: any, idx: number) => {
-            const rowId = getRowIdentifier(item, idx);
-
-            return (
-              <MemoizedTableFieldRow
-                key={`table-row-${rowId}`}
-                item={item}
-                rowId={rowId}
-                rowErrors={rowErrors(idx)}
-                modelRenderer={definition.modelRenderer}
-                columnCount={definition.headers?.length}
-                changeFn={onRowFieldChange}
-                removeFn={removeRow}
-              />
-            );
-          })
-        ) : (
-          <Table.Tr key='table-row-no-entries'>
-            <Table.Td
-              style={{ textAlign: 'center' }}
-              colSpan={definition.headers?.length}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '5px'
-                }}
-              >
-                <InvenTreeIcon icon='info' />
-                <Trans>No entries available</Trans>
-              </span>
-            </Table.Td>
+              return (
+                <Table.Th
+                  key={`table-header-${identifierString(header.title)}-${index}`}
+                  style={
+                    showAddButton
+                      ? {
+                          ...header.style,
+                          width: 'auto',
+                          textAlign: 'right',
+                          whiteSpace: 'nowrap'
+                        }
+                      : header.style
+                  }
+                >
+                  {showAddButton ? (
+                    <Button
+                      size='compact-xs'
+                      radius='xl'
+                      variant='outline'
+                      color='teal'
+                      leftSection={<IconPlus size={12} stroke={2.5} />}
+                      aria-label={`table-field-${fieldName}-add-row`}
+                      onClick={addNewRow}
+                    >
+                      {t`Add Row`}
+                    </Button>
+                  ) : (
+                    header.title
+                  )}
+                </Table.Th>
+              );
+            })}
           </Table.Tr>
-        )}
-      </Table.Tbody>
-    </Table>
+        </Table.Thead>
+
+        <Table.Tbody>
+          {(value?.length ?? 0) > 0 ? (
+            value.map((item: any, idx: number) => {
+              const rowId = getRowIdentifier(item, idx);
+
+              return (
+                <MemoizedTableFieldRow
+                  key={`table-row-${rowId}`}
+                  item={item}
+                  rowId={rowId}
+                  rowErrors={rowErrors(idx)}
+                  modelRenderer={definition.modelRenderer}
+                  columnCount={definition.headers?.length}
+                  changeFn={onRowFieldChange}
+                  removeFn={removeRow}
+                />
+              );
+            })
+          ) : (
+            <Table.Tr key='table-row-no-entries'>
+              <Table.Td
+                style={{ textAlign: 'center' }}
+                colSpan={definition.headers?.length}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <InvenTreeIcon icon='info' />
+                  <Trans>No entries available</Trans>
+                </span>
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
+      </Table>
+      {tableError && (
+        <Text size='xs' c='red'>
+          {tableError}
+        </Text>
+      )}
+    </Stack>
   );
 }
 

@@ -654,12 +654,24 @@ function isEmptyPurchaseRequestLine(row: any): boolean {
  * Errors are attached to the offending rows, and false cancels the submit.
  *
  * @param fieldName : The table field holding the rows ("items" or "lines")
+ * @param requireRow : Reject the submit when the table holds no rows at all
  */
-export function validatePurchaseRequestLines(fieldName: string) {
+export function validatePurchaseRequestLines(
+  fieldName: string,
+  requireRow = false,
+) {
   return (data: any, form: any): boolean => {
     let valid = true;
+    const rows = data?.[fieldName] ?? [];
 
-    (data?.[fieldName] ?? []).forEach((row: any, idx: number) => {
+    if (requireRow && rows.length === 0) {
+      form.setError(fieldName, {
+        message: "At least one line item is required",
+      });
+      return false;
+    }
+
+    rows.forEach((row: any, idx: number) => {
       const path = `${fieldName}.${idx}`;
 
       if (isEmptyPurchaseRequestLine(row)) {

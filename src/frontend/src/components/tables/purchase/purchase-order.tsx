@@ -115,7 +115,7 @@ export default function PurchaseOrderTable() {
     url: ApiEndpoints.purchase_api,
     title: t`Create New Purchase Order`,
     fields: purchaseOrderFields(),
-    validateFormData: validatePurchaseRequestLines("items"),
+    validateFormData: validatePurchaseRequestLines("items", true),
     processFormData: processPurchaseRequestData,
     successMessage: t`Purchase order created`,
     gridColumns: PURCHASE_ORDER_FORM_GRID_COLUMNS,
