@@ -31,7 +31,9 @@ class OwnerSerializer(InvenTreeModelSerializer):
         fields = ['pk', 'owner_id', 'owner_model', 'name', 'label']
 
     name = serializers.CharField(read_only=True)
-    owner_model = serializers.CharField(read_only=True, source='owner._meta.model_name')
+    owner_model = serializers.CharField(
+        read_only=True, source='owner._meta.model_name'
+    )
 
     label = serializers.CharField(read_only=True)
 
@@ -132,6 +134,7 @@ def generate_permission_dict(permissions) -> dict:
             perms[model] = []
 
         perms[model].append(perm)
+
     return perms
 
 
@@ -170,6 +173,25 @@ class BriefUserProfileSerializer(InvenTreeModelSerializer):
         ]
 
 
+class UserProfileUpdateSerializer(serializers.Serializer):
+    """Serializer for updating a user's profile assignment."""
+
+    # OLD: 'user' was readable, which broke serialization of the nested profile
+    # (a User instance cannot be rendered by an IntegerField).
+    # user = serializers.IntegerField(required=False, allow_null=True)
+    user = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+
+    executive = serializers.PrimaryKeyRelatedField(
+        queryset=UserProfile._meta.get_field('executive').remote_field.model.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+    def to_representation(self, instance):
+        """Render the full profile detail when reading (write uses the fields above)."""
+        return BriefUserProfileSerializer(instance, context=self.context).data
+
+
 class UserProfileSerializer(BriefUserProfileSerializer):
     """Serializer for the UserProfile model."""
 
@@ -194,18 +216,27 @@ class UserSerializer(InvenTreeModelSerializer):
         fields = ['pk', 'username', 'first_name', 'last_name', 'email']
         read_only_fields = ['username', 'email']
 
-    username = serializers.CharField(label=_('Username'), help_text=_('Username'))
+    username = serializers.CharField(
+        label=_('Username'),
+        help_text=_('Username'),
+    )
 
     first_name = serializers.CharField(
-        label=_('First Name'), help_text=_('First name of the user'), allow_blank=True
+        label=_('First Name'),
+        help_text=_('First name of the user'),
+        allow_blank=True,
     )
 
     last_name = serializers.CharField(
-        label=_('Last Name'), help_text=_('Last name of the user'), allow_blank=True
+        label=_('Last Name'),
+        help_text=_('Last name of the user'),
+        allow_blank=True,
     )
 
     email = serializers.EmailField(
-        label=_('Email'), help_text=_('Email address of the user'), allow_blank=True
+        label=_('Email'),
+        help_text=_('Email address of the user'),
+        allow_blank=True,
     )
 
 
@@ -213,8 +244,10 @@ class ApiTokenSerializer(InvenTreeModelSerializer):
     """Serializer for the ApiToken model."""
 
     in_use = serializers.SerializerMethodField(read_only=True)
+
     user = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), required=False
+        queryset=User.objects.all(),
+        required=False,
     )
 
     def get_in_use(self, token: ApiToken) -> bool:
@@ -223,6 +256,7 @@ class ApiTokenSerializer(InvenTreeModelSerializer):
 
         request = self.context.get('request')
         rq_token = get_token_from_request(request)
+
         return token.key == rq_token
 
     class Meta:
@@ -246,6 +280,7 @@ class ApiTokenSerializer(InvenTreeModelSerializer):
     def validate(self, data):
         """Validate the data for the serializer."""
         request_user = self.context['request'].user
+
         if not request_user:
             raise serializers.ValidationError(
                 _('User must be authenticated')
@@ -262,7 +297,10 @@ class ApiTokenSerializer(InvenTreeModelSerializer):
 
         return super().validate(data)
 
-    user_detail = UserSerializer(source='user', read_only=True)
+    user_detail = UserSerializer(
+        source='user',
+        read_only=True,
+    )
 
 
 class GroupSerializer(FilterableSerializerMixin, InvenTreeModelSerializer):
@@ -276,7 +314,10 @@ class GroupSerializer(FilterableSerializerMixin, InvenTreeModelSerializer):
 
     permissions = OptionalField(
         serializer_class=serializers.SerializerMethodField,
-        serializer_kwargs={'allow_null': True, 'read_only': True},
+        serializer_kwargs={
+            'allow_null': True,
+            'read_only': True,
+        },
         filter_name='permission_detail',
     )
 
@@ -327,13 +368,22 @@ class ExtendedUserSerializer(UserSerializer):
             'profile',
         ]
 
-        read_only_fields = [*UserSerializer.Meta.read_only_fields, 'groups']
+        read_only_fields = [
+            *UserSerializer.Meta.read_only_fields,
+            'groups',
+        ]
 
-    groups = GroupSerializer(many=True, read_only=True)
+    groups = GroupSerializer(
+        many=True,
+        read_only=True,
+    )
 
     # Write-only field, for updating the groups associated with the user
     group_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(), many=True, write_only=True, required=False
+        queryset=Group.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
     )
 
     is_staff = serializers.BooleanField(
@@ -343,15 +393,21 @@ class ExtendedUserSerializer(UserSerializer):
     )
 
     is_superuser = serializers.BooleanField(
-        label=_('Superuser'), help_text=_('Is this user a superuser'),
+        label=_('Superuser'),
+        help_text=_('Is this user a superuser'),
         required=False,
     )
 
     is_active = serializers.BooleanField(
-        label=_('Active'), help_text=_('Is this user account active'), required=False
+        label=_('Active'),
+        help_text=_('Is this user account active'),
+        required=False,
     )
 
-    profile = BriefUserProfileSerializer(many=False, read_only=True)
+    profile = UserProfileUpdateSerializer(
+        many=False,
+        required=False,
+    )
 
     def validate_is_superuser(self, value):
         """Only a superuser account can adjust this value!"""
@@ -360,20 +416,90 @@ class ExtendedUserSerializer(UserSerializer):
         if 'is_superuser' in self.context['request'].data:
             if not request_user.is_superuser:
                 raise PermissionDenied({
-                    'is_superuser': _('Only a superuser can adjust this field')
+                    'is_superuser': _(
+                        'Only a superuser can adjust this field'
+                    )
                 })
 
         return value
 
+    def to_internal_value(self, data):
+        """Extract the nested 'profile' data *before* it reaches the model layer.
+
+        'User.profile' is a reverse OneToOne accessor - if the validated dict is
+        left in place, ModelSerializer.update() / create() will try to run
+        setattr(user, 'profile', {...}) and Django raises:
+            Cannot assign "{...}": "User.profile" must be a "UserProfile" instance.
+        """
+        ret = super().to_internal_value(data)
+
+        # Stash it on the serializer, and remove it from the validated data
+        self._profile_data = ret.pop('profile', None)
+
+        return ret
+
+    def _save_profile(self, instance, profile_data):
+        """Apply the nested profile data to the user's UserProfile instance."""
+        if not profile_data:
+            return
+
+        # 'user' is never writable on the profile - it is fixed by the relation
+        profile_data.pop('user', None)
+
+        if not profile_data:
+            return
+
+        profile = instance.profile
+
+        for attr, value in profile_data.items():
+            setattr(profile, attr, value)
+
+        profile.save(update_fields=list(profile_data.keys()))
+
+    def create(self, validated_data):
+        """Create a new user, and apply any nested profile data."""
+        groups = validated_data.pop('group_ids', None)
+        profile_data = validated_data.pop('profile', None) or getattr(
+            self, '_profile_data', None
+        )
+
+        instance = super().create(validated_data)
+
+        if groups is not None:
+            instance.groups.set(groups)
+
+        # The profile is created by a post_save signal on User
+        instance.refresh_from_db()
+        self._save_profile(instance, profile_data)
+
+        return instance
+
     def update(self, instance, validated_data):
         """Update the user instance with the provided data."""
-        # Update the groups associated with the user
         groups = validated_data.pop('group_ids', None)
+
+        # OLD: profile_data = validated_data.pop('profile', None)
+        profile_data = validated_data.pop('profile', None) or getattr(
+            self, '_profile_data', None
+        )
 
         instance = super().update(instance, validated_data)
 
         if groups is not None:
             instance.groups.set(groups)
+
+        # OLD: inline profile update
+        # if profile_data is not None:
+        #     profile_data.pop('user', None)
+        #
+        #     for attr, value in profile_data.items():
+        #         setattr(instance.profile, attr, value)
+        #
+        #     if profile_data:
+        #         instance.profile.save(
+        #             update_fields=list(profile_data.keys())
+        #         )
+        self._save_profile(instance, profile_data)
 
         return instance
 
@@ -394,6 +520,7 @@ class UserSetPasswordSerializer(serializers.Serializer):
         required=True,
         style={'input_type': 'password'},
     )
+
     override_warning = serializers.BooleanField(
         label=_('Override warning'),
         help_text=_('Override the warning about password rules'),
@@ -402,7 +529,10 @@ class UserSetPasswordSerializer(serializers.Serializer):
     )
 
 
-class MeUserSerializer(FilterableSerializerMixin, ExtendedUserSerializer):
+class MeUserSerializer(
+    FilterableSerializerMixin,
+    ExtendedUserSerializer,
+):
     """API serializer specifically for the 'me' endpoint."""
 
     class Meta(ExtendedUserSerializer.Meta):
@@ -412,7 +542,7 @@ class MeUserSerializer(FilterableSerializerMixin, ExtendedUserSerializer):
         but ensures that certain fields are read-only.
         """
 
-        # Remove the 'group_ids' field, as this is not relevant for the 'me' endpoint
+        # Remove the 'group_ids' field, as this is not relevant to the 'me' endpoint
         fields = [
             *(f for f in ExtendedUserSerializer.Meta.fields if f != 'group_ids'),
             'roles',
@@ -426,7 +556,10 @@ class MeUserSerializer(FilterableSerializerMixin, ExtendedUserSerializer):
             'is_superuser',
         ]
 
-    profile = UserProfileSerializer(many=False, read_only=True)
+    profile = UserProfileSerializer(
+        many=False,
+        read_only=True,
+    )
 
     # Roles and permissions are only computed (and included) when the
     # request explicitly asks for them via '?roles=true' - they require
@@ -441,7 +574,10 @@ class MeUserSerializer(FilterableSerializerMixin, ExtendedUserSerializer):
 
     permissions = OptionalField(
         serializer_class=serializers.SerializerMethodField,
-        serializer_kwargs={'allow_null': True, 'read_only': True},
+        serializer_kwargs={
+            'allow_null': True,
+            'read_only': True,
+        },
         filter_name='roles',
     )
 
@@ -479,14 +615,19 @@ class MeUserSerializer(FilterableSerializerMixin, ExtendedUserSerializer):
 def make_random_password(length=14):
     """Generate a random password of given length."""
     alphabet = string.ascii_letters + string.digits
+
     while True:
-        password = ''.join(secrets.choice(alphabet) for _ in range(length))
+        password = ''.join(
+            secrets.choice(alphabet) for _ in range(length)
+        )
+
         if (
             any(c.islower() for c in password)
             and any(c.isupper() for c in password)
             and sum(c.isdigit() for c in password) >= 3
         ):
             break
+
     return password
 
 
@@ -497,21 +638,30 @@ class UserCreateSerializer(ExtendedUserSerializer):
         """Metaclass options for the UserCreateSerializer."""
 
         # Prevent creation of users with superuser or staff permissions
-        read_only_fields = ['groups', 'is_staff', 'is_superuser']
+        read_only_fields = [
+            'groups',
+            'is_staff',
+            'is_superuser',
+        ]
 
     def validate(self, attrs):
         """Expanded valiadation for auth."""
         user = self.context['request'].user
 
         # Check that the user trying to create a new user is a superuser
-        if not user.is_staff or not check_user_role(user, RuleSetEnum.ADMIN, 'add'):
-            raise serializers.ValidationError(  # pragma: no cover # Handled by permissions already
+        if not user.is_staff or not check_user_role(
+            user,
+            RuleSetEnum.ADMIN,
+            'add',
+        ):
+            raise serializers.ValidationError(
                 _('You do not have permission to create users')
-            )
+            )  # pragma: no cover
 
         # Generate a random password
         password = make_random_password(length=14)
         attrs.update({'password': password})
+
         return super().validate(attrs)
 
     def create(self, validated_data):
@@ -539,7 +689,11 @@ class UserCreateSerializer(ExtendedUserSerializer):
 
         # Send the user an onboarding email (from current site)
         offload_task(
-            email_user, instance.pk, str(subject), str(message), force_async=True
+            email_user,
+            instance.pk,
+            str(subject),
+            str(message),
+            force_async=True,
         )
 
         return instance
