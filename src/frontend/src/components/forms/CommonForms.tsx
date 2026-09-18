@@ -146,9 +146,15 @@ export function findingTypeItems(): ApiFormFieldSet {
       },
     },
     name: {},
-    type: {},
+    // type: {},
     weight: {},
-    metal: {},
+    metal: {
+      api_url: `${apiUrl(ApiEndpoints.metal_purity_list)}?active=true`,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
+      },
+    },
     price: {},
     active: { boxed: true },
   };
@@ -968,6 +974,7 @@ export const COST_CARD_LINE_MODAL_SIZE = "72rem";
 export function useCostCardGeneralFields(): ApiFormFieldSet {
   const [metalGrams, setMetalGrams] = useState<any>(undefined);
   const [karat, setKarat] = useState<any>(undefined);
+  const [findingItemId, setFindingItemId] = useState<any>(undefined);
   const [findingPrice, setFindingPrice] = useState<any>(undefined);
 
   return useMemo(() => {
@@ -978,8 +985,10 @@ export function useCostCardGeneralFields(): ApiFormFieldSet {
       setKarat,
       findingPrice,
       setFindingPrice,
+      findingItemId,
+      setFindingItemId,
     );
-  }, [metalGrams, karat, findingPrice]);
+  }, [metalGrams, karat, findingPrice, findingItemId]);
 }
 
 function costCardGeneralFieldSet(
@@ -989,6 +998,8 @@ function costCardGeneralFieldSet(
   setKarat: (value: any) => void,
   findingPrice: any,
   setFindingPrice: (value: any) => void,
+  fingingItemId: any,
+  setFindingItemId: (value: any) => void,
 ): ApiFormFieldSet {
   return {
     cost_card_no: { read_only: true },
@@ -1030,6 +1041,7 @@ function costCardGeneralFieldSet(
       },
       onValueChange: (_value: any, instance?: any) => {
         setKarat(instance?.karat ?? null);
+        setFindingItemId(instance?.pk ?? null);
       },
     },
     karat: {
@@ -1041,7 +1053,7 @@ function costCardGeneralFieldSet(
       onValueChange: (value: any) => setMetalGrams(value),
     },
     finding_item: {
-      api_url: `${apiUrl(ApiEndpoints.finding_item)}?active=true`,
+      api_url: `${apiUrl(ApiEndpoints.finding_item)}?active=true&metal=${fingingItemId}`,
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
