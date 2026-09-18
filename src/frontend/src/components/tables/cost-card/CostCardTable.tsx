@@ -20,8 +20,16 @@ import { ColumnSearchInput } from "../ColumnSearchInput";
 import { InvenTreeTable } from "../InvenTreeTable";
 import { useDeleteApiFormModal } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
-import { Thumbnail } from "@components/shared/images/Thumbnail";
-import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { ApiImage } from "@components/shared/images/ApiImage";
+import {
+  ActionIcon,
+  Box,
+  Group,
+  HoverCard,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { IconFilterOff } from "@tabler/icons-react";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +57,63 @@ const FILTERABLE_COLUMNS: { accessor: string; searchKey: string }[] = [
   { accessor: "sub_category", searchKey: "sub_category_name" },
   { accessor: "karat", searchKey: "karat" },
 ];
+
+const COST_CARD_IMAGE_VIEWS: { field: string; label: () => string }[] = [
+  { field: "front_view", label: () => t`Front View` },
+  { field: "side_view", label: () => t`Side View` },
+  { field: "back_view", label: () => t`Back View` },
+];
+
+const BLANK_IMAGE = "/static/img/blank_image.png";
+
+/*
+ * Only the front view is shown in the table cell - hovering it previews
+ * whichever of the front / side / back views the cost card actually has.
+ */
+function CostCardImagePreview({ record }: Readonly<{ record: any }>) {
+  const images = COST_CARD_IMAGE_VIEWS.filter(({ field }) => !!record[field]);
+
+  return (
+    <HoverCard
+      disabled={images.length === 0}
+      withinPortal
+      shadow="xs"
+      openDelay={300}
+      closeDelay={50}
+    >
+      <HoverCard.Target>
+        <Box w={24}>
+          <ApiImage
+            src={record.front_view || BLANK_IMAGE}
+            aria-label={t`Front View`}
+            w={24}
+            fit="contain"
+            radius="xs"
+            style={{ maxHeight: 24, height: 24 }}
+          />
+        </Box>
+      </HoverCard.Target>
+      <HoverCard.Dropdown>
+        <Group gap="sm" wrap="nowrap" align="flex-start">
+          {images.map(({ field, label }) => (
+            <Stack key={field} gap={4} align="center">
+              <Text size="xs" c="dimmed">
+                {label()}
+              </Text>
+              <ApiImage
+                src={record[field]}
+                aria-label={label()}
+                w={128}
+                fit="contain"
+                style={{ maxHeight: 128 }}
+              />
+            </Stack>
+          ))}
+        </Group>
+      </HoverCard.Dropdown>
+    </HoverCard>
+  );
+}
 
 export default function CostCardTable() {
   const table = useTable("cost-card");
@@ -213,8 +278,7 @@ export default function CostCardTable() {
   const allRecords = useMemo(() => {
     return (costCardQuery.data ?? []).map((record: any) => ({
       ...record,
-      customer_name:
-        customerNameByPk[record.customer] ?? record.customer ?? "",
+      customer_name: customerNameByPk[record.customer] ?? record.customer ?? "",
       vendor_name: vendorNameByPk[record.vendor] ?? record.vendor ?? "",
       category_name:
         jewelCategoryNameByPk[record.category] ?? record.category ?? "",
@@ -267,7 +331,9 @@ export default function CostCardTable() {
           <ColumnSearchInput
             label={label}
             value={columnFilters[entry.searchKey] ?? ""}
-            onChange={(value: string) => setColumnFilter(entry.searchKey, value)}
+            onChange={(value: string) =>
+              setColumnFilter(entry.searchKey, value)
+            }
           />
         ),
       };
@@ -279,16 +345,7 @@ export default function CostCardTable() {
         title: t`Image`,
         sortable: false,
         switchable: true,
-        render: (record: any) => (
-          <Group gap="xs" wrap="nowrap">
-            <Thumbnail
-              src={record.front_view}
-              alt={t`Front View`}
-              size={24}
-              hover
-            />
-          </Group>
-        ),
+        render: (record: any) => <CostCardImagePreview record={record} />,
       },
       {
         accessor: "cost_card_no",
