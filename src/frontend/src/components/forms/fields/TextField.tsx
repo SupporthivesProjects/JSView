@@ -20,7 +20,7 @@ function TextField({
   definition: any;
   fieldName: string;
   placeholderAutofill?: boolean;
-  onChange: (value: any) => void;
+  onChange: (value: any) => any;
   onKeyDown: (value: any) => void;
 }>) {
   const fieldId = useId();
@@ -35,10 +35,17 @@ function TextField({
 
   const onTextChange = useCallback(
     (value: any) => {
-      setTextValue(value);
-      onChange(value);
+      const adjusted = onChange(value);
+
+      // Optionally show the value as adjusted by the field, so any
+      // characters the field rejects never appear in the input
+      setTextValue(
+        definition.showAdjustedValue && typeof adjusted === 'string'
+          ? adjusted
+          : value
+      );
     },
-    [onChange]
+    [onChange, definition.showAdjustedValue]
   );
 
   useEffect(() => {
@@ -52,6 +59,7 @@ function TextField({
     return {
       ...definition,
       allow_blank: undefined,
+      showAdjustedValue: undefined,
       multiline: undefined,
       minRows: undefined,
       maxRows: undefined

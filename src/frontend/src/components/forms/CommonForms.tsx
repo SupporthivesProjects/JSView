@@ -833,11 +833,42 @@ export function colorStoneColorFields(): ApiFormFieldSet {
   };
 }
 
+/**
+ * Build an adjustValue function which drops every character not matched by
+ * `allowed` as the user types. Letters are upper-cased first, so a typed "x"
+ * is kept as "X".
+ */
+function allowOnlyChars(allowed: RegExp) {
+  return (value: any) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    return value
+      .toUpperCase()
+      .split("")
+      .filter((char) => allowed.test(char))
+      .join("");
+  };
+}
+
+// Stone size (Diamond / Color Stone properties): numbers, M and X
+const STONE_MM_SIZE_FIELD = {
+  adjustValue: allowOnlyChars(/[0-9.MX]/),
+  showAdjustedValue: true,
+};
+
+// Stone sieve size: numbers, +, -, M and X
+const STONE_SIEVE_SIZE_FIELD = {
+  adjustValue: allowOnlyChars(/[0-9.+\-MX]/),
+  showAdjustedValue: true,
+};
+
 export function colorStoneSizeFields(): ApiFormFieldSet {
   return {
     name: {},
-    mm_size: {},
-    sieve_size: {},
+    mm_size: { ...STONE_MM_SIZE_FIELD },
+    sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     description: {},
     active: { boxed: true },
   };
@@ -1762,8 +1793,8 @@ export function diamondColorFields(): ApiFormFieldSet {
 export function diamondSizeFields(): ApiFormFieldSet {
   return {
     name: {},
-    mm_size: {},
-    sieve_size: {},
+    mm_size: { ...STONE_MM_SIZE_FIELD },
+    sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     description: {},
     active: { boxed: true },
   };
