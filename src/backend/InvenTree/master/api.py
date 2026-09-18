@@ -107,15 +107,14 @@ class FindingTypeDetail(RetrieveUpdateDestroyAPI):
     serializer_class = master_serializers.FindingTypeSerializer
     permission_classes = [MasterDataPermission]
 
-
 class FindingItemList(DataExportViewMixin, ListCreateAPI):
     queryset = FindingItem.objects.all()
     serializer_class = master_serializers.FindingItemSerializer
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['finding_type', 'active']
-    search_fields = ['name', 'metal', 'finding_type__name']
+    filterset_fields = ['finding_type', 'metal', 'active']
+    search_fields = ['name', 'metal__name', 'finding_type__name']
     ordering_fields = ['name', 'weight', 'price', 'active']
     ordering = 'name'
 
