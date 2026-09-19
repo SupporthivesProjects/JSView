@@ -196,6 +196,7 @@ class FindingType(MasterFieldsMixin):
 
     def __str__(self):
         return self.name
+    
 class FindingItem(MasterFieldsMixin):
     """Jewelry finding item belonging to a finding type."""
 
