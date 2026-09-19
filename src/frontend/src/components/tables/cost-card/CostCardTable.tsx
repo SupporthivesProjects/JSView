@@ -1,5 +1,11 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
@@ -14,6 +20,7 @@ import { UserRoles } from "@lib/enums/Roles";
 import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
+import { useStoredTableState } from "@lib/states/StoredTableState";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn } from "../ColumnRenderers";
 import { ColumnSearchInput } from "../ColumnSearchInput";
@@ -24,13 +31,23 @@ import { ApiImage } from "@components/shared/images/ApiImage";
 import {
   ActionIcon,
   Box,
+  Button,
+  Checkbox,
   Group,
   HoverCard,
+  Menu,
   Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
-import { IconFilterOff } from "@tabler/icons-react";
+import { showNotification } from "@mantine/notifications";
+import {
+  IconChevronDown,
+  IconFileInvoice,
+  IconFilterOff,
+  IconPresentation,
+  IconShoppingCart,
+} from "@tabler/icons-react";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
 
@@ -65,6 +82,24 @@ const COST_CARD_IMAGE_VIEWS: { field: string; label: () => string }[] = [
 ];
 
 const BLANK_IMAGE = "/static/img/blank_image.png";
+
+// Accessor for the row selection checkbox column
+const SELECT_COLUMN_ACCESSOR = "select";
+
+// Bulk actions available for the selected cost cards
+const COST_CARD_BULK_ACTIONS: {
+  key: string;
+  label: () => string;
+  icon: ReactNode;
+}[] = [
+  { key: "po-request", label: () => t`PO Request`, icon: <IconFileInvoice /> },
+  { key: "po-place", label: () => t`PO Place`, icon: <IconShoppingCart /> },
+  {
+    key: "picture-presentation",
+    label: () => t`Picture Presentation`,
+    icon: <IconPresentation />,
+  },
+];
 
 /*
  * Only the front view is shown in the table cell - hovering it previews
@@ -315,6 +350,72 @@ export default function CostCardTable() {
     table.setPage(1);
   }, [activeColumnFilters]);
 
+  // --- Row selection -----------------------------------------------------
+  // Tracked locally (by pk) so that selection persists across pages
+  const { pageSize } = useStoredTableState();
+
+  const [selectedPks, setSelectedPks] = useState<Set<number>>(new Set());
+
+  const toggleSelected = useCallback((pk: number, checked: boolean) => {
+    setSelectedPks((current) => {
+      const updated = new Set(current);
+
+      if (checked) {
+        updated.add(pk);
+      } else {
+        updated.delete(pk);
+      }
+
+      return updated;
+    });
+  }, []);
+
+  // Only count selections which are still present in the loaded data
+  const selectedRecords = useMemo(
+    () => allRecords.filter((record: any) => selectedPks.has(record.pk)),
+    [allRecords, selectedPks],
+  );
+
+  // "Select all" applies to every record matching the current column filters
+  const allFilteredSelected =
+    filteredRecords.length > 0 &&
+    filteredRecords.every((record: any) => selectedPks.has(record.pk));
+
+  const someFilteredSelected =
+    !allFilteredSelected &&
+    filteredRecords.some((record: any) => selectedPks.has(record.pk));
+
+  const toggleSelectAll = useCallback(
+    (checked: boolean) => {
+      setSelectedPks((current) => {
+        const updated = new Set(current);
+
+        filteredRecords.forEach((record: any) => {
+          if (checked) {
+            updated.add(record.pk);
+          } else {
+            updated.delete(record.pk);
+          }
+        });
+
+        return updated;
+      });
+    },
+    [filteredRecords],
+  );
+
+  const runBulkAction = useCallback(
+    (label: string) => {
+      // TODO: hook up to the relevant workflow once available
+      showNotification({
+        title: label,
+        message: t`${selectedRecords.length} cost card(s) selected`,
+        color: "blue",
+      });
+    },
+    [selectedRecords],
+  );
+
   // --- new Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
     // Build the inline search popover for a given column
@@ -340,6 +441,37 @@ export default function CostCardTable() {
     };
 
     return [
+      {
+        accessor: "row_number",
+        title: t`#`,
+        sortable: false,
+        switchable: false,
+        resizable: false,
+        width: 50,
+        minWidth: 50,
+        render: (_record: any, index?: number) =>
+          (Math.max(1, table.page) - 1) * pageSize + (index ?? 0) + 1,
+      },
+      {
+        accessor: SELECT_COLUMN_ACCESSOR,
+        title: "",
+        sortable: false,
+        switchable: false,
+        resizable: false,
+        width: 40,
+        minWidth: 40,
+        render: (record: any) => (
+          <Checkbox
+            size="xs"
+            aria-label={t`Select cost card`}
+            checked={selectedPks.has(record.pk)}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) =>
+              toggleSelected(record.pk, event.currentTarget.checked)
+            }
+          />
+        ),
+      },
       {
         accessor: "image",
         title: t`Image`,
@@ -427,7 +559,14 @@ export default function CostCardTable() {
         switchable: true,
       },
     ];
-  }, [columnFilters, setColumnFilter]);
+  }, [
+    columnFilters,
+    setColumnFilter,
+    table.page,
+    pageSize,
+    selectedPks,
+    toggleSelected,
+  ]);
 
   // --- Delete modal ------------------------------------------------------
   // Create and edit now happen on a dedicated tabbed page (see
@@ -506,8 +645,54 @@ export default function CostCardTable() {
         tooltip={t`Add Stamp`}
         hidden={!user.hasAddRole(UserRoles.part)}
       />,
+      <Checkbox
+        key="select-all"
+        size="sm"
+        label={t`Select All`}
+        aria-label="select-all-cost-cards"
+        checked={allFilteredSelected}
+        indeterminate={someFilteredSelected}
+        disabled={filteredRecords.length === 0}
+        onChange={(event) => toggleSelectAll(event.currentTarget.checked)}
+      />,
+      <Menu key="bulk-actions" position="bottom-end" withinPortal>
+        <Menu.Target>
+          <Button
+            size="xs"
+            variant="light"
+            aria-label="cost-card-actions"
+            disabled={selectedRecords.length === 0}
+            rightSection={<IconChevronDown size={16} stroke={1.5} />}
+          >
+            {selectedRecords.length > 0
+              ? t`Actions (${selectedRecords.length})`
+              : t`Actions`}
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {COST_CARD_BULK_ACTIONS.map((action) => (
+            <Menu.Item
+              key={action.key}
+              leftSection={action.icon}
+              onClick={() => runBulkAction(action.label())}
+            >
+              {action.label()}
+            </Menu.Item>
+          ))}
+        </Menu.Dropdown>
+      </Menu>,
     ];
-  }, [user, navigate, activeColumnFilters.length]);
+  }, [
+    user,
+    navigate,
+    activeColumnFilters.length,
+    allFilteredSelected,
+    someFilteredSelected,
+    filteredRecords.length,
+    toggleSelectAll,
+    selectedRecords.length,
+    runBulkAction,
+  ]);
 
   return (
     <>
@@ -523,8 +708,15 @@ export default function CostCardTable() {
           tableFilters: tableFilters,
           enableDownload: true,
           dataLoading: costCardQuery.isFetching,
-          onRowClick: (record: any) =>
-            navigate(`/cards/cost-card/${record.pk}`),
+          // Clicking in the selection column must not open the cost card
+          onCellClick: ({ record, column }: any) => {
+            if (column?.accessor === SELECT_COLUMN_ACCESSOR) {
+              toggleSelected(record.pk, !selectedPks.has(record.pk));
+              return;
+            }
+
+            navigate(`/cards/cost-card/${record.pk}`);
+          },
         }}
       />
     </>
