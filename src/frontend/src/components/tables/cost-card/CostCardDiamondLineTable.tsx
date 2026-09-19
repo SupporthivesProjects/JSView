@@ -149,7 +149,8 @@ export default function CostCardDiamondLineTable({
         title: t`D.R.`,
         sortable: false,
         switchable: true,
-        render: (record: any) => (record.default_rate ? t`Y` : t`N`),
+        render: (record: any) =>
+          record.default_rate === "yes" ? t`Y` : t`N`,
       },
       {
         accessor: "rate",
