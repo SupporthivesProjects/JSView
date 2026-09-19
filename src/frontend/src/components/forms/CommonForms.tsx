@@ -1330,9 +1330,10 @@ function costCardStoneLineFields(
       modelRenderer: nameRenderer,
     },
     pcs: {},
-    cts: {},
     pc: {},
+    default_rate: { boxed: true },
     rate: {},
+    cts: {},
     amount: {},
     labour_rate: {},
     labour_amount: {},
@@ -1346,7 +1347,6 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
-    default_rate: { boxed: true },
     active: { boxed: true, default: true, hidden: true },
   };
 }
