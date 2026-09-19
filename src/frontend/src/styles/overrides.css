@@ -6,19 +6,19 @@
 
 /* Alternating month backgrounds in the multi-month scroll calendar view */
 /* Alternating month backgrounds in the multi-month scroll calendar view */
-[data-mantine-color-scheme='light'] .fc-day-month-odd:not(.fc-day-today) {
+[data-mantine-color-scheme="light"] .fc-day-month-odd:not(.fc-day-today) {
   background-color: var(--mantine-color-gray-1);
 }
-[data-mantine-color-scheme='dark'] .fc-day-month-odd:not(.fc-day-today) {
+[data-mantine-color-scheme="dark"] .fc-day-month-odd:not(.fc-day-today) {
   background-color: var(--mantine-color-dark-4);
 }
 
 /* Today highlight */
 /* Today highlight */
-[data-mantine-color-scheme='light'] .fc-day-today {
+[data-mantine-color-scheme="light"] .fc-day-today {
   background-color: var(--mantine-color-blue-1) !important;
 }
-[data-mantine-color-scheme='dark'] .fc-day-today {
+[data-mantine-color-scheme="dark"] .fc-day-today {
   background-color: var(--mantine-color-blue-9) !important;
 }
 
@@ -36,7 +36,11 @@
 .api-form input:disabled,
 .api-form textarea:disabled,
 .api-form select:disabled,
-.api-form [class*='mantine']:has(> input:disabled) {
+.api-form [class*="mantine"]:has(> input:disabled) {
   color: black;
   opacity: 1;
+}
+
+td {
+  text-transform: uppercase;
 }
