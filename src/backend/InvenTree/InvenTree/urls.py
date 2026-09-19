@@ -25,6 +25,7 @@ import machine.api
 import master.api
 import costcard.api
 import purchase_order.urls
+import revision.api
 import order.api
 import part.api
 import plugin.api
@@ -67,6 +68,7 @@ apipatterns = [
     path('master/', include(master.api.master_api_urls)),
     path('costcard/', include(costcard.api.cards_api_urls)),
     path('purchase-order/', include(purchase_order.urls.purchase_order_api_urls)),
+    path('revision/', include(revision.api.history_api_urls)),
     path('order/', include(order.api.order_api_urls)),
     path('part/', include(part.api.part_api_urls)),
     path('properties/', include('properties.urls')),
