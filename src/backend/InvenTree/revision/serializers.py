@@ -30,3 +30,4 @@ class CostCardVersionListSerializer(InvenTreeModelSerializer):
             'created_at',
             'active',
         ]
+
