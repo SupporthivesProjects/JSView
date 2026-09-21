@@ -349,7 +349,7 @@ function PurchaseRequestLineRow({
   const costCardField: ApiFormFieldType = useMemo(() => {
     return {
       field_type: "related field",
-      api_url: apiUrl(ApiEndpoints.cost_card),
+      api_url: `${apiUrl(ApiEndpoints.cost_card)}?active=true`,
       required: false,
       value: item.costcardid,
       modelRenderer: (arg: any) => {
