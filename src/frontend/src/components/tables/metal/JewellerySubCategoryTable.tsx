@@ -22,10 +22,16 @@ import {
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
+import useNameLookup from "../../../hooks/UseNameLookup";
 
 export default function JewellerySubCategoryTable() {
   const table = useTable("jewellery-sub-category");
   const user = useUserState();
+
+  const { nameByPk: jewelleryCategoryNameByPk } = useNameLookup(
+    ApiEndpoints.jewellery_category,
+    "jewellery-category-lookup",
+  );
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -34,6 +40,7 @@ export default function JewellerySubCategoryTable() {
         accessor: "category",
         sortable: true,
         switchable: false,
+        render: (record: any) => jewelleryCategoryNameByPk[record.category] ?? record.category,
       },
       {
         accessor: "name",
@@ -57,7 +64,7 @@ export default function JewellerySubCategoryTable() {
         switchable: true,
       },
     ];
-  }, []);
+  }, [jewelleryCategoryNameByPk]);
 
   // --- Create modal ----------------------------------------------------
   const newJewellerySubCategory = useCreateApiFormModal({

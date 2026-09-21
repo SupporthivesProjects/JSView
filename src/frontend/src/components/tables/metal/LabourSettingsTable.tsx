@@ -24,29 +24,16 @@ import {
 import { useUserState } from "@store/UserState";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
+import useNameLookup from "../../../hooks/UseNameLookup";
 
 export default function LabourSettingTable() {
   const table = useTable("labour-settings");
   const user = useUserState();
 
-  const api = useApi();
-
-  const settingsQuery = useQuery({
-    queryKey: ["setting-lookup"],
-    queryFn: () =>
-      api
-        .get(apiUrl(ApiEndpoints.master_setting), { params: { limit: 1000 } })
-        .then((response) => response.data?.results ?? response.data ?? []),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const settingNameByPk = useMemo(() => {
-    const map: Record<number, string> = {};
-    (settingsQuery.data ?? []).forEach((setting: any) => {
-      map[setting.pk] = setting.name;
-    });
-    return map;
-  }, [settingsQuery.data]);
+  const { nameByPk: masterSettingNameByPk } = useNameLookup(
+    ApiEndpoints.master_setting,
+    "master-setting-lookup",
+  );
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -61,6 +48,7 @@ export default function LabourSettingTable() {
         title: t`Setting`,
         sortable: true,
         switchable: true,
+        render: (record: any) => masterSettingNameByPk[record.setting] ?? record.setting,
       },
       {
         accessor: "charge_type",
@@ -90,7 +78,7 @@ export default function LabourSettingTable() {
         switchable: true,
       },
     ];
-  }, [settingNameByPk]);
+  }, [masterSettingNameByPk]);
 
   // --- Create modal ----------------------------------------------------
   const newLabourSettings = useCreateApiFormModal({

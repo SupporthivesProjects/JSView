@@ -24,29 +24,21 @@ import {
 import { useUserState } from "@store/UserState";
 import { useApi } from "@context/ApiContext";
 import { useQuery } from "@tanstack/react-query";
+import useNameLookup from "../../../hooks/UseNameLookup";
 
 export default function FindingItemTable() {
   const table = useTable("finding-item");
   const user = useUserState();
 
-  const api = useApi();
+  const { nameByPk: findingTypeNameByPk } = useNameLookup(
+    ApiEndpoints.finding_type,
+    "finding-type-lookup",
+  );
 
-  const findingTypesQuery = useQuery({
-    queryKey: ["finding-type-lookup"],
-    queryFn: () =>
-      api
-        .get(apiUrl(ApiEndpoints.finding_type), { params: { limit: 1000 } })
-        .then((response) => response.data?.results ?? response.data ?? []),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const findingTypeNameByPk = useMemo(() => {
-    const map: Record<number, string> = {};
-    (findingTypesQuery.data ?? []).forEach((findingType: any) => {
-      map[findingType.pk] = findingType.name;
-    });
-    return map;
-  }, [findingTypesQuery.data]);
+  const { nameByPk: findingMetalNameByPk } = useNameLookup(
+    ApiEndpoints.finding_item,
+    "finding-metal-lookup",
+  );
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -55,8 +47,7 @@ export default function FindingItemTable() {
         accessor: "finding_type",
         sortable: true,
         switchable: false,
-        render: (record: any) =>
-          findingTypeNameByPk[record.finding_type] ?? record.finding_type,
+        render: (record: any) => findingTypeNameByPk[record.finding_type] ?? record.finding_type,
       },
       {
         accessor: "name",
@@ -77,6 +68,7 @@ export default function FindingItemTable() {
         accessor: "metal",
         sortable: true,
         switchable: false,
+        render: (record: any) => findingMetalNameByPk[record.metal] ?? record.metal,
       },
       {
         accessor: "price",
@@ -99,7 +91,7 @@ export default function FindingItemTable() {
         switchable: true,
       },
     ];
-  }, [findingTypeNameByPk]);
+  }, [findingTypeNameByPk, findingMetalNameByPk]);
 
   // --- Create modal ----------------------------------------------------
   const newFindingItem = useCreateApiFormModal({
