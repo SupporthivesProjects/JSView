@@ -142,6 +142,9 @@ export default function MasterCustomerTable() {
         sortable: true,
         switchable: true,
       },
+      BooleanColumn({
+        accessor: "active",
+      }),
     ];
   }, []);
 

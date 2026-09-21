@@ -27,6 +27,7 @@ import { useApi } from "@context/ApiContext";
 import { useUserState } from "@store/UserState";
 import { useModal } from "../../../hooks/UseModal";
 import { ContactsPanel } from "./sharedComponents/ContactsPanel";
+import { BooleanColumn } from "../ColumnRenderers";
 
 export default function MasterVendorTable() {
   const table = useTable("master-vendor");
@@ -169,6 +170,9 @@ export default function MasterVendorTable() {
         sortable: true,
         switchable: true,
       },
+      BooleanColumn({
+        accessor: "active",
+      }),
     ];
   }, []);
 
