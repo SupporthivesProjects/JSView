@@ -77,6 +77,7 @@ export type ApiFormFieldHeader = {
  * @param autoFill: Whether to automatically fill the field with data from the API
  * @param autoFillFilters: Optional filters to apply when auto-filling the field
  * @param adjustValue : Callback function to adjust the value of the field before it is sent to the API
+ * @param showAdjustedValue : For a text field, display the value returned by adjustValue as the user types (e.g. to strip disallowed characters), rather than the raw typed text
  * @param onValueChange : Callback function to call when the field value changes
  * @param adjustFilters : Callback function to adjust the filters for a related field before a query is made
  * @param addRow : Callback function to add a new row to a table field
@@ -147,6 +148,7 @@ export type ApiFormFieldType = {
   autoFill?: boolean;
   autoFillFilters?: any;
   adjustValue?: (value: any) => any;
+  showAdjustedValue?: boolean;
   onValueChange?: (value: any, record?: any) => void;
   adjustFilters?: (value: ApiFormAdjustFilterType) => any;
   addRow?: () => any;

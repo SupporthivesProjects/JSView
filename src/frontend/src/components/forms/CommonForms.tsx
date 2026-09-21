@@ -833,11 +833,42 @@ export function colorStoneColorFields(): ApiFormFieldSet {
   };
 }
 
+/**
+ * Build an adjustValue function which drops every character not matched by
+ * `allowed` as the user types. Letters are upper-cased first, so a typed "x"
+ * is kept as "X".
+ */
+function allowOnlyChars(allowed: RegExp) {
+  return (value: any) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    return value
+      .toUpperCase()
+      .split("")
+      .filter((char) => allowed.test(char))
+      .join("");
+  };
+}
+
+// Stone size (Diamond / Color Stone properties): numbers, M and X
+const STONE_MM_SIZE_FIELD = {
+  adjustValue: allowOnlyChars(/[0-9.MX]/),
+  showAdjustedValue: true,
+};
+
+// Stone sieve size: numbers, +, -, M and X
+const STONE_SIEVE_SIZE_FIELD = {
+  adjustValue: allowOnlyChars(/[0-9.+\-MX]/),
+  showAdjustedValue: true,
+};
+
 export function colorStoneSizeFields(): ApiFormFieldSet {
   return {
     name: {},
-    mm_size: {},
-    sieve_size: {},
+    mm_size: { ...STONE_MM_SIZE_FIELD },
+    sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     description: {},
     active: { boxed: true },
   };
@@ -1299,9 +1330,10 @@ function costCardStoneLineFields(
       modelRenderer: nameRenderer,
     },
     pcs: {},
-    cts: {},
     pc: {},
+    default_rate: { boxed: true },
     rate: {},
+    cts: {},
     amount: {},
     labour_rate: {},
     labour_amount: {},
@@ -1315,7 +1347,6 @@ function costCardStoneLineFields(
       filters: { active: true },
       modelRenderer: nameRenderer,
     },
-    default_rate: { boxed: true },
     active: { boxed: true, default: true, hidden: true },
   };
 }
@@ -1374,6 +1405,11 @@ function useCostCardStoneLineFields(
   const [rate, setRate] = useState<any>(undefined);
   const [labourRate, setLabourRate] = useState<any>(undefined);
   const [pc, setPc] = useState<any>(undefined);
+
+  // D.R. 'yes' takes the Rate from the rate table; 'no' (the model default,
+  // so an untouched selector counts as 'no') leaves it for the user to enter.
+  const [defaultRate, setDefaultRate] = useState<any>(undefined);
+  const usesDefaultRate = defaultRate === "yes";
 
   // The three selections the rate table is keyed on (see rateQuery below).
   const [stonePk, setStonePk] = useState<any>(undefined);
@@ -1528,9 +1564,10 @@ function useCostCardStoneLineFields(
 
   // --- Rate lookup -----------------------------------------------------
   // A rate table row is unique on (stone, shape, mm size), so once all three
-  // are picked the line's Rate is that row's rate - the field is read-only and
-  // can only ever come from here. A combination with no row priced for it
-  // leaves the Rate blank rather than keeping a rate from another combination.
+  // are picked with D.R. set to 'yes', the line's Rate is that row's rate -
+  // the field is read-only and can only come from here. A combination with no
+  // row priced for it leaves the Rate blank rather than keeping a rate from
+  // another combination. With D.R. 'no' the Rate is entered by hand instead.
   const rateLookupKeys = useMemo(
     () =>
       stonePk && shapePk && mmSizePk
@@ -1559,32 +1596,30 @@ function useCostCardStoneLineFields(
   const lookedUpRate = rateQuery.data;
 
   useEffect(() => {
-    if (!rateLookupKeys || lookedUpRate === undefined) return;
+    // A hand-entered rate is left alone - switching D.R. to 'no' keeps
+    // whatever rate was showing as the starting point for the user's own.
+    if (!usesDefaultRate) return;
 
     // Push the blank back as "" rather than null - ApiForm only treats a
     // non-null field value as caller-controlled.
+    if (!rateLookupKeys) {
+      // Clearing any of the three keys clears the rate they produced.
+      setRate("");
+      return;
+    }
+
+    if (lookedUpRate === undefined) return;
+
     setRate(lookedUpRate ?? "");
-  }, [rateLookupKeys, lookedUpRate]);
+  }, [usesDefaultRate, rateLookupKeys, lookedUpRate]);
 
-  // Clearing any of the three keys clears the rate they produced.
-  const onRateKeyChange = useCallback(
-    (setKey: (value: any) => void) => (value: any) => {
-      const pk = value ?? null;
-
-      setKey(pk);
-
-      if (!pk) setRate("");
-    },
+  const onStoneChange = useCallback(
+    (value: any) => setStonePk(value ?? null),
     [],
   );
-
-  const onStoneChange = useMemo(
-    () => onRateKeyChange(setStonePk),
-    [onRateKeyChange],
-  );
-  const onShapeChange = useMemo(
-    () => onRateKeyChange(setShapePk),
-    [onRateKeyChange],
+  const onShapeChange = useCallback(
+    (value: any) => setShapePk(value ?? null),
+    [],
   );
 
   const reset = useCallback(() => {
@@ -1592,6 +1627,7 @@ function useCostCardStoneLineFields(
     setRate(undefined);
     setLabourRate(undefined);
     setPc(undefined);
+    setDefaultRate(undefined);
     setMmSize(undefined);
     setSieveSize(undefined);
     setSeededSieveSize(undefined);
@@ -1640,7 +1676,14 @@ function useCostCardStoneLineFields(
       },
       pcs: { onValueChange: (value: any) => setPcs(value) },
       pc: { onValueChange: (value: any) => setPc(value) },
-      rate: { value: rate, read_only: true, disabled: true },
+      rate: {
+        value: rate,
+        read_only: usesDefaultRate,
+        disabled: usesDefaultRate,
+        // Also seeds the stored rate of the line being edited. A cleared rate
+        // is kept as "" so ApiForm does not restore the fetched one over it.
+        onValueChange: (value: any) => setRate(value ?? ""),
+      },
       amount: { value: amount, read_only: true, disabled: true },
       labour_rate: { onValueChange: (value: any) => setLabourRate(value) },
       labour_amount: {
@@ -1648,12 +1691,17 @@ function useCostCardStoneLineFields(
         read_only: true,
         disabled: true,
       },
+      default_rate: {
+        ...baseFields.default_rate,
+        onValueChange: (value: any) => setDefaultRate(value),
+      },
     };
   }, [
     costCardId,
     endpoints,
     pcs,
     rate,
+    usesDefaultRate,
     labourRate,
     pc,
     mmSize,
@@ -1762,8 +1810,8 @@ export function diamondColorFields(): ApiFormFieldSet {
 export function diamondSizeFields(): ApiFormFieldSet {
   return {
     name: {},
-    mm_size: {},
-    sieve_size: {},
+    mm_size: { ...STONE_MM_SIZE_FIELD },
+    sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     description: {},
     active: { boxed: true },
   };

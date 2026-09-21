@@ -140,6 +140,10 @@ export function ApiFormField({
 
       // Run custom callback for this field
       definition.onValueChange?.(rtnValue);
+
+      // Returned so an input can display the adjusted value (e.g. with
+      // disallowed characters stripped) rather than the raw typed text
+      return rtnValue;
     },
     [fieldName, definition],
   );
