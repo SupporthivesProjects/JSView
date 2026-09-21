@@ -58,7 +58,8 @@ export function stonePlaceFields(): ApiFormFieldSet {
 export function metalPurityFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -74,7 +75,8 @@ export function metalPurityFields(): ApiFormFieldSet {
 export function metalRate(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -139,7 +141,8 @@ export function findingTypeFields(): ApiFormFieldSet {
 export function findingTypeItems(): ApiFormFieldSet {
   return {
     finding_type: {
-      api_url: `${apiUrl(ApiEndpoints.finding_type)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.finding_type),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -149,7 +152,8 @@ export function findingTypeItems(): ApiFormFieldSet {
     // type: {},
     weight: {},
     metal: {
-      api_url: `${apiUrl(ApiEndpoints.metal_purity_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.metal_purity_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -171,7 +175,8 @@ export function finishTypeFields(): ApiFormFieldSet {
 export function ListDutyFields(): ApiFormFieldSet {
   return {
     metal_type: {
-      api_url: `${apiUrl(ApiEndpoints.metal_type_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.metal_type_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         // return instance?.name ?? (instance?.pk ? `#${instance.pk}` : "");
@@ -349,7 +354,8 @@ function PurchaseRequestLineRow({
   const costCardField: ApiFormFieldType = useMemo(() => {
     return {
       field_type: "related field",
-      api_url: `${apiUrl(ApiEndpoints.cost_card)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.cost_card),
+      filters: { active: true },
       required: false,
       value: item.costcardid,
       modelRenderer: (arg: any) => {
@@ -885,42 +891,48 @@ export function colorStoneQualityFields(): ApiFormFieldSet {
 export function colorStoneRateFields(): ApiFormFieldSet {
   return {
     shape: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_shape_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_shape_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     mm_size: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_size_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_size_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     stone: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_type_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_type_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     color: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_color_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_color_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     cut: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_cut_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_cut_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     quality: {
-      api_url: `${apiUrl(ApiEndpoints.color_stone_quality_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.color_stone_quality_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -1037,35 +1049,40 @@ function costCardGeneralFieldSet(
     our_style_no: {},
     vendor_style_no: {},
     vendor: {
-      api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_supplier=true`,
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      filters: { active: true, is_supplier: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.code ?? (instance?.code ? `#${instance.code}` : "");
       },
     },
     customer: {
-      api_url: `${apiUrl(ApiEndpoints.master_vendor_customer)}?active=true&is_customer=true`,
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      filters: { active: true, is_customer: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.code ?? (instance?.code ? `#${instance.code}` : "");
       },
     },
     category: {
-      api_url: `${apiUrl(ApiEndpoints.jewellery_category)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.jewellery_category),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     sub_category: {
-      api_url: `${apiUrl(ApiEndpoints.jewellery_sub_category)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.jewellery_sub_category),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     metal_purity: {
-      api_url: `${apiUrl(ApiEndpoints.metal_purity_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.metal_purity_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -1084,7 +1101,8 @@ function costCardGeneralFieldSet(
       onValueChange: (value: any) => setMetalGrams(value),
     },
     finding_item: {
-      api_url: `${apiUrl(ApiEndpoints.finding_item)}?active=true&metal=${fingingItemId}`,
+      api_url: apiUrl(ApiEndpoints.finding_item),
+      filters: { active: true, metal: fingingItemId },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
@@ -1764,7 +1782,8 @@ export function costCardFinishLineFields(costCardId: number): ApiFormFieldSet {
   return {
     cost_card: { hidden: true, value: costCardId },
     finish_type: {
-      api_url: `${apiUrl(ApiEndpoints.finish_type)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.finish_type),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? "";
@@ -1828,42 +1847,48 @@ export function diamondQualityFields(): ApiFormFieldSet {
 export function diamondRateFields(): ApiFormFieldSet {
   return {
     shape: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_shape_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_shape_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     mm_size: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_size_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_size_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     stone: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_stone_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_stone_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     color: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_color_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_color_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     cut: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_cut_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_cut_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
       },
     },
     quality: {
-      api_url: `${apiUrl(ApiEndpoints.diamond_quality_list)}?active=true`,
+      api_url: apiUrl(ApiEndpoints.diamond_quality_list),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? (instance?.name ? `#${instance.name}` : "");
