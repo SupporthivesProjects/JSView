@@ -729,6 +729,16 @@ export function validatePurchaseRequestLines(
       const sizes = splitCommaList(row.size);
       const pcs = splitCommaList(row.spcs);
 
+      if (sizes.length === 0) {
+        form.setError(`${path}.size`, { message: "Size is required" });
+        valid = false;
+      }
+
+      if (pcs.length === 0) {
+        form.setError(`${path}.spcs`, { message: "Size Pcs is required" });
+        valid = false;
+      }
+
       if (pcs.some((entry) => !Number.isFinite(Number(entry)))) {
         form.setError(`${path}.spcs`, {
           message: "Size Pcs must be comma separated numbers",
@@ -736,7 +746,8 @@ export function validatePurchaseRequestLines(
         valid = false;
       }
 
-      if (sizes.length !== pcs.length) {
+      // Only worth comparing the two lists once both have been filled in
+      if (sizes.length > 0 && pcs.length > 0 && sizes.length !== pcs.length) {
         const message = `Size has ${sizes.length} value(s) but Size Pcs has ${pcs.length}`;
         form.setError(`${path}.size`, { message });
         form.setError(`${path}.spcs`, { message });
