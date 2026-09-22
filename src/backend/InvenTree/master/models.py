@@ -25,9 +25,9 @@ class MasterFieldsMixin(models.Model):
 class MetalType(MasterFieldsMixin):
     """Metal type (e.g. Gold, Silver, Platinum)."""
 
-    code = models.CharField(max_length=100, unique=True, null=True, verbose_name=_('Code'), help_text=_('Unique code used to identify the metal type.'))
+    code = models.CharField(max_length=100, unique=True, null=True, blank=False, verbose_name=_('Code'), help_text=_('Unique code used to identify the metal type.'))
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the metal type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the metal type.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the metal type.'))
 
     class Meta:
         verbose_name = _('Metal Type')
@@ -47,7 +47,7 @@ class MetalPurity(MasterFieldsMixin):
     name = models.CharField(max_length=50, verbose_name=_('Name'), help_text=_('Name of the metal purity grade.'))
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='purities', verbose_name=_('Metal Type'), help_text=_('Metal type associated with this purity grade.'))
     purity = models.DecimalField(max_digits=6, null=True, blank=True, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Purity (%)'), help_text=_('Purity percentage of the metal, from 0 to 100.'))
-    karat = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14, 18, 22, or 24.'))
+    karat = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True, blank=False, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14, 18, 22, or 24.'))
 
     class Meta:
         verbose_name = _('Metal Purity')
@@ -72,7 +72,7 @@ class JewelryCategory(MasterFieldsMixin):
     """Jewelry category master."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry category.'))
-    description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry category.'))
+    description = models.CharField(max_length=250, blank=False, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry category.'))
 
     class Meta:
         verbose_name = _('Jewelry Category')
@@ -88,7 +88,7 @@ class JewelrySubCategory(MasterFieldsMixin):
     """Jewelry sub-category master."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry sub-category.'))
-    description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry sub-category.'))
+    description = models.CharField(max_length=250, blank=False, null=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry sub-category.'))
     category = models.ForeignKey( JewelryCategory,on_delete=models.SET_NULL,null=True, blank=True,related_name='subcategories', verbose_name=_('Category'), help_text=_('Optional jewelry category associated with this sub-category.'))
 
     class Meta:
@@ -105,7 +105,7 @@ class JewelrySubCategory(MasterFieldsMixin):
 class Setting(MasterFieldsMixin):
     """Jewelry setting type (e.g. Prong, Bezel, Pave)."""
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the jewelry setting type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the jewelry setting type.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the jewelry setting type.'))
 
     class Meta:
         verbose_name = _('Setting')
@@ -136,7 +136,7 @@ class LabourSetting(MasterFieldsMixin):
     ]
 
     name = models.CharField(max_length=100, verbose_name=_('Name'), help_text=_('Name of the labour setting.'))
-    setting = models.ForeignKey(Setting, on_delete=models.SET_NULL, null=True, blank=True, related_name='labour_settings', verbose_name=_('Setting'), help_text=_('Jewelry setting associated with this labour configuration.'))
+    setting = models.ForeignKey(Setting, on_delete=models.SET_NULL, null=True, blank=False, related_name='labour_settings', verbose_name=_('Setting'), help_text=_('Jewelry setting associated with this labour configuration.'))
     charge_type = models.CharField(max_length=20, choices=CHARGE_TYPE_CHOICES, default=CHARGE_TYPE_FIXED, verbose_name=_('Charge Type'), help_text=_('Method used to calculate the labour charge.'))
     rate = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Rate'), help_text=_('Labour charge rate based on the selected charge type.'))
 
@@ -183,7 +183,7 @@ class FindingType(MasterFieldsMixin):
     """Jewelry finding type (e.g. Chain, Clasp, Hook, Jump Ring)."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Finding Type'), help_text=_('Name of the jewelry finding type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finding type.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the finding type.'))
 
     class Meta:
         verbose_name = _('Finding Type')
@@ -203,7 +203,7 @@ class FindingItem(MasterFieldsMixin):
     finding_type = models.ForeignKey(FindingType, on_delete=models.CASCADE, related_name='items', verbose_name=_('Finding Type'))
     name = models.CharField(max_length=100, verbose_name=_('Finding Item'))
     weight = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Wt.'), help_text=_('Weight of the finding in grams.'))
-    metal = models.ForeignKey(MetalPurity, on_delete=models.PROTECT, null=True, blank=True, verbose_name=_('Finding Metal'), help_text=_('Metal purity of the finding.'))
+    metal = models.ForeignKey(MetalPurity, on_delete=models.PROTECT, null=True, blank=False, verbose_name=_('Finding Metal'), help_text=_('Metal purity of the finding.'))
     price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Finding Price'), help_text=_('Price of the finding.'))
 
     class Meta:
@@ -228,7 +228,7 @@ class FinishType(MasterFieldsMixin):
     """Surface finish type (e.g. Matte, Glossy, Antique)."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the surface finish type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the finish type.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the finish type.'))
 
     class Meta:
         verbose_name = _('Finish Type')
@@ -248,7 +248,7 @@ class Duty(MasterFieldsMixin):
     metal_type = models.ForeignKey(MetalType, on_delete=models.CASCADE, related_name='duties', verbose_name=_('Metal Type'), help_text=_('Metal type for which this duty applies.'))
     duty = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Duty'), help_text=_('Duty percentage applicable to the selected metal type.'))
     markup = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)], verbose_name=_('Markup'), help_text=_('Markup value applicable to the selected metal type.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the duty configuration.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the duty configuration.'))
 
     class Meta:
         verbose_name = _('Duty')
@@ -267,8 +267,8 @@ class Stamp(MasterFieldsMixin):
     """Hallmark / stamp type (e.g. BIS Hallmark, 916)."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the hallmark or stamp.'))
-    image = models.ImageField(upload_to=stamp_image, blank=True, null=True, verbose_name=_('Image'), help_text=_('Optional image representing the hallmark or stamp.'))
-    description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the stamp.'))
+    image = models.ImageField(upload_to=stamp_image, blank=False, null=True, verbose_name=_('Image'), help_text=_('Optional image representing the hallmark or stamp.'))
+    description = models.CharField(max_length=250, null=True, blank=False, verbose_name=_('Description'), help_text=_('Optional description of the stamp.'))
     all_customers = models.BooleanField(default=False,verbose_name=_('All Customers'),help_text=_('If set, this rate applies to every customer (Select All Customers).'),)
     customers = models.ManyToManyField( Company,blank=True,related_name='stamps',verbose_name=_('Customers'),help_text=_('Customers assigned to this stamp.'))
 
@@ -287,9 +287,9 @@ class ACExecutive(MasterFieldsMixin):
     """Accounts executive responsible for customer/vendor accounts."""
 
     name = models.CharField(max_length=100, verbose_name=_('Name'), help_text=_('Name of the accounts executive.'))
-    code = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Code'), help_text=_('Optional code used to identify the accounts executive.'))
-    email = models.EmailField(blank=True, null=True, verbose_name=_('Email'), help_text=_('Email address of the accounts executive.'))
-    phone = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Phone'), help_text=_('Contact phone number of the accounts executive.'))
+    code = models.CharField(max_length=50, null=True, blank=False, verbose_name=_('Code'), help_text=_('Optional code used to identify the accounts executive.'))
+    email = models.EmailField(blank=False, null=True, verbose_name=_('Email'), help_text=_('Email address of the accounts executive.'))
+    phone = models.CharField(max_length=50, null=True, blank=False, verbose_name=_('Phone'), help_text=_('Contact phone number of the accounts executive.'))
 
     class Meta:
         verbose_name = _('A/C Executive')
@@ -311,7 +311,7 @@ class Terms(MasterFieldsMixin):
     days = models.PositiveIntegerField(default=0, verbose_name=_('Days'), help_text=_('Number of days allowed under these payment terms.'))
     all_vendors = models.BooleanField(default=False, verbose_name=_('All Vendors'), help_text=_('If set, these terms apply to every vendor (Select All Vendors).'))
     vendors = models.ManyToManyField(Company, blank=True, related_name='payment_terms', verbose_name=_('Vendors'), help_text=_('Vendors to whom these payment terms apply.'))
-    description = models.CharField(max_length=250, blank=True, null=True, verbose_name=_('Description'), help_text=_('Optional description of the payment terms.'))
+    description = models.CharField(max_length=250, blank=False, null=True, verbose_name=_('Description'), help_text=_('Optional description of the payment terms.'))
 
     class Meta:
         verbose_name = _('Terms')
@@ -329,10 +329,10 @@ class CourierService(MasterFieldsMixin):
     """Courier / shipping service provider."""
 
     name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the courier or shipping service.'))
-    contact_person = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Contact Person'), help_text=_('Name of the primary contact person.'))
-    phone = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Phone'), help_text=_('Contact phone number for the courier service.'))
-    email = models.EmailField(blank=True, null=True, verbose_name=_('Email'), help_text=_('Email address for the courier service.'))
-    tracking_url = models.URLField(max_length=500, blank=True, null=True, verbose_name=_('Tracking URL'), help_text=_('URL used to track shipments from this courier service.'))
+    contact_person = models.CharField(max_length=100, null=True, blank=False, verbose_name=_('Contact Person'), help_text=_('Name of the primary contact person.'))
+    phone = models.CharField(max_length=50, null=True, blank=False, verbose_name=_('Phone'), help_text=_('Contact phone number for the courier service.'))
+    email = models.EmailField(blank=False, null=True, verbose_name=_('Email'), help_text=_('Email address for the courier service.'))
+    tracking_url = models.URLField(max_length=500, blank=False, null=True, verbose_name=_('Tracking URL'), help_text=_('URL used to track shipments from this courier service.'))
 
     class Meta:
         verbose_name = _('Courier Service')

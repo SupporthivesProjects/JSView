@@ -13,6 +13,7 @@ export interface UserProfile {
   contact: string | null;
   type: string;
   organisation: string | null;
+  executive: number | null;
   primary_group: number | null;
 }
 
