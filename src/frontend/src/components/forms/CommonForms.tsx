@@ -487,6 +487,23 @@ function newPurchaseRequestLineItem() {
   };
 }
 
+/**
+ * Build a line item row from a cost card record, as if the user had picked
+ * that card in the Cost Card column - the style numbers and vendor are
+ * carried across exactly as `PurchaseRequestLineRow` does on selection.
+ *
+ * Quantity / Size / Size Pcs are left blank, to be filled in on the form.
+ */
+export function purchaseRequestLineFromCostCard(costCard: any) {
+  return {
+    ...newPurchaseRequestLineItem(),
+    costcardid: costCard?.pk ?? null,
+    styleno: costCard?.our_style_no ?? "",
+    vstyleno: costCard?.vendor_style_no ?? "",
+    vendorid: costCard?.vendor ?? null,
+  };
+}
+
 /** The two kinds of record held by the purchase order endpoint */
 export type POType = "REQUEST" | "ORDER";
 
