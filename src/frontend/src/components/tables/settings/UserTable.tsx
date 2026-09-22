@@ -31,7 +31,7 @@ import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 import { api } from '@app-lib/api/client';
-import { EditApiForm } from '../../forms/ApiForm';
+import { PatchApiForm } from '../../forms/ApiForm';
 import {
   TransferList,
   type TransferListItem
@@ -58,6 +58,10 @@ export interface UserDetailI {
   is_active: boolean;
   is_staff: boolean;
   is_superuser: boolean;
+  profile?: {
+    executive: number | null;
+    [key: string]: any;
+  };
 }
 
 export function UserDrawer({
@@ -166,7 +170,7 @@ export function UserDrawer({
             </StylishText>
           </Accordion.Control>
           <Accordion.Panel>
-            <EditApiForm
+            <PatchApiForm
               props={{
                 url: ApiEndpoints.user_list,
                 pk: id,
@@ -175,6 +179,19 @@ export function UserDrawer({
                   first_name: {},
                   last_name: {},
                   email: {},
+                  executive: {
+                    field_type: 'related field',
+                    label: t`Executive`,
+                    description: t`Master executive assigned to this user`,
+                    required: false,
+                    api_url: apiUrl(ApiEndpoints.master_executive),
+                    filters: { active: true },
+                    value: userDetail?.profile?.executive ?? undefined,
+                    modelRenderer: (arg: any) => {
+                      const instance = arg?.instance ?? arg;
+                      return instance?.name ?? '';
+                    }
+                  },
                   is_active: {
                     label: t`Is Active`,
                     description: t`Designates whether this user should be treated as active. Unselect this instead of deleting accounts.`,
@@ -190,6 +207,16 @@ export function UserDrawer({
                     description: t`Designates that this user has all permissions without explicitly assigning them.`,
                     disabled: isCurrentUser
                   }
+                },
+                processFormData: (data: any) => {
+                  // 'executive' lives on the nested user profile - it is
+                  // rendered as a top-level field here, so re-nest it for
+                  // the API (see UserProfileUpdateSerializer)
+                  const { executive, ...rest } = data;
+                  return {
+                    ...rest,
+                    profile: { executive: executive ?? null }
+                  };
                 },
                 postFormContent: isCurrentUser ? (
                   <Alert

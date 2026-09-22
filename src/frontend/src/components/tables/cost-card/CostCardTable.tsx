@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
+import { StylishText } from "@lib/components/StylishText";
 import {
   type RowAction,
   RowDeleteAction,
@@ -20,12 +21,27 @@ import { UserRoles } from "@lib/enums/Roles";
 import { apiUrl } from "@lib/functions/Api";
 import useTable from "@lib/hooks/UseTable";
 import type { TableFilter } from "@lib/index";
+import type { ApiFormFieldSet } from "@lib/types/Forms";
 import { useStoredTableState } from "@lib/states/StoredTableState";
 import type { TableColumn } from "@lib/types/Tables";
 import { BooleanColumn } from "../ColumnRenderers";
 import { ColumnSearchInput } from "../ColumnSearchInput";
 import { InvenTreeTable } from "../InvenTreeTable";
-import { useDeleteApiFormModal } from "../../../hooks/UseForm";
+import {
+  PURCHASE_ORDER_FORM_GRID_COLUMNS,
+  PURCHASE_ORDER_MODAL_SIZE,
+  PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+  PURCHASE_REQUEST_MODAL_SIZE,
+  processPurchaseRequestData,
+  purchaseOrderFields,
+  purchaseRequestFields,
+  purchaseRequestLineFromCostCard,
+  validatePurchaseRequestLines,
+} from "../../forms/CommonForms";
+import {
+  useCreateApiFormModal,
+  useDeleteApiFormModal,
+} from "../../../hooks/UseForm";
 import { useUserState } from "@store/UserState";
 import { ApiImage } from "@components/shared/images/ApiImage";
 import {
@@ -40,6 +56,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import {
   IconChevronDown,
@@ -404,16 +421,109 @@ export default function CostCardTable() {
     [filteredRecords],
   );
 
-  const runBulkAction = useCallback(
-    (label: string) => {
-      // TODO: hook up to the relevant workflow once available
-      showNotification({
-        title: label,
-        message: t`${selectedRecords.length} cost card(s) selected`,
-        color: "blue",
-      });
+  // --- "PO Request" / "PO Place" bulk actions ----------------------------
+  // The selected cost cards are turned into line item rows and handed to the
+  // same create form the Purchase Request / Purchase Order tables use, so the
+  // record is reviewed (quantities, sizes, header fields) before it is saved.
+  // A request and an order take identical rows, so both share this state.
+  const [purchaseLines, setPurchaseLines] = useState<any[]>([]);
+
+  // Only carried over when every selected card belongs to the same customer
+  const [purchaseCustomer, setPurchaseCustomer] = useState<number | null>(null);
+
+  // Apply the prefilled rows (and customer) to either form's field set
+  const withSelectedCards = useCallback(
+    (fields: ApiFormFieldSet): ApiFormFieldSet => {
+      const populated: ApiFormFieldSet = {
+        ...fields,
+        items: { ...fields.items, value: purchaseLines },
+      };
+
+      if (purchaseCustomer) {
+        populated.customerid = {
+          ...fields.customerid,
+          value: purchaseCustomer,
+        };
+      }
+
+      return populated;
+    },
+    [purchaseLines, purchaseCustomer],
+  );
+
+  const newPurchaseRequest = useCreateApiFormModal({
+    url: ApiEndpoints.purchase_api,
+    title: t`Create New Purchase Request`,
+    fields: withSelectedCards(purchaseRequestFields()),
+    validateFormData: validatePurchaseRequestLines("items", true),
+    processFormData: processPurchaseRequestData,
+    successMessage: t`Purchase request created`,
+    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+    size: PURCHASE_REQUEST_MODAL_SIZE,
+    onFormSuccess: () => setSelectedPks(new Set()),
+  });
+
+  const newPurchaseOrder = useCreateApiFormModal({
+    url: ApiEndpoints.purchase_api,
+    title: t`Create New Purchase Order`,
+    fields: withSelectedCards(purchaseOrderFields()),
+    validateFormData: validatePurchaseRequestLines("items", true),
+    processFormData: processPurchaseRequestData,
+    successMessage: t`Purchase order created`,
+    gridColumns: PURCHASE_ORDER_FORM_GRID_COLUMNS,
+    size: PURCHASE_ORDER_MODAL_SIZE,
+    onFormSuccess: () => setSelectedPks(new Set()),
+  });
+
+  const openPurchaseForm = useCallback(
+    (open: () => void) => {
+      setPurchaseLines(
+        selectedRecords.map((record: any) =>
+          purchaseRequestLineFromCostCard(record),
+        ),
+      );
+
+      const customers = new Set(
+        selectedRecords
+          .map((record: any) => record.customer)
+          .filter((customer: any) => !!customer),
+      );
+
+      setPurchaseCustomer(
+        customers.size === 1
+          ? (customers.values().next().value as number)
+          : null,
+      );
+
+      open();
     },
     [selectedRecords],
+  );
+
+  const runBulkAction = useCallback(
+    (action: { key: string; label: () => string }) => {
+      switch (action.key) {
+        case "po-request":
+          openPurchaseForm(newPurchaseRequest.open);
+          return;
+        case "po-place":
+          openPurchaseForm(newPurchaseOrder.open);
+          return;
+        default:
+          // TODO: hook up to the relevant workflow once available
+          showNotification({
+            title: action.label(),
+            message: t`${selectedRecords.length} cost card(s) selected`,
+            color: "blue",
+          });
+      }
+    },
+    [
+      selectedRecords,
+      openPurchaseForm,
+      newPurchaseRequest.open,
+      newPurchaseOrder.open,
+    ],
   );
 
   // --- new Table columns -------------------------------------------------
@@ -594,12 +704,26 @@ export default function CostCardTable() {
             navigate(`/cards/cost-card/${record.pk}`);
           },
         }),
-        // Opens the create view pre-filled from this card - nothing is
-        // created until the General tab is saved
+        // Asks for confirmation, then opens the create view pre-filled from
+        // this card - nothing is created until the General tab is saved
         RowDuplicateAction({
           hidden: !user.hasAddRole(UserRoles.part),
           onClick: () => {
-            navigate(`/cards/cost-card/new?duplicate=${record.pk}`);
+            modals.openConfirmModal({
+              title: <StylishText size="xl">{t`Duplicate Cost Card`}</StylishText>,
+              children: (
+                <Text>
+                  {t`Are you sure you want to duplicate this cost card:`}{" "}
+                  <Text span fw={700}>
+                    {record.cost_card_no}
+                  </Text>
+                </Text>
+              ),
+              labels: { confirm: t`Duplicate`, cancel: t`Cancel` },
+              onConfirm: () => {
+                navigate(`/cards/cost-card/new?duplicate=${record.pk}`);
+              },
+            });
           },
         }),
         RowDeleteAction({
@@ -674,7 +798,7 @@ export default function CostCardTable() {
             <Menu.Item
               key={action.key}
               leftSection={action.icon}
-              onClick={() => runBulkAction(action.label())}
+              onClick={() => runBulkAction(action)}
             >
               {action.label()}
             </Menu.Item>
@@ -697,6 +821,8 @@ export default function CostCardTable() {
   return (
     <>
       {deleteStamp.modal}
+      {newPurchaseRequest.modal}
+      {newPurchaseOrder.modal}
       <InvenTreeTable
         url={apiUrl(ApiEndpoints.cost_card)}
         tableState={table}

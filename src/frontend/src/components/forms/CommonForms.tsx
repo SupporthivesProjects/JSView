@@ -487,6 +487,23 @@ function newPurchaseRequestLineItem() {
   };
 }
 
+/**
+ * Build a line item row from a cost card record, as if the user had picked
+ * that card in the Cost Card column - the style numbers and vendor are
+ * carried across exactly as `PurchaseRequestLineRow` does on selection.
+ *
+ * Quantity / Size / Size Pcs are left blank, to be filled in on the form.
+ */
+export function purchaseRequestLineFromCostCard(costCard: any) {
+  return {
+    ...newPurchaseRequestLineItem(),
+    costcardid: costCard?.pk ?? null,
+    styleno: costCard?.our_style_no ?? "",
+    vstyleno: costCard?.vendor_style_no ?? "",
+    vendorid: costCard?.vendor ?? null,
+  };
+}
+
 /** The two kinds of record held by the purchase order endpoint */
 export type POType = "REQUEST" | "ORDER";
 
@@ -497,8 +514,19 @@ export type POType = "REQUEST" | "ORDER";
  * order additionally names the vendor it is placed with, and the customer's
  * own reference number for it.
  */
-function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
+function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet {
   const isOrder = potype === "ORDER";
+
+  const currentUser = useUserState.getState().getUser();
+
+  // Display-only: who is filling the record in. The backend stamps the
+  // preparer from the request user, so this is never sent in the payload.
+  const preparedBy = currentUser?.username ?? "";
+
+  // The executive assigned to the current user's profile (if any) seeds the
+  // 'Executive' field on a new record - only as a starting value, the field
+  // stays editable. On an existing record the stored value wins instead.
+  const ownExecutive = currentUser?.profile?.executive ?? undefined;
 
   return {
     pocategory: {
@@ -529,6 +557,38 @@ function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
       : {}),
 
     // Row 2 - who the record is for, and on what terms
+    
+    acexeid: {
+      label: "Executive",
+      api_url: apiUrl(ApiEndpoints.master_executive),
+      ...(editing || !ownExecutive ? {} : { value: ownExecutive }),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    ...(editing
+      ? {}
+      : {
+          prepby_username: {
+            label: "Prepared By",
+            description: `Recorded against your account`,
+            field_type: "string" as const,
+            value: preparedBy,
+            disabled: true,
+            required: false,
+            exclude: true,
+          },
+        }),
+    termsid: {
+      label: "Terms",
+      api_url: apiUrl(ApiEndpoints.master_terms),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+
     customerid: {
       label: "Customer",
       api_url: apiUrl(ApiEndpoints.master_vendor_customer),
@@ -541,22 +601,6 @@ function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
         return instance?.code ?? instance?.name ?? "";
       },
     },
-    acexeid: {
-      label: "Executive",
-      api_url: apiUrl(ApiEndpoints.master_executive),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? "";
-      },
-    },
-    termsid: {
-      label: "Terms",
-      api_url: apiUrl(ApiEndpoints.master_terms),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? "";
-      },
-    },
     stampid: {
       label: "Stamp",
       api_url: apiUrl(ApiEndpoints.master_stamp),
@@ -565,15 +609,23 @@ function purchaseHeaderFields(potype: POType): ApiFormFieldSet {
         return instance?.name ?? "";
       },
     },
+    ...(isOrder
+      ? {
     rem: {
       label: "Remarks",
-    },
+      multiline: true,
+      gridSpan: 1,
+    } }: {
+      rem: {
+      label: "Remarks",
+      }
+    }),
     ...(isOrder
       ? {
           note: {
             label: "Add note",
             multiline: true,
-            gridSpan: "full",
+            gridSpan: 2,
           },
         }
       : {}),
@@ -610,7 +662,7 @@ function purchaseRequestLineTable(potype: POType): ApiFormFieldType {
 
 function purchaseFields(potype: POType, editing: boolean): ApiFormFieldSet {
   return {
-    ...purchaseHeaderFields(potype),
+    ...purchaseHeaderFields(potype, editing),
     ...(editing
       ? {
           lines: {
@@ -712,6 +764,16 @@ export function validatePurchaseRequestLines(
       const sizes = splitCommaList(row.size);
       const pcs = splitCommaList(row.spcs);
 
+      if (sizes.length === 0) {
+        form.setError(`${path}.size`, { message: "Size is required" });
+        valid = false;
+      }
+
+      if (pcs.length === 0) {
+        form.setError(`${path}.spcs`, { message: "Size Pcs is required" });
+        valid = false;
+      }
+
       if (pcs.some((entry) => !Number.isFinite(Number(entry)))) {
         form.setError(`${path}.spcs`, {
           message: "Size Pcs must be comma separated numbers",
@@ -719,7 +781,8 @@ export function validatePurchaseRequestLines(
         valid = false;
       }
 
-      if (sizes.length !== pcs.length) {
+      // Only worth comparing the two lists once both have been filled in
+      if (sizes.length > 0 && pcs.length > 0 && sizes.length !== pcs.length) {
         const message = `Size has ${sizes.length} value(s) but Size Pcs has ${pcs.length}`;
         form.setError(`${path}.size`, { message });
         form.setError(`${path}.spcs`, { message });
