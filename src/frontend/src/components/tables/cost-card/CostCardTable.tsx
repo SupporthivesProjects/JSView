@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { AddItemButton } from "@lib/components/AddItemButton";
+import { StylishText } from "@lib/components/StylishText";
 import {
   type RowAction,
   RowDeleteAction,
@@ -55,6 +56,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import {
   IconChevronDown,
@@ -702,12 +704,26 @@ export default function CostCardTable() {
             navigate(`/cards/cost-card/${record.pk}`);
           },
         }),
-        // Opens the create view pre-filled from this card - nothing is
-        // created until the General tab is saved
+        // Asks for confirmation, then opens the create view pre-filled from
+        // this card - nothing is created until the General tab is saved
         RowDuplicateAction({
           hidden: !user.hasAddRole(UserRoles.part),
           onClick: () => {
-            navigate(`/cards/cost-card/new?duplicate=${record.pk}`);
+            modals.openConfirmModal({
+              title: <StylishText size="xl">{t`Duplicate Cost Card`}</StylishText>,
+              children: (
+                <Text>
+                  {t`Are you sure you want to duplicate this cost card:`}{" "}
+                  <Text span fw={700}>
+                    {record.cost_card_no}
+                  </Text>
+                </Text>
+              ),
+              labels: { confirm: t`Duplicate`, cancel: t`Cancel` },
+              onConfirm: () => {
+                navigate(`/cards/cost-card/new?duplicate=${record.pk}`);
+              },
+            });
           },
         }),
         RowDeleteAction({
