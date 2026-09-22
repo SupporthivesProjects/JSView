@@ -81,6 +81,7 @@ export function UserDrawer({
   });
 
   const currentUserPk = useUserState(useShallow((s) => s.user?.pk));
+  const fetchUserState = useUserState((s) => s.fetchUserState);
   const isCurrentUser = useMemo(
     () => currentUserPk === Number.parseInt(id, 10),
     [currentUserPk, id]
@@ -233,6 +234,14 @@ export function UserDrawer({
                 onFormSuccess: () => {
                   refreshTable();
                   refreshInstance();
+
+                  // Forms which seed a field from the logged-in user (the
+                  // 'Executive' on a new purchase request / order, for one)
+                  // read the cached user state - refresh it so an edit to
+                  // your own account is picked up without a page reload
+                  if (isCurrentUser) {
+                    fetchUserState();
+                  }
                 }
               }}
               id={`user-detail-drawer-${id}`}
