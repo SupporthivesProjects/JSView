@@ -557,38 +557,11 @@ function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet 
       : {}),
 
     // Row 2 - who the record is for, and on what terms
-    customerid: {
-      label: "Customer",
-      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
-      filters: {
-        active: true,
-        is_customer: true,
-      },
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.code ?? instance?.name ?? "";
-      },
-    },
+    
     acexeid: {
       label: "Executive",
       api_url: apiUrl(ApiEndpoints.master_executive),
       ...(editing || !ownExecutive ? {} : { value: ownExecutive }),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? "";
-      },
-    },
-    termsid: {
-      label: "Terms",
-      api_url: apiUrl(ApiEndpoints.master_terms),
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.name ?? "";
-      },
-    },
-    stampid: {
-      label: "Stamp",
-      api_url: apiUrl(ApiEndpoints.master_stamp),
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
         return instance?.name ?? "";
@@ -607,6 +580,35 @@ function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet 
             exclude: true,
           },
         }),
+    termsid: {
+      label: "Terms",
+      api_url: apiUrl(ApiEndpoints.master_terms),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+
+    customerid: {
+      label: "Customer",
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      filters: {
+        active: true,
+        is_customer: true,
+      },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? instance?.name ?? "";
+      },
+    },
+    stampid: {
+      label: "Stamp",
+      api_url: apiUrl(ApiEndpoints.master_stamp),
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
     ...(isOrder
       ? {
     rem: {
