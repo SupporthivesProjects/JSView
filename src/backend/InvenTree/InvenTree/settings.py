@@ -321,6 +321,7 @@ INSTALLED_APPS = [
     'purchase_order.apps.PurchaseOrderConfig',
     'properties.apps.PropertiesConfig',
     'revision.apps.RevisionConfig',
+    'requisition.apps.RequisitionConfig',
 
     'order.apps.OrderConfig',
     'part.apps.PartConfig',
