@@ -6,6 +6,7 @@ from django.db.models import Sum, DecimalField
 from django.db.models.functions import Coalesce
 from django.urls import include, path
 
+from requisition.permissions import RequisitionPermission
 from data_exporter.mixins import DataExportViewMixin
 
 from InvenTree.filters import SEARCH_ORDER_FILTER
@@ -29,7 +30,7 @@ class MetalSentList(DataExportViewMixin, ListCreateAPI):
     queryset = MetalSent.objects.all()
     serializer_class = requisition_serializers.MetalSentSerializer
     pagination_class = RequisitionPagination
-    # permission_classes = [RequisitionPermission]
+    permission_classes = [RequisitionPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['purchase_order', 'active']
     search_fields = ['invoice_no', 'purchase_order__pono', 'triounce']
@@ -43,13 +44,13 @@ class MetalSentList(DataExportViewMixin, ListCreateAPI):
 class MetalSentDetail(RetrieveUpdateDestroyAPI):
     queryset = MetalSent.objects.all()
     serializer_class = requisition_serializers.MetalSentSerializer
-    # permission_classes = [RequisitionPermission]
+    permission_classes = [RequisitionPermission]
 
 
 class StoneOrderListView(APIView):
     """Read-only aggregation of stone requirements for selected PO(s)."""
 
-    # permission_classes = [RequisitionPermission]
+    permission_classes = [RequisitionPermission]
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):
@@ -159,7 +160,7 @@ class StoneOrderListView(APIView):
 class MetalOrderRequisitionView(APIView):
     """Read-only metal requirement aggregation (Gold/Silver/Platinum) for selected PO(s)."""
 
-    # permission_classes = [RequisitionPermission]
+    permission_classes = [RequisitionPermission]
     http_method_names = ['get']
 
     def get(self, request, *args, **kwargs):

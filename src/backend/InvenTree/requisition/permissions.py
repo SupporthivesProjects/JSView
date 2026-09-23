@@ -3,7 +3,7 @@
 from rest_framework.permissions import BasePermission
 
 
-class CardsDataPermission(BasePermission):
+class RequisitionPermission(BasePermission):
     """
     Permission for cards *master-like* reference data (e.g. StonePlace).
 

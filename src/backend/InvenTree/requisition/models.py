@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -22,9 +21,9 @@ class MetalSent(RequisitionFieldsMixin):
     invoice_no = models.CharField(max_length=100, verbose_name=_('Invoice No.'), help_text=_('Invoice number against which this metal was sent.'))
     metal_sent_date = models.DateField(verbose_name=_('Metal Sent Date'), help_text=_('Date on which the metal was sent.'))
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.PROTECT, related_name='metal_sent_entries', verbose_name=_('P.O. No'), help_text=_('Purchase order against which this metal was sent.'))
-    triounce = models.CharField(max_length=50, blank=True, verbose_name=_('Triounce'), help_text=_('Purity/fineness grade of the metal sent.'))
-    metal_gms = models.DecimalField(max_digits=15, decimal_places=4, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Metal Gms.'), help_text=_('Weight of metal sent, in grams.'))
-    metal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), validators=[MinValueValidator(0)], verbose_name=_('Metal Amount'), help_text=_('Value of the metal sent.'))
+    triounce = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), verbose_name=_('Triounce'), help_text=_('Purity/fineness grade of the metal sent.'))
+    metal_gms = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), verbose_name=_('Metal Gms.'), help_text=_('Weight of metal sent, in grams. Can be negative for returns/adjustments.'))
+    metal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), verbose_name=_('Metal Amount'), help_text=_('Value of the metal sent. Can be negative for returns/adjustments.'))
     prepby = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='prepared_metal_sent_entries', verbose_name=_('Prepared By'), help_text=_('User who created this metal sent record.'))
 
     class Meta:
