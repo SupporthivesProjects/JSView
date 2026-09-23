@@ -1,4 +1,3 @@
-# requisition/serializers.py
 """DRF serializers for the 'requisition' app."""
 
 from InvenTree.serializers import InvenTreeModelSerializer

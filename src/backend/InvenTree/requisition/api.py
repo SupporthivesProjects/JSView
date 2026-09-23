@@ -32,8 +32,8 @@ class MetalSentList(DataExportViewMixin, ListCreateAPI):
     pagination_class = RequisitionPagination
     permission_classes = [RequisitionPermission]
     filter_backends = SEARCH_ORDER_FILTER
-    filterset_fields = ['purchase_order', 'active']
-    search_fields = ['invoice_no', 'purchase_order__pono', 'triounce']
+    filterset_fields = ['purchase_order', 'active', 'triounce']
+    search_fields = ['invoice_no', 'purchase_order__pono']
     ordering_fields = ['metal_sent_no', 'metal_sent_date', 'invoice_no', 'metal_gms', 'metal_amount']
     ordering = '-metal_sent_date'
 
