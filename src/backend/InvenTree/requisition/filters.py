@@ -41,3 +41,21 @@ def annotate_total_metal_sent_gms(reference: str = '') -> QuerySet:
         0,
         output_field=DecimalField(),
     )
+
+
+def annotate_total_metal_sent_amount(reference: str = '') -> QuerySet:
+    """Sum total metal amount sent for a PurchaseOrder."""
+    subquery = requisition.models.MetalSent.objects.filter(
+        purchase_order=OuterRef(f'{reference}pk')
+    )
+
+    return Coalesce(
+        Subquery(
+            subquery
+            .annotate(total=Func(F('metal_amount'), function='SUM', output_field=DecimalField()))
+            .values('total')
+            .order_by()
+        ),
+        0,
+        output_field=DecimalField(),
+    )

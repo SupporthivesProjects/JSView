@@ -1,4 +1,4 @@
-"""Permission classes for the 'cards' app."""
+"""Permission classes for the 'requisition' app.""""""Permission classes for the 'requisition' app."""
 
 from rest_framework.permissions import BasePermission
 
