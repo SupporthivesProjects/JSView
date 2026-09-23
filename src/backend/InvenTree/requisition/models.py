@@ -1,5 +1,3 @@
-# requisition/models.py
-
 from decimal import Decimal
 
 from django.conf import settings
