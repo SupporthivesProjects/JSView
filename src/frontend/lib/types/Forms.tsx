@@ -178,6 +178,7 @@ export type ApiFormFieldSet = Record<string, ApiFormFieldType>;
  * @param fields : The fields to render in the form
  * @param submitText : Optional custom text to display on the submit button (default: Submit)4
  * @param submitColor : Optional custom color for the submit button (default: green)
+ * @param alwaysEnableSubmit : Keep the submit button enabled at all times, including while the form is loading or a submit is already in flight (default: false)
  * @param fetchInitialData : Optional flag to fetch initial data from the server (default: true)
  * @param preFormContent : Optional content to render before the form fields
  * @param postFormContent : Optional content to render after the form fields
@@ -204,6 +205,7 @@ export interface ApiFormProps {
   initialData?: FieldValues;
   submitText?: string;
   submitColor?: string;
+  alwaysEnableSubmit?: boolean;
   fetchInitialData?: boolean;
   ignorePermissionCheck?: boolean;
   preFormContent?: JSX.Element;

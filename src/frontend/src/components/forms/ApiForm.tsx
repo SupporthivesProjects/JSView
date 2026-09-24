@@ -821,7 +821,11 @@ export function ApiForm({
               variant='filled'
               radius='sm'
               color={props.submitColor ?? 'green'}
-              disabled={isLoading || (props.fetchInitialData && !isDirty)}
+              disabled={
+                props.alwaysEnableSubmit
+                  ? false
+                  : isLoading || (props.fetchInitialData && !isDirty)
+              }
             >
               {props.submitText ?? t`Submit`}
             </Button>

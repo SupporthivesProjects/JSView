@@ -2028,6 +2028,82 @@ export function useCustomStateFields(): ApiFormFieldSet {
 }
 
 
+/** Columns of the Picture Presentation stone summary, in display order */
+const PICTURE_PRESENTATION_STONE_COLUMNS = [
+  "shape",
+  "mm_size",
+  "sieve_size",
+  "stone",
+  "color",
+  "cut",
+  "quality",
+  "pointer",
+  "rate",
+] as const;
+
+const PICTURE_PRESENTATION_STONE_HEADERS = [
+  { title: "Shape", style: { minWidth: "120px" } },
+  { title: "MM Size", style: { minWidth: "110px" } },
+  { title: "Sieve Size", style: { minWidth: "110px" } },
+  { title: "Stone", style: { minWidth: "140px" } },
+  { title: "Color", style: { minWidth: "110px" } },
+  { title: "Cut", style: { minWidth: "110px" } },
+  { title: "Quality", style: { minWidth: "120px" } },
+  { title: "Pointer", style: { minWidth: "90px" } },
+  { title: "Rate", style: { minWidth: "90px" } },
+];
+
+/*
+ * One row of the stone summary.
+ *
+ * The rows are produced by the export endpoint itself (it pools the diamond
+ * and color stone lines of the selected cost cards and collapses them to one
+ * row per distinct combination), so this is a preview of what lands on the
+ * sheet rather than something the user fills in - every cell is read-only.
+ */
+function PicturePresentationStoneRow({
+  props,
+}: Readonly<{ props: TableFieldRowProps }>) {
+  const { item, rowId } = props;
+
+  return (
+    <Table.Tr key={`table-row-${rowId}`}>
+      {PICTURE_PRESENTATION_STONE_COLUMNS.map((column) => (
+        <Table.Td key={column}>
+          <TextInput
+            aria-label={`text-field-${column}`}
+            value={item?.[column] ?? ""}
+            disabled
+            readOnly
+          />
+        </Table.Td>
+      ))}
+    </Table.Tr>
+  );
+}
+
+/**
+ * Stone summary table shown on the Picture Presentation modal.
+ *
+ * `exclude` keeps it out of the submitted query: the export view recomputes
+ * these rows from `cost_card_ids`, so sending them back would be redundant.
+ */
+export function picturePresentationStoneTable(): ApiFormFieldType {
+  return {
+    label: "Stones",
+    description: "Stones across the selected cost cards",
+    field_type: "table",
+    required: false,
+    gridSpan: "full",
+    exclude: true,
+    headers: PICTURE_PRESENTATION_STONE_HEADERS,
+    modelRenderer: (row: TableFieldRowProps) => (
+      <PicturePresentationStoneRow key={row.rowId} props={row} />
+    ),
+    value: [],
+  };
+}
+
 export function picturePresentationFields(): ApiFormFieldSet {
   return {
     ponumber: {
@@ -2083,6 +2159,7 @@ export function picturePresentationFields(): ApiFormFieldSet {
       description: t`Profit margin.`,
       required: false,
     },
+    stones: picturePresentationStoneTable(),
   };
 }
 

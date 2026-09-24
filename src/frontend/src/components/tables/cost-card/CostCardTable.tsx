@@ -280,6 +280,26 @@ export default function CostCardTable() {
     return map;
   }, [jewelSubCategoryQuery.data]);
 
+  // Metal purity - only needed to tell gold apart from silver when pre-filling
+  // the troy ounce price on the Picture Presentation form
+  const metalPurityQuery = useQuery({
+    queryKey: ["cost-card-metal-purity-lookup"],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.metal_purity_list), {
+          params: { limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    staleTime: 5 * 60 * 1000,
+  });
+  const metalPurityNameByPk = useMemo(() => {
+    const map: Record<number, string> = {};
+    (metalPurityQuery.data ?? []).forEach((purity: any) => {
+      map[purity.pk] = purity.name;
+    });
+    return map;
+  }, [metalPurityQuery.data]);
+
   // Table-level filters (e.g. "active") are still applied by the server
   const serverParams = useMemo(() => {
     const params: Record<string, any> = {};
@@ -511,18 +531,121 @@ export default function CostCardTable() {
   });
 
   // `cost_card_ids` is not set here: it is assembled at submit time from the
-  // rows ticked in the table *plus* whatever the style-number picker selected.
+  // style numbers shown on the form (which are pre-filled from the ticked rows).
   const picturePresentationParams = useMemo(
     () => new URLSearchParams({ export: "true" }),
     [],
   );
 
-  // Built once - the field set contains modelRenderer callbacks, so rebuilding
-  // it every render would replace the whole field object each time.
-  const picturePresentationFormFields = useMemo(
-    (): ApiFormFieldSet => picturePresentationFields(),
-    [],
+  const [picturePresentationOpen, setPicturePresentationOpen] =
+    useState<boolean>(false);
+
+  // The cost cards the modal is currently working with. Seeded from the ticked
+  // rows when the form is opened, and kept in step with the style-number picker
+  // afterwards, so the stone preview always matches what will be exported.
+  const [picturePresentationCards, setPicturePresentationCards] = useState<
+    number[]
+  >([]);
+
+  const picturePresentationCardIds = useMemo(
+    () => picturePresentationCards.join(","),
+    [picturePresentationCards],
   );
+
+  // A plain GET against the export endpoint (no `export` flag) returns the
+  // aggregated stone summary alongside the rows, with the related names
+  // already resolved - the same rows that end up on the sheet. Only fetched
+  // while the modal is open, since the endpoint is unpaginated.
+  const picturePresentationStones = useQuery({
+    queryKey: ["picture-presentation-stones", picturePresentationCardIds],
+    enabled: picturePresentationOpen && picturePresentationCards.length > 0,
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.cost_card_picture_presentation), {
+          params: { cost_card_ids: picturePresentationCardIds },
+        })
+        .then((response) => response.data?.stones ?? []),
+    staleTime: 60 * 1000,
+  });
+
+  /*
+   * The pricing inputs apply to the export as a whole, so a figure is only
+   * pre-filled when every selected card agrees on it - otherwise the field is
+   * left empty rather than presenting one card's number as if it covered all
+   * of them. The troy ounce price is split by metal the same way the export
+   * itself splits it: on the metal purity name.
+   */
+  const picturePresentationValues = useMemo(() => {
+    const isSilver = (record: any) =>
+      (metalPurityNameByPk[record.metal_purity] ?? "")
+        .toLowerCase()
+        .includes("silver");
+
+    const sharedValue = (records: any[], field: string) => {
+      let shared: any;
+
+      for (const record of records) {
+        const value = record?.[field];
+
+        if (value === null || value === undefined || value === "") {
+          return undefined;
+        }
+
+        if (shared === undefined) {
+          shared = value;
+        } else if (String(shared) !== String(value)) {
+          return undefined;
+        }
+      }
+
+      return shared;
+    };
+
+    return {
+      stylenumber:
+        picturePresentationCards.length > 0
+          ? picturePresentationCards
+          : undefined,
+      duty_pct: sharedValue(selectedRecords, "duty_pct"),
+      margin_pct: sharedValue(selectedRecords, "margin_pct"),
+      gold_troy_ounce: sharedValue(
+        selectedRecords.filter((record: any) => !isSilver(record)),
+        "troy_ounce_price",
+      ),
+      silver_troy_ounce: sharedValue(
+        selectedRecords.filter((record: any) => isSilver(record)),
+        "troy_ounce_price",
+      ),
+    };
+  }, [selectedRecords, picturePresentationCards, metalPurityNameByPk]);
+
+  const picturePresentationFormFields = useMemo((): ApiFormFieldSet => {
+    const fields = picturePresentationFields();
+
+    const values: Record<string, any> = {
+      ...picturePresentationValues,
+      stones: picturePresentationStones.data ?? [],
+    };
+
+    const prefilled: ApiFormFieldSet = {};
+
+    for (const [name, field] of Object.entries(fields)) {
+      const value = values[name];
+      prefilled[name] = value === undefined ? field : { ...field, value };
+    }
+
+    // Track the picker, so removing a style from the form also removes its
+    // stones from the preview (and the card from the export)
+    prefilled.stylenumber = {
+      ...prefilled.stylenumber,
+      onValueChange: (value: any) => {
+        const ids = Array.isArray(value) ? value : value ? [value] : [];
+        setPicturePresentationCards(ids.map((pk: any) => Number(pk)));
+      },
+    };
+
+    return prefilled;
+  }, [picturePresentationValues, picturePresentationStones.data]);
 
   // The export view filters on `cost_card_ids`, and the style-number picker
   // returns cost card PKs - so fold them together into that one parameter.
@@ -530,21 +653,22 @@ export default function CostCardTable() {
     (data: any) => {
       const { stylenumber, ...rest } = data;
 
-      const ids = new Set<number>(selectedPks);
+      const picked = Array.isArray(stylenumber)
+        ? stylenumber
+        : stylenumber
+          ? [stylenumber]
+          : [];
 
-      if (Array.isArray(stylenumber)) {
-        stylenumber.forEach((pk: any) => {
-          ids.add(pk);
-        });
-      } else if (stylenumber) {
-        ids.add(stylenumber);
-      }
+      // The picker starts out holding the ticked rows, so it is what the user
+      // last said should be exported; fall back to the selection only if they
+      // emptied it entirely.
+      const ids = picked.length > 0 ? picked : Array.from(selectedPks);
 
-      if (ids.size === 0) {
+      if (ids.length === 0) {
         return rest;
       }
 
-      return { ...rest, cost_card_ids: Array.from(ids).join(",") };
+      return { ...rest, cost_card_ids: Array.from(new Set(ids)).join(",") };
     },
     [selectedPks],
   );
@@ -561,8 +685,18 @@ export default function CostCardTable() {
     timeout: 30 * 1000,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
     size: PURCHASE_REQUEST_MODAL_SIZE,
+    alwaysEnableSubmit: true,
+    onOpen: () => setPicturePresentationOpen(true),
+    onClose: () => setPicturePresentationOpen(false),
     onFormSuccess: (response: any) => setExportId(response.pk),
   });
+
+  // Seed the form from the ticked rows *before* it mounts, so the fields come
+  // up already filled in rather than being populated a render later
+  const openPicturePresentation = useCallback(() => {
+    setPicturePresentationCards(Array.from(selectedPks));
+    picturePresentationModal.open();
+  }, [selectedPks, picturePresentationModal.open]);
 
   const runBulkAction = useCallback(
     (action: { key: string; label: () => string }) => {
@@ -574,7 +708,7 @@ export default function CostCardTable() {
           openPurchaseForm(newPurchaseOrder.open);
           return;
         case "picture-presentation":
-          picturePresentationModal.open();
+          openPicturePresentation();
           return;
         default:
           // TODO: hook up to the relevant workflow once available
@@ -590,7 +724,7 @@ export default function CostCardTable() {
       openPurchaseForm,
       newPurchaseRequest.open,
       newPurchaseOrder.open,
-      picturePresentationModal.open,
+      openPicturePresentation,
     ],
   );
 
