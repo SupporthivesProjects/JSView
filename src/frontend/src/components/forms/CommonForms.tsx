@@ -2026,6 +2026,27 @@ export function useCustomStateFields(): ApiFormFieldSet {
   }, [statusOptions]);
 }
 
+export function picturePresentationFields(): ApiFormFieldSet {
+  return {
+    ponumber: {},
+    goldtriounce: {},
+    silvertriounce: {},
+    duty: {},
+    margin: {},
+    stylenumber: {
+      field_type: "related field",
+      model: ModelType.company,
+      multiple: true,
+      api_url: apiUrl(ApiEndpoints.company_list),
+      filters: { is_customer: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? "";
+      },
+    },
+  };
+}
+
 export function customUnitsFields(): ApiFormFieldSet {
   return {
     name: {},

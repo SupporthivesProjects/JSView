@@ -155,6 +155,7 @@ export enum ApiEndpoints {
   cost_card_diamond_line = "costcard/cost-card-diamond-line/",
   cost_card_colorstone_line = "costcard/cost-card-colorstone-line/",
   cost_card_finish_line = "costcard/cost-card-finish-line/",
+  cost_card_picture_presentation = "",
 
   // Color Stone API endpoints
   color_stone_type_list = "properties/colorstone/",

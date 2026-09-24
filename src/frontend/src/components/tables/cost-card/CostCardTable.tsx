@@ -32,6 +32,8 @@ import {
   PURCHASE_ORDER_MODAL_SIZE,
   PURCHASE_REQUEST_FORM_GRID_COLUMNS,
   PURCHASE_REQUEST_MODAL_SIZE,
+  findingTypeItems,
+  picturePresentationFields,
   processPurchaseRequestData,
   purchaseOrderFields,
   purchaseRequestFields,
@@ -509,6 +511,9 @@ export default function CostCardTable() {
         case "po-place":
           openPurchaseForm(newPurchaseOrder.open);
           return;
+        case "picture-presentation":
+          openPurchaseForm(picturePresentationModal.open)
+          return;
         default:
           // TODO: hook up to the relevant workflow once available
           showNotification({
@@ -678,6 +683,16 @@ export default function CostCardTable() {
     toggleSelected,
   ]);
 
+  // --- Picture Presentation modal ----------------------------------------------------
+  const picturePresentationModal = useCreateApiFormModal({
+    url: ApiEndpoints.company_list,
+    title: t`Picture Presentation`,
+    fields: picturePresentationFields(),
+    table: table,
+    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+    size: PURCHASE_REQUEST_MODAL_SIZE,
+  });
+
   // --- Delete modal ------------------------------------------------------
   // Create and edit now happen on a dedicated tabbed page (see
   // containers/cost-card-detail) rather than in a modal, since a cost card
@@ -820,6 +835,7 @@ export default function CostCardTable() {
 
   return (
     <>
+      {picturePresentationModal.modal}
       {deleteStamp.modal}
       {newPurchaseRequest.modal}
       {newPurchaseOrder.modal}
