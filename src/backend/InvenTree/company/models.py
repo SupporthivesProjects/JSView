@@ -384,7 +384,8 @@ class Contact(InvenTree.models.InvenTreeMetadataModel):
     )
 
     email = models.EmailField(
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Email'),
         help_text=_('Email address of the contact person.'),
     )

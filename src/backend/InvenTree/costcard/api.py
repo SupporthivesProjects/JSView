@@ -250,13 +250,26 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
                 context[key] = value
         return context
 
+    # @staticmethod
+    # def _label(value):
+    #     if value is None:
+    #         return ''
+    #     if hasattr(value, 'normalize'):
+    #         return format(value.normalize(), 'f')
+    #     return str(getattr(value, 'name', value))
+
     @staticmethod
     def _label(value):
         if value is None:
             return ''
         if hasattr(value, 'normalize'):
             return format(value.normalize(), 'f')
-        return str(getattr(value, 'name', value))
+        if hasattr(value, '_meta'):
+            for attr in ('name', 'quality_name', 'title', 'label', 'code'):
+                if getattr(value, attr, None):
+                    return str(getattr(value, attr))
+        return str(value)
+
 
     def _stones(self, queryset):
         rows = {}
