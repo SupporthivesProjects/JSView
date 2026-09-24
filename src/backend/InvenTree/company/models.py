@@ -78,8 +78,8 @@ class Company(
 
     code = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Code'),
         help_text=_('Unique or internal code used to identify the company.'),
     )
@@ -87,19 +87,22 @@ class Company(
     name = models.CharField(
         max_length=100,
         blank=False,
+        null=False,
         verbose_name=_('Company name'),
         help_text=_('Company name.'),
     )
 
     description = models.CharField(
         max_length=500,
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Company description'),
         help_text=_('Description of the company.'),
     )
 
     website = InvenTreeURLField(
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Website'),
         help_text=_('Company website URL.'),
         max_length=2000,
@@ -107,27 +110,30 @@ class Company(
 
     phone = models.CharField(
         max_length=50,
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Phone number'),
         help_text=_('Contact phone number.'),
     )
 
     email = models.EmailField(
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Email'),
         help_text=_('Contact email address.'),
     )
 
     contact = models.CharField(
         max_length=100,
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Contact'),
         help_text=_('Primary point of contact.'),
     )
 
     link = InvenTreeURLField(
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Link'),
         help_text=_('Link to external company information.'),
         max_length=2000,
@@ -168,39 +174,40 @@ class Company(
 
     tax_id = models.CharField(
         max_length=50,
-        blank=True,
+        blank=False,
+        null=False,
         verbose_name=_('Tax ID'),
         help_text=_('Company Tax ID.'),
     )
 
     fax = models.CharField(
         max_length=50,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Fax'),
         help_text=_('Company fax number.'),
     )
 
     city = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('City'),
         help_text=_('City where the company is located.'),
     )
 
     state = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('State'),
         help_text=_('State or province where the company is located.'),
     )
 
     country = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Country'),
         help_text=_('Country where the company is located.'),
     )
@@ -208,8 +215,8 @@ class Company(
     rating = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Rating'),
         help_text=_('Rating assigned to the company.'),
     )
@@ -217,16 +224,16 @@ class Company(
     credit_limit = models.DecimalField(
         max_digits=15,
         decimal_places=2,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Credit Limit'),
         help_text=_('Maximum credit limit allowed for the company.'),
     )
 
     ref_by = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         verbose_name=_('Ref By'),
         help_text=_('Person or source that referred the company.'),
     )

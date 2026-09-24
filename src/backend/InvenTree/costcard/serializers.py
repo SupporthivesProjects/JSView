@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
 
@@ -578,3 +579,117 @@ class CostCardImageSerializer(InvenTreeModelSerializer):
         )
 
         return instance
+
+
+# def _dec(value):
+#     if value in (None, '', 'null'):
+#         return None
+#     try:
+#         return Decimal(str(value))
+#     except InvalidOperation:
+#         return None
+
+def _dec(value):
+    if isinstance(value, (list, tuple)):
+        value = value[0] if value else None
+    if value in (None, '', 'null'):
+        return None
+    try:
+        return Decimal(str(value).strip())
+    except InvalidOperation:
+        return None
+
+
+class CostCardPicturePresentationSerializer(
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
+    our_style_no = drf_serializers.CharField(label='JS Style No.')
+    vendor_style_no = drf_serializers.CharField(label='Vendor Style No.', allow_null=True)
+    kt = drf_serializers.SerializerMethodField(label='KT')
+    dia_cts = drf_serializers.DecimalField(max_digits=10, decimal_places=4, label='DIA CTS.')
+    quality = drf_serializers.SerializerMethodField(label='QUALITY')
+    col_cts = drf_serializers.DecimalField(max_digits=10, decimal_places=4, label='COL CTS.')
+    cost = drf_serializers.SerializerMethodField(label='COST $')
+    comments = drf_serializers.CharField(source='remarks', label='COMMENTS', allow_null=True)
+    duty = drf_serializers.SerializerMethodField(label='Duty %')
+    margin = drf_serializers.SerializerMethodField(label='Margin %')
+
+    class Meta:
+        model = CostCard
+        fields = [
+            'our_style_no',
+            'vendor_style_no',
+            'kt',
+            'dia_cts',
+            'quality',
+            'col_cts',
+            'cost',
+            'comments',
+            'duty',
+            'margin',
+        ]
+
+    # def _param(self, key):
+    #     value = self.context.get(key)
+    #     if value in (None, ''):
+    #         request = self.context.get('request')
+    #         params = getattr(request, 'query_params', None) or {}
+    #         value = params.get(key)
+    #     return value
+
+    def _param(self, key):
+        value = self.context.get(key)
+        if isinstance(value, (list, tuple)):
+            value = value[0] if value else None
+        if value in (None, ''):
+            request = self.context.get('request')
+            params = getattr(request, 'query_params', None) or {}
+            value = params.get(key)
+            if isinstance(value, (list, tuple)):
+                value = value[0] if value else None
+        return value
+
+    def _duty_pct(self, obj):
+        value = _dec(self._param('duty_pct'))
+        return value if value is not None else obj.duty_pct
+
+    def _margin_pct(self, obj):
+        value = _dec(self._param('margin_pct'))
+        return value if value is not None else obj.margin_pct
+
+    def get_kt(self, obj):
+        return obj.metal_purity.name if obj.metal_purity else (obj.karat or '')
+
+    def get_quality(self, obj):
+        line = obj.diamond_lines.first()
+        return line.stone.name if line and line.stone else ''
+
+    def _metal_ratio(self, obj):
+        name = (obj.metal_purity.name if obj.metal_purity else '').lower()
+        key = 'silver_troy_ounce' if 'silver' in name else 'gold_troy_ounce'
+        new_price = _dec(self._param(key))
+        if new_price is None or not obj.troy_ounce_price:
+            return None
+        return new_price / obj.troy_ounce_price
+
+    def _fob(self, obj):
+        ratio = self._metal_ratio(obj)
+        if ratio is None:
+            return obj.fob
+        return obj.fob + (obj.metal_amount + obj.metal_loss_amount) * (ratio - 1)
+
+    def get_cost(self, obj):
+        keys = ('duty_pct', 'margin_pct', 'gold_troy_ounce', 'silver_troy_ounce')
+        if all(_dec(self._param(k)) is None for k in keys):
+            return obj.final_amount
+        fob = self._fob(obj)
+        duty_amt = fob * self._duty_pct(obj) / 100
+        margin_amt = (fob + duty_amt) * self._margin_pct(obj) / 100
+        return (fob + duty_amt + margin_amt).quantize(Decimal('0.01'))
+
+    def get_duty(self, obj):
+        return self._duty_pct(obj)
+
+    def get_margin(self, obj):
+        return self._margin_pct(obj)
