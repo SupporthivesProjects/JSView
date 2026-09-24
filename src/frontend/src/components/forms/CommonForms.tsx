@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Table, TextInput } from "@mantine/core";
 import { randomId } from "@mantine/hooks";
 import { IconUsers } from "@tabler/icons-react";
@@ -2026,23 +2027,58 @@ export function useCustomStateFields(): ApiFormFieldSet {
   }, [statusOptions]);
 }
 
+
 export function picturePresentationFields(): ApiFormFieldSet {
   return {
-    ponumber: {},
-    goldtriounce: {},
-    silvertriounce: {},
-    duty: {},
-    margin: {},
-    stylenumber: {
+    ponumber: {
       field_type: "related field",
-      model: ModelType.company,
-      multiple: true,
-      api_url: apiUrl(ApiEndpoints.company_list),
-      filters: { is_customer: true },
+      label: t`P.O. Number`,
+      description: t`Purchase order this presentation relates to.`,
+      required: false,
+      api_url: apiUrl(ApiEndpoints.purchase_api),
+      filters: { active: true },
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
-        return instance?.code ?? "";
+        return instance?.pono || (instance?.pk ? `#${instance.pk}` : "");
       },
+    },
+    stylenumber: {
+      field_type: "string",
+      label: t`Style Number`,
+      description: t`Style numbers of the selected cost cards.`,
+      // disabled: true,
+      // exclude: true,
+      required: false,
+      api_url: apiUrl(ApiEndpoints.purchase_api),
+      filters: { active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.pono || (instance?.pk ? `#${instance.pk}` : "");
+      },
+    },
+    gold_troy_ounce: {
+      field_type: "decimal",
+      label: t`Gold Troy Ounce`,
+      description: t`Gold price per troy ounce.`,
+      required: false,
+    },
+    silver_troy_ounce: {
+      field_type: "decimal",
+      label: t`Silver Troy Ounce`,
+      description: t`Silver price per troy ounce.`,
+      required: false,
+    },
+    duty_pct: {
+      field_type: "decimal",
+      label: t`Duty %`,
+      description: t`Import/export duty.`,
+      required: false,
+    },
+    margin_pct: {
+      field_type: "decimal",
+      label: t`Margin %`,
+      description: t`Profit margin.`,
+      required: false,
     },
   };
 }

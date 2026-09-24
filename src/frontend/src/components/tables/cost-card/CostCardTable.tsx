@@ -44,6 +44,7 @@ import {
   useCreateApiFormModal,
   useDeleteApiFormModal,
 } from "../../../hooks/UseForm";
+import useDataOutput from "../../../hooks/UseDataOutput";
 import { useUserState } from "@store/UserState";
 import { ApiImage } from "@components/shared/images/ApiImage";
 import {
@@ -502,6 +503,55 @@ export default function CostCardTable() {
     [selectedRecords],
   );
 
+  const [exportId, setExportId] = useState<number | undefined>(undefined);
+
+  useDataOutput({
+    title: t`Exporting Picture Presentation`,
+    id: exportId,
+  });
+
+  const picturePresentationParams = useMemo(() => {
+    const params = new URLSearchParams({ export: "true" });
+
+    if (selectedPks.size > 0) {
+      params.set("cost_card_ids", Array.from(selectedPks).join(","));
+    }
+
+    return params;
+  }, [selectedPks]);
+
+  // The read-only `stylenumber` input just echoes back what is being exported,
+  // so the user can confirm the selection before generating the sheet.
+  const picturePresentationDisplayFields = useMemo((): ApiFormFieldSet => {
+    const fields = picturePresentationFields();
+
+    const styleNumbers = selectedRecords
+      .map((record: any) => record.our_style_no)
+      .filter((styleNo: any) => !!styleNo);
+
+    return {
+      ...fields,
+      stylenumber: {
+        ...fields.stylenumber,
+        value: Array.from(new Set(styleNumbers)).join(", "),
+      },
+    };
+  }, [selectedRecords]);
+
+  const picturePresentationModal = useCreateApiFormModal({
+    url: ApiEndpoints.cost_card_picture_presentation,
+    queryParams: picturePresentationParams,
+    method: "GET",
+    title: t`Picture Presentation`,
+    fields: picturePresentationDisplayFields,
+    submitText: t`Export`,
+    successMessage: null,
+    timeout: 30 * 1000,
+    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
+    size: PURCHASE_REQUEST_MODAL_SIZE,
+    onFormSuccess: (response: any) => setExportId(response.pk),
+  });
+
   const runBulkAction = useCallback(
     (action: { key: string; label: () => string }) => {
       switch (action.key) {
@@ -512,7 +562,7 @@ export default function CostCardTable() {
           openPurchaseForm(newPurchaseOrder.open);
           return;
         case "picture-presentation":
-          openPurchaseForm(picturePresentationModal.open)
+          picturePresentationModal.open();
           return;
         default:
           // TODO: hook up to the relevant workflow once available
@@ -528,6 +578,7 @@ export default function CostCardTable() {
       openPurchaseForm,
       newPurchaseRequest.open,
       newPurchaseOrder.open,
+      picturePresentationModal.open,
     ],
   );
 
@@ -682,16 +733,6 @@ export default function CostCardTable() {
     selectedPks,
     toggleSelected,
   ]);
-
-  // --- Picture Presentation modal ----------------------------------------------------
-  const picturePresentationModal = useCreateApiFormModal({
-    url: ApiEndpoints.company_list,
-    title: t`Picture Presentation`,
-    fields: picturePresentationFields(),
-    table: table,
-    gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
-    size: PURCHASE_REQUEST_MODAL_SIZE,
-  });
 
   // --- Delete modal ------------------------------------------------------
   // Create and edit now happen on a dedicated tabbed page (see
