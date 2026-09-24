@@ -10,6 +10,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 
 from costcard.permissions import CardsDataPermission, CostCardPermission
+from properties.models import ColorStoneQuality, DiamondQuality
 
 from . import serializers as cards_serializers
 from .duplicates import duplicate_cost_card
@@ -271,13 +272,63 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
         return str(value)
 
 
+    @staticmethod
+    def _quality_label(value, names):
+        if value is None:
+            return ''
+        if hasattr(value, 'name'):
+            return str(value.name)
+        try:
+            return names.get(int(value), str(value))
+        except (TypeError, ValueError):
+            return str(value)
+
+    # def _stones(self, queryset):
+    #     rows = {}
+    #     for card in queryset:
+    #         for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
+    #             for line in lines:
+    #                 key = tuple(
+    #                     self._label(getattr(line, field))
+    #                     for field in (
+    #                         'shape',
+    #                         'mm_size',
+    #                         'sieve_size',
+    #                         'stone',
+    #                         'color',
+    #                         'cut',
+    #                         'quality',
+    #                         'pointer',
+    #                     )
+    #                 )
+    #                 if key not in rows:
+    #                     rows[key] = {
+    #                         'shape': key[0],
+    #                         'mm_size': key[1],
+    #                         'sieve_size': key[2],
+    #                         'stone': key[3],
+    #                         'color': key[4],
+    #                         'cut': key[5],
+    #                         'quality': key[6],
+    #                         'pointer': key[7],
+    #                         'rate': line.rate,
+    #                     }
+    #     return list(rows.values())
+
     def _stones(self, queryset):
+        diamond_quality = dict(DiamondQuality.objects.values_list('pk', 'name'))
+        colorstone_quality = dict(ColorStoneQuality.objects.values_list('pk', 'name'))
         rows = {}
         for card in queryset:
-            for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
+            for lines, names in (
+                (card.diamond_lines.all(), diamond_quality),
+                (card.colorstone_lines.all(), colorstone_quality),
+            ):
                 for line in lines:
                     key = tuple(
-                        self._label(getattr(line, field))
+                        self._quality_label(getattr(line, field), names)
+                        if field == 'quality'
+                        else self._label(getattr(line, field))
                         for field in (
                             'shape',
                             'mm_size',
