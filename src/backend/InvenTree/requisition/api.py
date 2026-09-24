@@ -92,6 +92,7 @@ class StoneOrderListView(APIView):
                 row = {
                     'sr_no': idx,
                     'style_no': cc.our_style_no,
+                    'front_view': cc.front_view.url,
                     'category': cc.sub_category.name if cc.sub_category else None,
                     'setting': line.setting,
                     'stone': line.stone,
