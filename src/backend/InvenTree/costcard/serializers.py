@@ -604,6 +604,7 @@ class CostCardPicturePresentationSerializer(
     DataExportSerializerMixin,
     InvenTreeModelSerializer,
 ):
+    picture = drf_serializers.SerializerMethodField(label='Picture')
     our_style_no = drf_serializers.CharField(label='JS Style No.')
     vendor_style_no = drf_serializers.CharField(label='Vendor Style No.', allow_null=True)
     kt = drf_serializers.SerializerMethodField(label='KT')
@@ -618,6 +619,7 @@ class CostCardPicturePresentationSerializer(
     class Meta:
         model = CostCard
         fields = [
+            'picture',
             'our_style_no',
             'vendor_style_no',
             'kt',
@@ -657,6 +659,9 @@ class CostCardPicturePresentationSerializer(
     def _margin_pct(self, obj):
         value = _dec(self._param('margin_pct'))
         return value if value is not None else obj.margin_pct
+
+    def get_picture(self, obj):
+        return obj.front_view.name if obj.front_view else ''
 
     def get_kt(self, obj):
         return obj.metal_purity.name if obj.metal_purity else (obj.karat or '')
