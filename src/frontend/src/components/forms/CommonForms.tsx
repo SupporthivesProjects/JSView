@@ -2043,17 +2043,20 @@ export function picturePresentationFields(): ApiFormFieldSet {
       },
     },
     stylenumber: {
-      field_type: "string",
+      // Picks cost cards by style number. The selected PKs are folded into the
+      // `cost_card_ids` query parameter by the caller's `processFormData`, so
+      // this narrows the export without needing a new backend parameter.
+      field_type: "related field",
       label: t`Style Number`,
-      description: t`Style numbers of the selected cost cards.`,
-      // disabled: true,
-      // exclude: true,
+      description: t`Limit the export to these style numbers.`,
       required: false,
-      api_url: apiUrl(ApiEndpoints.purchase_api),
+      multiple: true,
+      api_url: apiUrl(ApiEndpoints.cost_card),
       filters: { active: true },
+      // `our_style_no` is the internal style number shown on the sheet
       modelRenderer: (arg: any) => {
         const instance = arg?.instance ?? arg;
-        return instance?.pono || (instance?.pk ? `#${instance.pk}` : "");
+        return instance?.our_style_no ?? "";
       },
     },
     gold_troy_ounce: {

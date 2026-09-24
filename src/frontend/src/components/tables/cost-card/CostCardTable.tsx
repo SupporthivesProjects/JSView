@@ -510,40 +510,52 @@ export default function CostCardTable() {
     id: exportId,
   });
 
-  const picturePresentationParams = useMemo(() => {
-    const params = new URLSearchParams({ export: "true" });
+  // `cost_card_ids` is not set here: it is assembled at submit time from the
+  // rows ticked in the table *plus* whatever the style-number picker selected.
+  const picturePresentationParams = useMemo(
+    () => new URLSearchParams({ export: "true" }),
+    [],
+  );
 
-    if (selectedPks.size > 0) {
-      params.set("cost_card_ids", Array.from(selectedPks).join(","));
-    }
+  // Built once - the field set contains modelRenderer callbacks, so rebuilding
+  // it every render would replace the whole field object each time.
+  const picturePresentationFormFields = useMemo(
+    (): ApiFormFieldSet => picturePresentationFields(),
+    [],
+  );
 
-    return params;
-  }, [selectedPks]);
+  // The export view filters on `cost_card_ids`, and the style-number picker
+  // returns cost card PKs - so fold them together into that one parameter.
+  const processPicturePresentationData = useCallback(
+    (data: any) => {
+      const { stylenumber, ...rest } = data;
 
-  // The read-only `stylenumber` input just echoes back what is being exported,
-  // so the user can confirm the selection before generating the sheet.
-  const picturePresentationDisplayFields = useMemo((): ApiFormFieldSet => {
-    const fields = picturePresentationFields();
+      const ids = new Set<number>(selectedPks);
 
-    const styleNumbers = selectedRecords
-      .map((record: any) => record.our_style_no)
-      .filter((styleNo: any) => !!styleNo);
+      if (Array.isArray(stylenumber)) {
+        stylenumber.forEach((pk: any) => {
+          ids.add(pk);
+        });
+      } else if (stylenumber) {
+        ids.add(stylenumber);
+      }
 
-    return {
-      ...fields,
-      stylenumber: {
-        ...fields.stylenumber,
-        value: Array.from(new Set(styleNumbers)).join(", "),
-      },
-    };
-  }, [selectedRecords]);
+      if (ids.size === 0) {
+        return rest;
+      }
+
+      return { ...rest, cost_card_ids: Array.from(ids).join(",") };
+    },
+    [selectedPks],
+  );
 
   const picturePresentationModal = useCreateApiFormModal({
     url: ApiEndpoints.cost_card_picture_presentation,
     queryParams: picturePresentationParams,
     method: "GET",
     title: t`Picture Presentation`,
-    fields: picturePresentationDisplayFields,
+    fields: picturePresentationFormFields,
+    processFormData: processPicturePresentationData,
     submitText: t`Export`,
     successMessage: null,
     timeout: 30 * 1000,
