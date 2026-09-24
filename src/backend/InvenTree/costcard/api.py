@@ -302,18 +302,12 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
                         }
         return list(rows.values())
 
-    # def list(self, request, *args, **kwargs):
-    #     response = super().list(request, *args, **kwargs)
-    #     if request.query_params.get('export'):
-    #         return response
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #     return Response({'results': response.data, 'stones': self._stones(queryset)})
-
     def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
         if request.query_params.get('export'):
-            return super().list(request, *args, **kwargs)
+            return response
         queryset = self.filter_queryset(self.get_queryset())
-        return Response({'results': self._stones(queryset)})
+        return Response({'results': response.data, 'stones': self._stones(queryset)})
 
 
 cards_api_urls = [
