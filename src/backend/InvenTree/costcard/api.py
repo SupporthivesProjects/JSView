@@ -250,6 +250,53 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
                 context[key] = value
         return context
 
+    @staticmethod
+    def _label(value):
+        if value is None:
+            return ''
+        if hasattr(value, 'normalize'):
+            return format(value.normalize(), 'f')
+        return str(getattr(value, 'name', value))
+
+    def _stones(self, queryset):
+        rows = {}
+        for card in queryset:
+            for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
+                for line in lines:
+                    key = tuple(
+                        self._label(getattr(line, field))
+                        for field in (
+                            'shape',
+                            'mm_size',
+                            'sieve_size',
+                            'stone',
+                            'color',
+                            'cut',
+                            'quality',
+                            'pointer',
+                        )
+                    )
+                    if key not in rows:
+                        rows[key] = {
+                            'shape': key[0],
+                            'mm_size': key[1],
+                            'sieve_size': key[2],
+                            'stone': key[3],
+                            'color': key[4],
+                            'cut': key[5],
+                            'quality': key[6],
+                            'pointer': key[7],
+                            'rate': line.rate,
+                        }
+        return list(rows.values())
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        if request.query_params.get('export'):
+            return response
+        queryset = self.filter_queryset(self.get_queryset())
+        return Response({'results': response.data, 'stones': self._stones(queryset)})
+
 
 cards_api_urls = [
     path(
