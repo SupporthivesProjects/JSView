@@ -660,13 +660,27 @@ class CostCardPicturePresentationSerializer(
         value = _dec(self._param('margin_pct'))
         return value if value is not None else obj.margin_pct
 
-    def get_picture(self, obj):
-        if not obj.front_view:
-            return ''
-        url = obj.front_view.url
-        request = self.context.get('request')
-        return request.build_absolute_uri(url) if request else url
+    # def get_picture(self, obj):
+    #     if not obj.front_view:
+    #         return ''
+    #     url = obj.front_view.url
+    #     request = self.context.get('request')
+    #     return request.build_absolute_uri(url) if request else url
 
+    def get_picture(self, obj):
+            if not obj.front_view:
+                return ''
+            url = obj.front_view.url
+            request = self.context.get('request')
+            build = getattr(request, 'build_absolute_uri', None)
+            if build:
+                return build(url)
+            try:
+                from InvenTree.helpers_model import construct_absolute_url
+                return construct_absolute_url(url)
+            except Exception:
+                return url
+        
     def get_kt(self, obj):
         return obj.metal_purity.name if obj.metal_purity else (obj.karat or '')
 
