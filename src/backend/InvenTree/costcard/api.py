@@ -208,6 +208,8 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
     pagination_class = None
     permission_classes = [CostCardPermission]
 
+    STONE_FIELDS = ('shape', 'mm_size', 'sieve_size', 'stone', 'color', 'cut', 'quality', 'pointer')
+
     # def _list_param(self, key):
     #     values = []
     #     for value in self.request.query_params.getlist(key):
@@ -216,16 +218,11 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
 
     def _list_param(self, key):
         params = self.request.query_params
-        if hasattr(params, 'getlist'):
-            raw = params.getlist(key)
-        else:
-            raw = params.get(key, [])
-            if not isinstance(raw, (list, tuple)):
-                raw = [raw]
+        raw = params.getlist(key) if hasattr(params, 'getlist') else params.get(key, [])
+        raw = raw if isinstance(raw, (list, tuple)) else [raw]
         values = []
         for value in raw:
-            cleaned = str(value).strip('[]() ')
-            values.extend(v.strip().strip('\'"') for v in cleaned.split(',') if v.strip())
+            values.extend(v.strip().strip('\'"') for v in str(value).strip('[]() ').split(',') if v.strip())
         return values
 
     def get_queryset(self):
@@ -256,50 +253,41 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
     #         return ''
     #     if hasattr(value, 'normalize'):
     #         return format(value.normalize(), 'f')
-    #     return str(getattr(value, 'name', value))
+    #     if hasattr(value, '_meta'):
+    #         for attr in ('name', 'quality_name', 'title', 'label', 'code'):
+    #             if getattr(value, attr, None):
+    #                 return str(getattr(value, attr))
+    #     return str(value)
 
     @staticmethod
-    def _label(value):
-        if value is None:
-            return ''
-        if hasattr(value, 'normalize'):
-            return format(value.normalize(), 'f')
-        if hasattr(value, '_meta'):
-            for attr in ('name', 'quality_name', 'title', 'label', 'code'):
-                if getattr(value, attr, None):
-                    return str(getattr(value, attr))
-        return str(value)
+    def _name_label(value):
+        return '' if value is None else str(getattr(value, 'name', value))
+
+    @staticmethod
+    def _number_label(value):
+        return '' if value is None else format(value.normalize(), 'f')
+
+    @staticmethod
+    def _mm_size_label(value):
+        return '' if value is None else str(value.mm_size or value.name)
+
+    # def _stone_key(self, line):
+    #     return tuple(
+    #         self._number_label(line.pointer) if field == 'pointer' else self._name_label(getattr(line, field))
+    #         for field in self.STONE_FIELDS
+    #     )
+
+    def _stone_key(self, line):
+        special = {'pointer': self._number_label, 'mm_size': self._mm_size_label}
+        return tuple(special.get(f, self._name_label)(getattr(line, f)) for f in self.STONE_FIELDS)
 
     def _stones(self, queryset):
         rows = {}
         for card in queryset:
-            for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
-                for line in lines:
-                    key = tuple(
-                        self._label(getattr(line, field))
-                        for field in (
-                            'shape',
-                            'mm_size',
-                            'sieve_size',
-                            'stone',
-                            'color',
-                            'cut',
-                            'quality',
-                            'pointer',
-                        )
-                    )
-                    if key not in rows:
-                        rows[key] = {
-                            'shape': key[0],
-                            'mm_size': key[1],
-                            'sieve_size': key[2],
-                            'stone': key[3],
-                            'color': key[4],
-                            'cut': key[5],
-                            'quality': key[6],
-                            'pointer': key[7],
-                            'rate': line.rate,
-                        }
+            for line in [*card.diamond_lines.all(), *card.colorstone_lines.all()]:
+                key = self._stone_key(line)
+                if key not in rows:
+                    rows[key] = {**dict(zip(self.STONE_FIELDS, key)), 'rate': line.rate}
         return list(rows.values())
 
     def list(self, request, *args, **kwargs):
