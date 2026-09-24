@@ -202,6 +202,55 @@ class CostCardDuplicate(generics.GenericAPIView):
         )
 
 
+class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
+    queryset = CostCard.objects.select_related('metal_purity').prefetch_related('diamond_lines__stone')
+    serializer_class = cards_serializers.CostCardPicturePresentationSerializer
+    pagination_class = None
+    permission_classes = [CostCardPermission]
+
+    # def _list_param(self, key):
+    #     values = []
+    #     for value in self.request.query_params.getlist(key):
+    #         values.extend(v.strip() for v in value.split(',') if v.strip())
+    #     return values
+
+    def _list_param(self, key):
+        params = self.request.query_params
+        if hasattr(params, 'getlist'):
+            raw = params.getlist(key)
+        else:
+            raw = params.get(key, [])
+            if not isinstance(raw, (list, tuple)):
+                raw = [raw]
+        values = []
+        for value in raw:
+            cleaned = str(value).strip('[]() ')
+            values.extend(v.strip().strip('\'"') for v in cleaned.split(',') if v.strip())
+        return values
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # nos = self.request.query_params.get('cost_card_nos', '')
+        # nos = [n.strip() for n in nos.split(',') if n.strip()]
+        # if nos:
+        #     queryset = queryset.filter(cost_card_no__in=nos)
+        nos = self._list_param('cost_card_nos')
+        ids = [i for i in self._list_param('cost_card_ids') if i.isdigit()]
+        if nos:
+            queryset = queryset.filter(cost_card_no__in=nos)
+        if ids:
+            queryset = queryset.filter(pk__in=ids)
+        return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        for key in ('duty_pct', 'margin_pct', 'gold_troy_ounce', 'silver_troy_ounce'):
+            value = self.request.query_params.get(key)
+            if value not in (None, ''):
+                context[key] = value
+        return context
+
+
 cards_api_urls = [
     path(
         'stone-place/',
@@ -292,5 +341,10 @@ cards_api_urls = [
                 name='api-cost-card-finish-line-list',
             ),
         ]),
+    ),
+    path(
+        'picture-presentation/',
+        CostCardPicturePresentation.as_view(),
+        name='api-picture-presentation',
     ),
 ]
