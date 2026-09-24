@@ -1,3 +1,8 @@
+import logging
+from io import BytesIO
+from pathlib import Path
+
+from django.conf import settings
 from django.urls import include, path
 
 from rest_framework import generics, status
@@ -10,7 +15,6 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 
 from costcard.permissions import CardsDataPermission, CostCardPermission
-from properties.models import ColorStoneQuality, DiamondQuality
 
 from . import serializers as cards_serializers
 from .duplicates import duplicate_cost_card
@@ -21,6 +25,8 @@ from .models import (
     CostCardFinishLine,
     StonePlace,
 )
+
+logger = logging.getLogger('inventree')
 
 
 class CardsPagination(LimitOffsetPagination):
@@ -272,63 +278,13 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
         return str(value)
 
 
-    @staticmethod
-    def _quality_label(value, names):
-        if value is None:
-            return ''
-        if hasattr(value, 'name'):
-            return str(value.name)
-        try:
-            return names.get(int(value), str(value))
-        except (TypeError, ValueError):
-            return str(value)
-
-    # def _stones(self, queryset):
-    #     rows = {}
-    #     for card in queryset:
-    #         for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
-    #             for line in lines:
-    #                 key = tuple(
-    #                     self._label(getattr(line, field))
-    #                     for field in (
-    #                         'shape',
-    #                         'mm_size',
-    #                         'sieve_size',
-    #                         'stone',
-    #                         'color',
-    #                         'cut',
-    #                         'quality',
-    #                         'pointer',
-    #                     )
-    #                 )
-    #                 if key not in rows:
-    #                     rows[key] = {
-    #                         'shape': key[0],
-    #                         'mm_size': key[1],
-    #                         'sieve_size': key[2],
-    #                         'stone': key[3],
-    #                         'color': key[4],
-    #                         'cut': key[5],
-    #                         'quality': key[6],
-    #                         'pointer': key[7],
-    #                         'rate': line.rate,
-    #                     }
-    #     return list(rows.values())
-
     def _stones(self, queryset):
-        diamond_quality = dict(DiamondQuality.objects.values_list('pk', 'name'))
-        colorstone_quality = dict(ColorStoneQuality.objects.values_list('pk', 'name'))
         rows = {}
         for card in queryset:
-            for lines, names in (
-                (card.diamond_lines.all(), diamond_quality),
-                (card.colorstone_lines.all(), colorstone_quality),
-            ):
+            for lines in (card.diamond_lines.all(), card.colorstone_lines.all()):
                 for line in lines:
                     key = tuple(
-                        self._quality_label(getattr(line, field), names)
-                        if field == 'quality'
-                        else self._label(getattr(line, field))
+                        self._label(getattr(line, field))
                         for field in (
                             'shape',
                             'mm_size',
@@ -353,6 +309,66 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
                             'rate': line.rate,
                         }
         return list(rows.values())
+
+    def _embed_pictures(self, response):
+        """Replace the 'Picture' column text (image path) with the real front view image."""
+        data = getattr(response, 'data', None)
+        output = data.get('output') if hasattr(data, 'get') else None
+        if not output or not str(output).lower().endswith('.xlsx'):
+            return
+        try:
+            from openpyxl import load_workbook
+            from openpyxl.drawing.image import Image as XLImage
+            from openpyxl.utils import get_column_letter
+            from PIL import Image as PILImage
+
+            media_root = Path(settings.MEDIA_ROOT)
+            media_url = settings.MEDIA_URL or '/media/'
+            relative = str(output)
+            if media_url in relative:
+                relative = relative.split(media_url, 1)[1]
+            xlsx_path = media_root / relative.lstrip('/')
+
+            workbook = load_workbook(xlsx_path)
+            sheet = workbook.active
+
+            column = None
+            for cell in sheet[1]:
+                if str(cell.value or '').strip().lower() == 'picture':
+                    column = cell.column
+                    break
+            if column is None:
+                return
+
+            sheet.column_dimensions[get_column_letter(column)].width = 18
+            buffers = []
+            for row in range(2, sheet.max_row + 1):
+                cell = sheet.cell(row=row, column=column)
+                name = cell.value
+                if not name:
+                    continue
+                cell.value = None
+                image_path = media_root / str(name)
+                if not image_path.is_file():
+                    continue
+                picture = PILImage.open(image_path)
+                picture.thumbnail((120, 120))
+                buffer = BytesIO()
+                picture.save(buffer, format='PNG')
+                buffer.seek(0)
+                buffers.append(buffer)
+                sheet.add_image(XLImage(buffer), cell.coordinate)
+                sheet.row_dimensions[row].height = 95
+
+            workbook.save(xlsx_path)
+        except Exception:
+            logger.exception('picture-presentation: could not embed pictures')
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        if request.query_params.get('export'):
+            self._embed_pictures(response)
+        return response
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
