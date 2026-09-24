@@ -1,5 +1,7 @@
 import json
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
+from urllib.request import Request, urlopen
 
 from django.db import transaction
 
@@ -360,9 +362,15 @@ class CostCardSerializer(
         else:
             data = dict(data)
 
-        diamond_lines = self._normalize_nested_payload(data.pop('diamond_lines', None))
-        colorstone_lines = self._normalize_nested_payload(data.pop('colorstone_lines', None))
-        finish_lines = self._normalize_nested_payload(data.pop('finish_lines', None))
+        diamond_lines = self._normalize_nested_payload(
+            data.pop('diamond_lines', None)
+        )
+        colorstone_lines = self._normalize_nested_payload(
+            data.pop('colorstone_lines', None)
+        )
+        finish_lines = self._normalize_nested_payload(
+            data.pop('finish_lines', None)
+        )
 
         validated_data = super().to_internal_value(data)
 
@@ -589,11 +597,14 @@ class CostCardImageSerializer(InvenTreeModelSerializer):
 #     except InvalidOperation:
 #         return None
 
+
 def _dec(value):
     if isinstance(value, (list, tuple)):
         value = value[0] if value else None
+
     if value in (None, '', 'null'):
         return None
+
     try:
         return Decimal(str(value).strip())
     except InvalidOperation:
@@ -606,13 +617,28 @@ class CostCardPicturePresentationSerializer(
 ):
     picture = drf_serializers.SerializerMethodField(label='Picture')
     our_style_no = drf_serializers.CharField(label='JS Style No.')
-    vendor_style_no = drf_serializers.CharField(label='Vendor Style No.', allow_null=True)
+    vendor_style_no = drf_serializers.CharField(
+        label='Vendor Style No.',
+        allow_null=True,
+    )
     kt = drf_serializers.SerializerMethodField(label='KT')
-    dia_cts = drf_serializers.DecimalField(max_digits=10, decimal_places=4, label='DIA CTS.')
+    dia_cts = drf_serializers.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        label='DIA CTS.',
+    )
     quality = drf_serializers.SerializerMethodField(label='QUALITY')
-    col_cts = drf_serializers.DecimalField(max_digits=10, decimal_places=4, label='COL CTS.')
+    col_cts = drf_serializers.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        label='COL CTS.',
+    )
     cost = drf_serializers.SerializerMethodField(label='COST $')
-    comments = drf_serializers.CharField(source='remarks', label='COMMENTS', allow_null=True)
+    comments = drf_serializers.CharField(
+        source='remarks',
+        label='COMMENTS',
+        allow_null=True,
+    )
     duty = drf_serializers.SerializerMethodField(label='Duty %')
     margin = drf_serializers.SerializerMethodField(label='Margin %')
 
@@ -642,14 +668,18 @@ class CostCardPicturePresentationSerializer(
 
     def _param(self, key):
         value = self.context.get(key)
+
         if isinstance(value, (list, tuple)):
             value = value[0] if value else None
+
         if value in (None, ''):
             request = self.context.get('request')
             params = getattr(request, 'query_params', None) or {}
             value = params.get(key)
+
             if isinstance(value, (list, tuple)):
                 value = value[0] if value else None
+
         return value
 
     def _duty_pct(self, obj):
@@ -668,19 +698,24 @@ class CostCardPicturePresentationSerializer(
     #     return request.build_absolute_uri(url) if request else url
 
     def get_picture(self, obj):
-            if not obj.front_view:
-                return ''
-            url = obj.front_view.url
-            request = self.context.get('request')
-            build = getattr(request, 'build_absolute_uri', None)
-            if build:
-                return build(url)
-            try:
-                from InvenTree.helpers_model import construct_absolute_url
-                return construct_absolute_url(url)
-            except Exception:
-                return url
-        
+        if not obj.front_view:
+            return ''
+
+        url = obj.front_view.url
+        request = self.context.get('request')
+
+        build = getattr(request, 'build_absolute_uri', None)
+
+        if build:
+            return build(url)
+
+        try:
+            from InvenTree.helpers_model import construct_absolute_url
+
+            return construct_absolute_url(url)
+        except Exception:
+            return url
+
     def get_kt(self, obj):
         return obj.metal_purity.name if obj.metal_purity else (obj.karat or '')
 
@@ -689,30 +724,267 @@ class CostCardPicturePresentationSerializer(
         return line.stone.name if line and line.stone else ''
 
     def _metal_ratio(self, obj):
-        name = (obj.metal_purity.name if obj.metal_purity else '').lower()
-        key = 'silver_troy_ounce' if 'silver' in name else 'gold_troy_ounce'
+        name = (
+            obj.metal_purity.name
+            if obj.metal_purity
+            else ''
+        ).lower()
+
+        key = (
+            'silver_troy_ounce'
+            if 'silver' in name
+            else 'gold_troy_ounce'
+        )
+
         new_price = _dec(self._param(key))
+
         if new_price is None or not obj.troy_ounce_price:
             return None
+
         return new_price / obj.troy_ounce_price
 
     def _fob(self, obj):
         ratio = self._metal_ratio(obj)
+
         if ratio is None:
             return obj.fob
-        return obj.fob + (obj.metal_amount + obj.metal_loss_amount) * (ratio - 1)
+
+        return obj.fob + (
+            obj.metal_amount + obj.metal_loss_amount
+        ) * (ratio - 1)
 
     def get_cost(self, obj):
-        keys = ('duty_pct', 'margin_pct', 'gold_troy_ounce', 'silver_troy_ounce')
+        keys = (
+            'duty_pct',
+            'margin_pct',
+            'gold_troy_ounce',
+            'silver_troy_ounce',
+        )
+
         if all(_dec(self._param(k)) is None for k in keys):
             return obj.final_amount
+
         fob = self._fob(obj)
-        duty_amt = fob * self._duty_pct(obj) / 100
-        margin_amt = (fob + duty_amt) * self._margin_pct(obj) / 100
-        return (fob + duty_amt + margin_amt).quantize(Decimal('0.01'))
+
+        duty_amt = (
+            fob
+            * self._duty_pct(obj)
+            / 100
+        )
+
+        margin_amt = (
+            (fob + duty_amt)
+            * self._margin_pct(obj)
+            / 100
+        )
+
+        return (
+            fob
+            + duty_amt
+            + margin_amt
+        ).quantize(Decimal('0.01'))
 
     def get_duty(self, obj):
         return self._duty_pct(obj)
 
     def get_margin(self, obj):
         return self._margin_pct(obj)
+
+    def export_to_file(self, data, headers, file_format):
+        """
+        Keep the existing InvenTree export behavior for all formats
+        except XLSX.
+
+        For XLSX, generate the workbook here so the Picture column
+        contains the actual embedded image instead of the image URL.
+        """
+
+        if file_format != 'xlsx':
+            return super().export_to_file(
+                data,
+                headers,
+                file_format,
+            )
+
+        from openpyxl import Workbook
+        from openpyxl.drawing.image import Image as ExcelImage
+        from openpyxl.utils import get_column_letter
+
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = 'Picture Presentation'
+
+        field_names = list(headers.keys())
+        field_headers = list(headers.values())
+
+        # Header row
+        for column_index, header in enumerate(field_headers, start=1):
+            worksheet.cell(
+                row=1,
+                column=column_index,
+                value=header,
+            )
+
+        # Find the Picture column
+        picture_column = None
+
+        for index, field_name in enumerate(field_names, start=1):
+            if field_name == 'picture':
+                picture_column = index
+                break
+
+        # Existing data
+        for row_index, row in enumerate(data, start=2):
+            for column_index, field_name in enumerate(
+                field_names,
+                start=1,
+            ):
+                value = self.get_nested_value(
+                    row,
+                    field_name,
+                )
+
+                # Do not write the image URL into Excel.
+                # The actual image will be embedded below.
+                if (
+                    picture_column is not None
+                    and column_index == picture_column
+                ):
+                    continue
+
+                worksheet.cell(
+                    row=row_index,
+                    column=column_index,
+                    value=value,
+                )
+
+            # Embed actual image
+            if picture_column is not None:
+                picture_url = self.get_nested_value(
+                    row,
+                    'picture',
+                )
+
+                if picture_url:
+                    try:
+                        request = Request(
+                            picture_url,
+                            headers={
+                                'User-Agent': 'Mozilla/5.0',
+                            },
+                        )
+
+                        with urlopen(
+                            request,
+                            timeout=15,
+                        ) as response:
+                            image_data = response.read()
+
+                        image_stream = BytesIO(image_data)
+
+                        excel_image = ExcelImage(
+                            image_stream
+                        )
+
+                        # Keep image size reasonable
+                        max_width = 120
+                        max_height = 120
+
+                        if excel_image.width > max_width:
+                            ratio = (
+                                max_width
+                                / excel_image.width
+                            )
+                            excel_image.width = max_width
+                            excel_image.height = int(
+                                excel_image.height * ratio
+                            )
+
+                        if excel_image.height > max_height:
+                            ratio = (
+                                max_height
+                                / excel_image.height
+                            )
+                            excel_image.height = max_height
+                            excel_image.width = int(
+                                excel_image.width * ratio
+                            )
+
+                        cell_reference = (
+                            f'{get_column_letter(picture_column)}'
+                            f'{row_index}'
+                        )
+
+                        worksheet.add_image(
+                            excel_image,
+                            cell_reference,
+                        )
+
+                        # Make row high enough for image
+                        worksheet.row_dimensions[
+                            row_index
+                        ].height = 95
+
+                    except Exception:
+                        # If image cannot be downloaded,
+                        # keep the rest of the export working.
+                        worksheet.cell(
+                            row=row_index,
+                            column=picture_column,
+                            value='',
+                        )
+
+        # Basic column sizing
+        for column_index, field_name in enumerate(
+            field_names,
+            start=1,
+        ):
+            column_letter = get_column_letter(
+                column_index
+            )
+
+            if (
+                picture_column is not None
+                and column_index == picture_column
+            ):
+                worksheet.column_dimensions[
+                    column_letter
+                ].width = 22
+                continue
+
+            max_length = len(
+                str(
+                    worksheet.cell(
+                        row=1,
+                        column=column_index,
+                    ).value or ''
+                )
+            )
+
+            for row_index in range(
+                2,
+                worksheet.max_row + 1,
+            ):
+                value = worksheet.cell(
+                    row=row_index,
+                    column=column_index,
+                ).value
+
+                if value is not None:
+                    max_length = max(
+                        max_length,
+                        len(str(value)),
+                    )
+
+            worksheet.column_dimensions[
+                column_letter
+            ].width = min(
+                max(max_length + 2, 12),
+                35,
+            )
+
+        output = BytesIO()
+
+        workbook.save(output)
+
+        return output.getvalue()
