@@ -45,6 +45,7 @@ import {
   useDeleteApiFormModal,
 } from "../../../hooks/UseForm";
 import useDataOutput from "../../../hooks/UseDataOutput";
+import useNameLookup from "../../../hooks/UseNameLookup";
 import { useUserState } from "@store/UserState";
 import { ApiImage } from "@components/shared/images/ApiImage";
 import {
@@ -120,6 +121,55 @@ const COST_CARD_BULK_ACTIONS: {
     icon: <IconPresentation />,
   },
 ];
+
+/*
+ * Resolved display names for the property tables a stone line points at.
+ *
+ * Diamond lines and color stone lines reference different sets of tables
+ * (DiamondShape vs ColorStoneShape, and so on), so each kind of line is
+ * rendered with its own maps.
+ */
+type StoneNameMaps = {
+  stone: Record<number, string>;
+  shape: Record<number, string>;
+  mm_size: Record<number, string>;
+  color: Record<number, string>;
+  cut: Record<number, string>;
+  quality: Record<number, string>;
+};
+
+/*
+ * Turn one diamond / color stone line into a row of the Picture Presentation
+ * stone listing: the foreign keys on the line are swapped for the names they
+ * point at, and the cost card's style number is carried along so that rows
+ * coming from different cards can be told apart.
+ *
+ * `id` is what the form's table field keys the row on, so it has to stay
+ * unique across both line types (their primary keys are independent).
+ */
+function picturePresentationStoneRow(
+  line: any,
+  names: StoneNameMaps,
+  styleNo: string,
+  id: string,
+) {
+  const label = (field: keyof StoneNameMaps) =>
+    names[field][line[field]] ?? line[field] ?? "";
+
+  return {
+    id: id,
+    style_no: styleNo,
+    shape: label("shape"),
+    mm_size: label("mm_size"),
+    sieve_size: line.sieve_size ?? "",
+    stone: label("stone"),
+    color: label("color"),
+    cut: label("cut"),
+    quality: label("quality"),
+    pointer: line.pointer ?? "",
+    rate: line.rate ?? "",
+  };
+}
 
 /*
  * Only the front view is shown in the table cell - hovering it previews
@@ -299,6 +349,102 @@ export default function CostCardTable() {
     });
     return map;
   }, [metalPurityQuery.data]);
+
+  /*
+   * Stone line properties, used to render the Picture Presentation stone
+   * listing: the lines nested on a cost card record hold primary keys, so the
+   * names they point at are pulled in separately. The query keys are shared
+   * with the cost card Diamond / Color Stone tabs, so the lookups are only
+   * fetched once between them.
+   */
+  const { nameByPk: diamondStoneByPk } = useNameLookup(
+    ApiEndpoints.diamond_stone_list,
+    "cost-card-diamond-stone-lookup",
+  );
+  const { nameByPk: diamondShapeByPk } = useNameLookup(
+    ApiEndpoints.diamond_shape_list,
+    "cost-card-diamond-shape-lookup",
+  );
+  const { nameByPk: diamondSizeByPk } = useNameLookup(
+    ApiEndpoints.diamond_size_list,
+    "cost-card-diamond-size-lookup",
+    "mm_size",
+  );
+  const { nameByPk: diamondColorByPk } = useNameLookup(
+    ApiEndpoints.diamond_color_list,
+    "cost-card-diamond-color-lookup",
+  );
+  const { nameByPk: diamondCutByPk } = useNameLookup(
+    ApiEndpoints.diamond_cut_list,
+    "cost-card-diamond-cut-lookup",
+  );
+  const { nameByPk: diamondQualityByPk } = useNameLookup(
+    ApiEndpoints.diamond_quality_list,
+    "cost-card-diamond-quality-lookup",
+  );
+
+  const { nameByPk: colorStoneByPk } = useNameLookup(
+    ApiEndpoints.color_stone_type_list,
+    "cost-card-colorstone-stone-lookup",
+  );
+  const { nameByPk: colorStoneShapeByPk } = useNameLookup(
+    ApiEndpoints.color_stone_shape_list,
+    "cost-card-colorstone-shape-lookup",
+  );
+  const { nameByPk: colorStoneSizeByPk } = useNameLookup(
+    ApiEndpoints.color_stone_size_list,
+    "cost-card-colorstone-size-lookup",
+  );
+  const { nameByPk: colorStoneColorByPk } = useNameLookup(
+    ApiEndpoints.color_stone_color_list,
+    "cost-card-colorstone-color-lookup",
+  );
+  const { nameByPk: colorStoneCutByPk } = useNameLookup(
+    ApiEndpoints.color_stone_cut_list,
+    "cost-card-colorstone-cut-lookup",
+  );
+  const { nameByPk: colorStoneQualityByPk } = useNameLookup(
+    ApiEndpoints.color_stone_quality_list,
+    "cost-card-colorstone-quality-lookup",
+  );
+
+  const diamondStoneNames: StoneNameMaps = useMemo(
+    () => ({
+      stone: diamondStoneByPk,
+      shape: diamondShapeByPk,
+      mm_size: diamondSizeByPk,
+      color: diamondColorByPk,
+      cut: diamondCutByPk,
+      quality: diamondQualityByPk,
+    }),
+    [
+      diamondStoneByPk,
+      diamondShapeByPk,
+      diamondSizeByPk,
+      diamondColorByPk,
+      diamondCutByPk,
+      diamondQualityByPk,
+    ],
+  );
+
+  const colorStoneNames: StoneNameMaps = useMemo(
+    () => ({
+      stone: colorStoneByPk,
+      shape: colorStoneShapeByPk,
+      mm_size: colorStoneSizeByPk,
+      color: colorStoneColorByPk,
+      cut: colorStoneCutByPk,
+      quality: colorStoneQualityByPk,
+    }),
+    [
+      colorStoneByPk,
+      colorStoneShapeByPk,
+      colorStoneSizeByPk,
+      colorStoneColorByPk,
+      colorStoneCutByPk,
+      colorStoneQualityByPk,
+    ],
+  );
 
   // Table-level filters (e.g. "active") are still applied by the server
   const serverParams = useMemo(() => {
@@ -553,26 +699,90 @@ export default function CostCardTable() {
     number | null
   >(null);
 
-  const picturePresentationCardIds = useMemo(
-    () => picturePresentationCards.join(","),
-    [picturePresentationCards],
-  );
+  /*
+   * Cost cards picked on the form which the table has not loaded. The style
+   * picker is filtered independently of the table (and, with a P.O. selected,
+   * lists that order's line items instead), so it can offer cards the current
+   * table filters exclude - fetch those individually so their stone lines are
+   * listed too. A card which cannot be fetched is simply left out.
+   */
+  const missingCardPks = useMemo(() => {
+    const loaded = new Set(allRecords.map((record: any) => record.pk));
+    return picturePresentationCards.filter((pk) => !loaded.has(pk));
+  }, [allRecords, picturePresentationCards]);
 
-  // A plain GET against the export endpoint (no `export` flag) returns the
-  // aggregated stone summary alongside the rows, with the related names
-  // already resolved - the same rows that end up on the sheet. Only fetched
-  // while the modal is open, since the endpoint is unpaginated.
-  const picturePresentationStones = useQuery({
-    queryKey: ["picture-presentation-stones", picturePresentationCardIds],
-    enabled: picturePresentationOpen && picturePresentationCards.length > 0,
-    queryFn: () =>
-      api
-        .get(apiUrl(ApiEndpoints.cost_card_picture_presentation), {
-          params: { cost_card_ids: picturePresentationCardIds },
-        })
-        .then((response) => response.data?.stones ?? []),
+  const missingCardsQuery = useQuery({
+    queryKey: ["picture-presentation-cards", missingCardPks.join(",")],
+    enabled: picturePresentationOpen && missingCardPks.length > 0,
     staleTime: 60 * 1000,
+    queryFn: () =>
+      Promise.all(
+        missingCardPks.map((pk) =>
+          api
+            .get(apiUrl(ApiEndpoints.cost_card, pk))
+            .then((response) => response.data)
+            .catch(() => null),
+        ),
+      ).then((records) => records.filter((record) => !!record)),
   });
+
+  /*
+   * Every stone line on the selected cost cards, one row each.
+   *
+   * The export endpoint also returns a stone summary, but it pools the lines
+   * and keeps only one row per distinct combination - two cards carrying the
+   * same stone would show up once. The rows are built here instead, from the
+   * lines the cost card records already carry, so nothing is collapsed.
+   */
+  const picturePresentationStones = useMemo(() => {
+    const cardByPk: Record<number, any> = {};
+
+    for (const record of [...allRecords, ...(missingCardsQuery.data ?? [])]) {
+      cardByPk[record.pk] = record;
+    }
+
+    const rows: any[] = [];
+
+    for (const pk of picturePresentationCards) {
+      const card = cardByPk[pk];
+
+      if (!card) {
+        continue;
+      }
+
+      const styleNo = card.our_style_no ?? "";
+
+      (card.diamond_lines ?? []).forEach((line: any, index: number) =>
+        rows.push(
+          picturePresentationStoneRow(
+            line,
+            diamondStoneNames,
+            styleNo,
+            `${pk}-diamond-${line.id ?? index}`,
+          ),
+        ),
+      );
+
+      (card.colorstone_lines ?? []).forEach((line: any, index: number) =>
+        rows.push(
+          picturePresentationStoneRow(
+            line,
+            colorStoneNames,
+            styleNo,
+            `${pk}-colorstone-${line.id ?? index}`,
+          ),
+        ),
+      );
+    }
+
+    return rows;
+  }, [
+    allRecords,
+    missingCardsQuery.data,
+    picturePresentationCards,
+    diamondStoneNames,
+    colorStoneNames,
+  ]);
 
   /*
    * The pricing inputs apply to the export as a whole, so a figure is only
@@ -630,7 +840,7 @@ export default function CostCardTable() {
 
     const values: Record<string, any> = {
       ...picturePresentationValues,
-      stones: picturePresentationStones.data ?? [],
+      stones: picturePresentationStones,
     };
 
     const prefilled: ApiFormFieldSet = {};
@@ -683,7 +893,7 @@ export default function CostCardTable() {
     return prefilled;
   }, [
     picturePresentationValues,
-    picturePresentationStones.data,
+    picturePresentationStones,
     picturePresentationPo,
   ]);
 
@@ -726,7 +936,7 @@ export default function CostCardTable() {
     successMessage: null,
     timeout: 30 * 1000,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
-    size: PURCHASE_REQUEST_MODAL_SIZE,
+    size: "80rem",
     alwaysEnableSubmit: true,
     onOpen: () => setPicturePresentationOpen(true),
     onClose: () => setPicturePresentationOpen(false),
@@ -957,7 +1167,9 @@ export default function CostCardTable() {
           hidden: !user.hasAddRole(UserRoles.part),
           onClick: () => {
             modals.openConfirmModal({
-              title: <StylishText size="xl">{t`Duplicate Cost Card`}</StylishText>,
+              title: (
+                <StylishText size="xl">{t`Duplicate Cost Card`}</StylishText>
+              ),
               children: (
                 <Text>
                   {t`Are you sure you want to duplicate this cost card:`}{" "}

@@ -2030,6 +2030,7 @@ export function useCustomStateFields(): ApiFormFieldSet {
 
 /** Columns of the Picture Presentation stone summary, in display order */
 const PICTURE_PRESENTATION_STONE_COLUMNS = [
+  "style_no",
   "shape",
   "mm_size",
   "sieve_size",
@@ -2042,6 +2043,9 @@ const PICTURE_PRESENTATION_STONE_COLUMNS = [
 ] as const;
 
 const PICTURE_PRESENTATION_STONE_HEADERS = [
+  // Every stone line is listed, so two cards carrying the same stone produce
+  // two identical rows - the style number is what tells them apart
+  { title: "Style No.", style: { minWidth: "130px" } },
   { title: "Shape", style: { minWidth: "120px" } },
   { title: "MM Size", style: { minWidth: "110px" } },
   { title: "Sieve Size", style: { minWidth: "110px" } },
@@ -2054,12 +2058,12 @@ const PICTURE_PRESENTATION_STONE_HEADERS = [
 ];
 
 /*
- * One row of the stone summary.
+ * One row of the stone listing.
  *
- * The rows are produced by the export endpoint itself (it pools the diamond
- * and color stone lines of the selected cost cards and collapses them to one
- * row per distinct combination), so this is a preview of what lands on the
- * sheet rather than something the user fills in - every cell is read-only.
+ * The rows are assembled by the caller from the diamond and color stone lines
+ * of the selected cost cards - one row per line, with nothing collapsed - so
+ * this lists what the cards actually hold rather than something the user fills
+ * in: every cell is read-only.
  */
 function PicturePresentationStoneRow({
   props,
@@ -2083,15 +2087,15 @@ function PicturePresentationStoneRow({
 }
 
 /**
- * Stone summary table shown on the Picture Presentation modal.
+ * Stone listing shown on the Picture Presentation modal.
  *
- * `exclude` keeps it out of the submitted query: the export view recomputes
- * these rows from `cost_card_ids`, so sending them back would be redundant.
+ * `exclude` keeps it out of the submitted query: the export view derives its
+ * own rows from `cost_card_ids`, so sending these back would be redundant.
  */
 export function picturePresentationStoneTable(): ApiFormFieldType {
   return {
     label: "Stones",
-    description: "Stones across the selected cost cards",
+    description: "Every stone line on the selected cost cards",
     field_type: "table",
     required: false,
     gridSpan: "full",
