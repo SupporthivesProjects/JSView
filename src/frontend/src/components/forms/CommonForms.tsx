@@ -2104,7 +2104,30 @@ export function picturePresentationStoneTable(): ApiFormFieldType {
   };
 }
 
-export function picturePresentationFields(): ApiFormFieldSet {
+/*
+ * Style number shown for an option of the Picture Presentation style picker.
+ *
+ * The picker reads either cost cards (`our_style_no`) or the line items of a
+ * purchase order (`styleno`, copied from the cost card when the order was
+ * raised), so both shapes are handled here - a selection made against one
+ * endpoint still renders after the picker has switched to the other.
+ */
+function picturePresentationStyleLabel(arg: any) {
+  const instance = arg?.instance ?? arg;
+  return instance?.our_style_no || instance?.styleno || "";
+}
+
+/**
+ * Fields of the Picture Presentation export form.
+ *
+ * @param poPk - Primary key of the purchase order currently selected on the
+ * form, if any. While one is selected the style-number picker lists that
+ * order's line items rather than every cost card, so only the cost cards
+ * linked to the order can be chosen.
+ */
+export function picturePresentationFields(
+  poPk?: number | null,
+): ApiFormFieldSet {
   return {
     ponumber: {
       field_type: "related field",
@@ -2127,13 +2150,20 @@ export function picturePresentationFields(): ApiFormFieldSet {
       description: t`Limit the export to these style numbers.`,
       required: false,
       multiple: true,
-      api_url: apiUrl(ApiEndpoints.cost_card),
-      filters: { active: true },
-      // `our_style_no` is the internal style number shown on the sheet
-      modelRenderer: (arg: any) => {
-        const instance = arg?.instance ?? arg;
-        return instance?.our_style_no ?? "";
-      },
+      // With a P.O. selected the options come from its line items, filtered
+      // server-side on the order - `pk_field` means the picker still deals in
+      // cost card PKs, so the rest of the form is unaffected by the switch.
+      ...(poPk
+        ? {
+            api_url: apiUrl(ApiEndpoints.purchase_api_line),
+            filters: { poid: poPk, active: true },
+            pk_field: "costcardid",
+          }
+        : {
+            api_url: apiUrl(ApiEndpoints.cost_card),
+            filters: { active: true },
+          }),
+      modelRenderer: picturePresentationStyleLabel,
     },
     gold_troy_ounce: {
       field_type: "decimal",

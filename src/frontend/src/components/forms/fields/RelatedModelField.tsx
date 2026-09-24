@@ -436,7 +436,18 @@ function RelatedModelFieldComponent({
       !definition.disabled &&
       !!definition.api_url &&
       !definition.hidden,
-    queryKey: [`related-field-${fieldName}`, fieldId, offset, searchText],
+    // The endpoint and its static filters are part of the key: a field whose
+    // options are driven by another field (e.g. cost cards narrowed to the
+    // line items of a selected purchase order) must re-query when they change,
+    // rather than serving the options of the previous source from cache
+    queryKey: [
+      `related-field-${fieldName}`,
+      fieldId,
+      offset,
+      searchText,
+      definition.api_url,
+      JSON.stringify(definition.filters ?? {})
+    ],
     queryFn: async () => {
       if (!definition.api_url) {
         return null;

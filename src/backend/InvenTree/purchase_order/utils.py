@@ -85,6 +85,18 @@ def _name(obj) -> str | None:
     return str(obj)
 
 
+def _default_rate(value) -> bool:
+    """Freeze a cost card line's D.R. flag as a boolean.
+
+    Cost card lines store it as the string 'yes'/'no'; the snapshot stores a
+    real boolean, so the string must be translated rather than handed straight
+    to the model field.
+    """
+    if isinstance(value, str):
+        return value.strip().lower() == 'yes'
+    return bool(value)
+
+
 def create_po_costcard_snapshot(po_line) -> None:
     """
     Called when a PurchaseOrderLine is saved for an ORDER.
@@ -194,7 +206,7 @@ def create_po_costcard_snapshot(po_line) -> None:
                 amount=line.amount,
                 labour_rate=line.labour_rate,
                 labour_amount=line.labour_amount,
-                default_rate=line.default_rate,
+                default_rate=_default_rate(line.default_rate),
             )
             for line in costcard.diamond_lines.all()
         ])
@@ -221,7 +233,7 @@ def create_po_costcard_snapshot(po_line) -> None:
                 amount=line.amount,
                 labour_rate=line.labour_rate,
                 labour_amount=line.labour_amount,
-                default_rate=line.default_rate,
+                default_rate=_default_rate(line.default_rate),
             )
             for line in costcard.colorstone_lines.all()
         ])

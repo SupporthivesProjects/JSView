@@ -30,7 +30,7 @@ class POCostCardSnapshotTests(TestCase):
         )
         self.card = CostCard.objects.create(
             our_style_no='JS-001',
-            karat='18KT',
+            karat=18,
             metal_grams=10.500,
         )
 
@@ -49,6 +49,7 @@ class POCostCardSnapshotTests(TestCase):
             cts=0.5000,
             rate=1000,
             amount=500,
+            default_rate='no',
         )
         CostCardFinishLine.objects.create(
             cost_card=self.card,
@@ -78,6 +79,8 @@ class POCostCardSnapshotTests(TestCase):
         self.assertEqual(dia.stone, 'Natural')
         self.assertEqual(dia.shape, 'Round')
         self.assertEqual(dia.pcs, 2)
+        # The cost card line stores D.R. as 'yes'/'no', the snapshot as a bool
+        self.assertIs(dia.default_rate, False)
         fin = snap.lines.get(etype='FINISHTYPE')
         self.assertEqual(fin.stone, 'Matte')
         self.assertEqual(fin.rate, 250)

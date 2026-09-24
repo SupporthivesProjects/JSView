@@ -547,6 +547,12 @@ export default function CostCardTable() {
     number[]
   >([]);
 
+  // The purchase order selected on the form (if any). It restricts the
+  // style-number picker to the cost cards linked to that order.
+  const [picturePresentationPo, setPicturePresentationPo] = useState<
+    number | null
+  >(null);
+
   const picturePresentationCardIds = useMemo(
     () => picturePresentationCards.join(","),
     [picturePresentationCards],
@@ -602,10 +608,10 @@ export default function CostCardTable() {
     };
 
     return {
-      stylenumber:
-        picturePresentationCards.length > 0
-          ? picturePresentationCards
-          : undefined,
+      // Always handed to the field (even when empty), so that dropping the
+      // cards which do not belong to a newly selected P.O. also clears them
+      // from the picker
+      stylenumber: picturePresentationCards,
       duty_pct: sharedValue(selectedRecords, "duty_pct"),
       margin_pct: sharedValue(selectedRecords, "margin_pct"),
       gold_troy_ounce: sharedValue(
@@ -620,7 +626,7 @@ export default function CostCardTable() {
   }, [selectedRecords, picturePresentationCards, metalPurityNameByPk]);
 
   const picturePresentationFormFields = useMemo((): ApiFormFieldSet => {
-    const fields = picturePresentationFields();
+    const fields = picturePresentationFields(picturePresentationPo);
 
     const values: Record<string, any> = {
       ...picturePresentationValues,
@@ -644,8 +650,42 @@ export default function CostCardTable() {
       },
     };
 
+    /*
+     * Selecting a P.O. narrows the style picker to the cost cards that order
+     * is linked to. The order carries its line items with it, so the cards
+     * already picked which are *not* on the order are dropped here - leaving
+     * them selected would export styles the order does not cover.
+     */
+    prefilled.ponumber = {
+      ...prefilled.ponumber,
+      onValueChange: (value: any, record?: any) => {
+        const pk = value ? Number(value) : null;
+
+        setPicturePresentationPo(pk);
+
+        if (!pk) {
+          return;
+        }
+
+        const linked = new Set<number>(
+          (record?.lines ?? [])
+            .map((line: any) => line?.costcardid)
+            .filter((id: any) => !!id)
+            .map((id: any) => Number(id)),
+        );
+
+        setPicturePresentationCards((current) =>
+          current.filter((id) => linked.has(id)),
+        );
+      },
+    };
+
     return prefilled;
-  }, [picturePresentationValues, picturePresentationStones.data]);
+  }, [
+    picturePresentationValues,
+    picturePresentationStones.data,
+    picturePresentationPo,
+  ]);
 
   // The export view filters on `cost_card_ids`, and the style-number picker
   // returns cost card PKs - so fold them together into that one parameter.
@@ -661,8 +701,10 @@ export default function CostCardTable() {
 
       // The picker starts out holding the ticked rows, so it is what the user
       // last said should be exported; fall back to the selection only if they
-      // emptied it entirely.
-      const ids = picked.length > 0 ? picked : Array.from(selectedPks);
+      // emptied it entirely. With a P.O. selected there is no fallback: the
+      // ticked rows are not necessarily linked to that order.
+      const ids =
+        picked.length > 0 || rest.ponumber ? picked : Array.from(selectedPks);
 
       if (ids.length === 0) {
         return rest;
@@ -695,6 +737,9 @@ export default function CostCardTable() {
   // up already filled in rather than being populated a render later
   const openPicturePresentation = useCallback(() => {
     setPicturePresentationCards(Array.from(selectedPks));
+    // The form comes up with an empty P.O. field, so the filter it drives
+    // starts out cleared too
+    setPicturePresentationPo(null);
     picturePresentationModal.open();
   }, [selectedPks, picturePresentationModal.open]);
 
