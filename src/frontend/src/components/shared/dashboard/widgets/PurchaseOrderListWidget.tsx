@@ -22,12 +22,18 @@ import {
 import { useEditApiFormModal } from '../../../../hooks/UseForm';
 import { DateColumn } from '../../../tables/ColumnRenderers';
 import { InvenTreeTable } from '../../../tables/InvenTreeTable';
+import type { ApiFormAction } from '@lib/types/Forms';
 import type { DashboardWidgetProps } from '../DashboardWidget';
 
-/**
- * A column which is required by the listing, but for which the purchase order
- * endpoint does not (yet) provide any data.
- */
+
+const PO_PRINT_TYPES: { type: string; label: () => string }[] = [
+  { type: 'vendor', label: () => t`Vendor` },
+  { type: 'self', label: () => t`Self` },
+  { type: 'vendor_costcard', label: () => t`Vendor Costcard` },
+  { type: 'self_costcard', label: () => t`Self Costcard` }
+];
+
+
 function PlaceholderColumn(accessor: string, title: string): TableColumn {
   return {
     accessor: accessor,
@@ -50,21 +56,28 @@ function PurchaseOrderListWidget() {
     number | undefined
   >(undefined);
 
-  // The line items the edit modal was opened with, used to work out which
-  // rows the user deleted from the grid
+  
   const [selectedLines, setSelectedLines] = useState<any[]>([]);
+
+
+  const printActions: ApiFormAction[] = useMemo(() => {
+    return PO_PRINT_TYPES.map((printType) => ({
+      text: printType.label(),
+      onClick: () => {}
+    }));
+  }, []);
 
   const editPurchaseOrder = useEditApiFormModal({
     url: ApiEndpoints.purchase_api,
     pk: selectedPurchaseOrder,
     title: t`Edit Purchase Order`,
     fields: purchaseOrderFields(true),
+    actions: printActions,
     validateFormData: validatePurchaseRequestLines('lines'),
     successMessage: t`Purchase order updated`,
     gridColumns: PURCHASE_ORDER_FORM_GRID_COLUMNS,
     size: PURCHASE_ORDER_MODAL_SIZE,
-    // The header endpoint ignores line data, so the edited rows are written
-    // separately once the header itself has saved
+   
     onFormSuccess: (data: any, form: any) => {
       savePurchaseRequestLines({
         api: api,
@@ -169,9 +182,6 @@ function PurchaseOrderListWidget() {
   );
 }
 
-/**
- * Construct a dashboard widget which displays a listing of purchase orders
- */
 export default function PurchaseOrderListDashboardWidget(): DashboardWidgetProps {
   const user = useUserState();
 
