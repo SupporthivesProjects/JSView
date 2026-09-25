@@ -17,10 +17,15 @@ from django.conf import settings
 from django.utils import timezone
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import MergedCell
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 from PIL import Image as PILImage
+
+# TODO: replace with the real company logo path once available (or set
+# settings.COST_CARD_LOGO_PATH to point at it).
+DEFAULT_LOGO_PATH = getattr(settings, 'COST_CARD_LOGO_PATH', None) or '/opt/inventree/data/static/img/company_logo.png'
 
 FOOTER_TEXT = 'The above quotation is based on current market price and is subject to change at any time without prior notice'
 LAST_COL = 16
@@ -28,6 +33,8 @@ THIN = Side(style='thin')
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
+MIN_COL_WIDTH = 8
+MAX_COL_WIDTH = 40
 STUDDING_HEADERS = [
     'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
     'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
@@ -91,7 +98,7 @@ class CostCardSheetBuilder:
     def __init__(self, overrides=None, modified_by='', logo_path=None, footer_text=FOOTER_TEXT, sheet_title=None, sections=None):
         self.overrides = {key: dec(value) for key, value in (overrides or {}).items()}
         self.modified_by = modified_by
-        self.logo_path = logo_path
+        self.logo_path = logo_path or DEFAULT_LOGO_PATH
         self.footer_text = footer_text
         self.sheet_title = sheet_title
         self.sections = sections or self.SECTIONS
@@ -113,13 +120,12 @@ class CostCardSheetBuilder:
         return buffer.getvalue()
 
     def fill_sheet(self, ws, card):
-        for col in range(1, LAST_COL + 1):
-            ws.column_dimensions[get_column_letter(col)].width = 15
         ws.sheet_view.showGridLines = False
         figures = self.figures(card)
         row = 1
         for name in self.sections:
             row = getattr(self, f'_section_{name}')(ws, card, figures, row)
+        self._autofit_columns(ws)
 
     def figures(self, card):
         overrides = self.overrides
@@ -234,7 +240,7 @@ class CostCardSheetBuilder:
         return row + 2
 
     def _section_labour_and_cost(self, ws, card, figures, row):
-        merge(ws, f'A{row}:C{row}', 'Labour Details', bold=True)
+        merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True)
         labour_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
         labour_rows.append(('STONE', sum(line.labour_amount for _, line in self._lines(card))))
         for offset, (label, value) in enumerate(labour_rows, start=1):
@@ -272,6 +278,20 @@ class CostCardSheetBuilder:
             ws.add_image(XLImage(buffer), anchor)
         except Exception:
             pass
+
+    def _autofit_columns(self, ws):
+        widths = {}
+        for row in ws.iter_rows():
+            for cell in row:
+                if isinstance(cell, MergedCell) or cell.value is None:
+                    continue
+                length = len(str(cell.value))
+                col = cell.column_letter
+                widths[col] = max(widths.get(col, 0), length)
+        for col in range(1, LAST_COL + 1):
+            letter = get_column_letter(col)
+            length = widths.get(letter, 0)
+            ws.column_dimensions[letter].width = min(max(length + 2, MIN_COL_WIDTH), MAX_COL_WIDTH)
 
     def _unique_title(self, card, used):
         base = self.sheet_title(card) if self.sheet_title else card.cost_card_no

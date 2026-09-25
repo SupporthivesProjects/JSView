@@ -319,7 +319,11 @@ class CostCardRepresentation(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        builder = CostCardSheetBuilder(overrides=self._overrides(), modified_by=self._modified_by())
+        builder = CostCardSheetBuilder(
+            overrides=self._overrides(),
+            modified_by=self._modified_by(),
+            sheet_title=lambda card: card.our_style_no,
+        )
         content = builder.to_bytes(builder.build(queryset))
 
         user = request.user if request.user.is_authenticated else None
