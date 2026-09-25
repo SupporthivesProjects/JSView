@@ -170,7 +170,8 @@ class CostCardSheetBuilder:
     def _section_title(self, ws, card, figures, row):
         merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14)
         if self.logo_path:
-            self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
+            # self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
+            self._image(ws, self.logo_path, f'B{row + 1}', (230, 90))
             return row + 5
         return row + 1
 
