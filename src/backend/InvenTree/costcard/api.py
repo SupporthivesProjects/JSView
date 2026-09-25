@@ -6,6 +6,10 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
+from common.models import DataOutput
+from common.serializers import DataOutputSerializer
+from django.core.files.base import ContentFile
+
 from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
@@ -212,12 +216,6 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
 
     STONE_FIELDS = ('shape', 'mm_size', 'sieve_size', 'stone', 'color', 'cut', 'quality', 'pointer')
 
-    # def _list_param(self, key):
-    #     values = []
-    #     for value in self.request.query_params.getlist(key):
-    #         values.extend(v.strip() for v in value.split(',') if v.strip())
-    #     return values
-
     def _list_param(self, key):
         params = self.request.query_params
         raw = params.getlist(key) if hasattr(params, 'getlist') else params.get(key, [])
@@ -229,10 +227,6 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # nos = self.request.query_params.get('cost_card_nos', '')
-        # nos = [n.strip() for n in nos.split(',') if n.strip()]
-        # if nos:
-        #     queryset = queryset.filter(cost_card_no__in=nos)
         nos = self._list_param('cost_card_nos')
         ids = [i for i in self._list_param('cost_card_ids') if i.isdigit()]
         if nos:
@@ -249,18 +243,6 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
                 context[key] = value
         return context
 
-    # @staticmethod
-    # def _label(value):
-    #     if value is None:
-    #         return ''
-    #     if hasattr(value, 'normalize'):
-    #         return format(value.normalize(), 'f')
-    #     if hasattr(value, '_meta'):
-    #         for attr in ('name', 'quality_name', 'title', 'label', 'code'):
-    #             if getattr(value, attr, None):
-    #                 return str(getattr(value, attr))
-    #     return str(value)
-
     @staticmethod
     def _name_label(value):
         return '' if value is None else str(getattr(value, 'name', value))
@@ -272,12 +254,6 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
     @staticmethod
     def _mm_size_label(value):
         return '' if value is None else str(value.mm_size or value.name)
-
-    # def _stone_key(self, line):
-    #     return tuple(
-    #         self._number_label(line.pointer) if field == 'pointer' else self._name_label(getattr(line, field))
-    #         for field in self.STONE_FIELDS
-    #     )
 
     def _stone_key(self, line):
         special = {'pointer': self._number_label, 'mm_size': self._mm_size_label}
@@ -347,12 +323,18 @@ class CostCardRepresentation(generics.GenericAPIView):
         builder = CostCardSheetBuilder(overrides=self._overrides(), modified_by=self._modified_by())
         content = builder.to_bytes(builder.build(queryset))
 
-        response = HttpResponse(
-            content,
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        user = request.user if request.user.is_authenticated else None
+        output = DataOutput.objects.create(
+            user=user,
+            total=queryset.count(),
+            progress=100,
+            complete=True,
+            output_type=DataOutput.DataOutputTypes.EXPORT,
+            plugin='costcard-representation',
         )
-        response['Content-Disposition'] = 'attachment; filename="CostCardRepresentation.xlsx"'
-        return response
+        output.output.save('CostCardRepresentation.xlsx', ContentFile(content), save=True)
+
+        return Response(DataOutputSerializer(output).data, status=200)
 
 
 cards_api_urls = [
