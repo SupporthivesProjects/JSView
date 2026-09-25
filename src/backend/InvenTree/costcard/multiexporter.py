@@ -14,6 +14,7 @@ from io import BytesIO
 from pathlib import Path
 
 from django.conf import settings
+from django.utils import timezone
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, Side
@@ -27,9 +28,14 @@ THIN = Side(style='thin')
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
-STUDDING_HEADERS = ['Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer', 'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount']
+STUDDING_HEADERS = [
+    'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
+    'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
+]
 STUDDING_FORMATS = {10: MONEY, 12: MONEY, 13: MONEY, 15: MONEY, 16: MONEY}
-COST_HEADERS = ['Metal', 'Studding', 'Labour', '', 'Markup %', 'With Markup %', 'F O B', 'Duty %', 'With Duty', 'Margin %', 'Final Price']
+COST_HEADERS = ['Metal', 'Studding', 'Labour', 'Markup %', 'With Markup %', 'F O B', 'Duty %', 'With Duty', 'Margin %', 'Final Price']
+COST_KEYS = ['metal', 'studding', 'labour', 'markup_pct', 'markup_amount', 'fob', 'duty_pct', 'with_duty', 'margin_pct', 'final']
+COST_COLUMNS = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']
 
 
 def dec(value):
@@ -91,8 +97,6 @@ class CostCardSheetBuilder:
         self.sections = sections or self.SECTIONS
         self._buffers = []
 
-    # ---------- public ----------
-
     def build(self, cards):
         workbook = Workbook()
         workbook.remove(workbook.active)
@@ -117,33 +121,40 @@ class CostCardSheetBuilder:
         for name in self.sections:
             row = getattr(self, f'_section_{name}')(ws, card, figures, row)
 
-    # ---------- figures (in memory only) ----------
-
     def figures(self, card):
-        o = self.overrides
+        overrides = self.overrides
         purity = card.metal_purity
         text = f"{name_of(getattr(purity, 'metal_type', None))} {name_of(purity)}".lower()
-        price = o.get('silver_troy_ounce' if 'silver' in text else 'gold_troy_ounce')
+        price = overrides.get('silver_troy_ounce' if 'silver' in text else 'gold_troy_ounce')
         ratio = price / card.troy_ounce_price if price is not None and card.troy_ounce_price else None
+
         fob, metal, tr_oz = card.fob, card.metal_amount, card.troy_ounce_price
         if ratio is not None:
             fob += (card.metal_amount + card.metal_loss_amount) * (ratio - 1)
             metal, tr_oz = metal * ratio, price
-        duty_pct = o['duty_pct'] if o.get('duty_pct') is not None else card.duty_pct
-        margin_pct = o['margin_pct'] if o.get('margin_pct') is not None else card.margin_pct
-        if any(value is not None for value in o.values()):
+
+        duty_pct = overrides['duty_pct'] if overrides.get('duty_pct') is not None else card.duty_pct
+        margin_pct = overrides['margin_pct'] if overrides.get('margin_pct') is not None else card.margin_pct
+
+        if any(value is not None for value in overrides.values()):
             with_duty = fob + fob * duty_pct / 100
             final = (with_duty + with_duty * margin_pct / 100).quantize(Decimal('0.01'))
         else:
             with_duty, final = fob + card.duty_amount, card.final_amount
-        return {
-            'tr_oz': tr_oz, 'metal': metal, 'studding': card.stone_amount, 'labour': card.labour_amount,
-            'handling': card.dia_handling_amount + card.col_handling_amount,
-            'markup_pct': card.vendor_markup_pct, 'markup_amount': card.vendor_markup_amount,
-            'fob': fob, 'duty_pct': duty_pct, 'with_duty': with_duty, 'margin_pct': margin_pct, 'final': final,
-        }
 
-    # ---------- sections (each returns the next free row) ----------
+        return {
+            'tr_oz': tr_oz,
+            'metal': metal,
+            'studding': card.stone_amount,
+            'labour': card.labour_amount,
+            'markup_pct': card.vendor_markup_pct,
+            'markup_amount': card.vendor_markup_amount,
+            'fob': fob,
+            'duty_pct': duty_pct,
+            'with_duty': with_duty,
+            'margin_pct': margin_pct,
+            'final': final,
+        }
 
     def _section_title(self, ws, card, figures, row):
         merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14)
@@ -153,9 +164,19 @@ class CostCardSheetBuilder:
         return row + 1
 
     def _section_header(self, ws, card, figures, row):
-        left = [('CC No :', card.cost_card_no), ('Customer :', name_of(card.customer)), ('Vendor :', name_of(card.vendor)), ('V. Style :', card.vendor_style_no or '')]
-        date = card.updated_at.strftime('%d %b %Y') if card.updated_at else ''
-        right = [('Style :', card.our_style_no), ('Category :', name_of(card.category)), ('Sub Category :', name_of(card.sub_category)), ('Date :', date), ('Modified By :', self.modified_by)]
+        left = [
+            ('CC No :', card.cost_card_no),
+            ('Customer :', name_of(card.customer)),
+            ('Vendor :', name_of(card.vendor)),
+            ('V. Style :', card.vendor_style_no or ''),
+        ]
+        right = [
+            ('Style :', card.our_style_no),
+            ('Category :', name_of(card.category)),
+            ('Sub Category :', name_of(card.sub_category)),
+            ('Date :', timezone.now().strftime('%d %b %Y')),
+            ('Modified By :', self.modified_by),
+        ]
         for offset, (label, value) in enumerate(left):
             put(ws, f'A{row + offset}', label)
             merge(ws, f'B{row + offset}:C{row + offset}', value)
@@ -171,8 +192,15 @@ class CostCardSheetBuilder:
         for col, title in zip('ABCDE', ['Type', 'Tr. Oz', 'KT', 'Net Wt.', 'Loss %']):
             put(ws, f'{col}{row}', title, bold=True)
         merge(ws, f'F{row}:G{row}', 'Metal Amount', bold=True)
+
         purity = card.metal_purity
-        values = [name_of(getattr(purity, 'metal_type', None)), num(figures['tr_oz']), card.karat, num(card.net_weight), num(card.metal_loss_pct)]
+        values = [
+            name_of(getattr(purity, 'metal_type', None)),
+            num(figures['tr_oz']),
+            card.karat,
+            num(card.net_weight),
+            num(card.metal_loss_pct),
+        ]
         for col, value in zip('ABCDE', values):
             put(ws, f'{col}{row + 1}', value)
         merge(ws, f'F{row + 1}:G{row + 1}', num(figures['metal']), fmt=MONEY)
@@ -184,14 +212,22 @@ class CostCardSheetBuilder:
         for col, title in enumerate(STUDDING_HEADERS, start=1):
             put(ws, f'{get_column_letter(col)}{row + 1}', title, bold=True)
         row += 2
+
         pcs = cts = amount = labour = 0
         for kind, line in self._lines(card):
-            values = [kind, name_of(line.shape), name_of(line.cut), size_of(line.mm_size), line.sieve_size or '', name_of(line.stone), name_of(line.color),
-                      num(line.pointer), line.pcs, num(line.cts), line.pc, num(line.rate), num(line.amount), name_of(line.setting), num(line.labour_rate), num(line.labour_amount)]
+            values = [
+                kind, name_of(line.shape), name_of(line.cut), size_of(line.mm_size), line.sieve_size or '',
+                name_of(line.stone), name_of(line.color), num(line.pointer), line.pcs, num(line.cts),
+                line.pc, num(line.rate), num(line.amount), name_of(line.setting), num(line.labour_rate), num(line.labour_amount),
+            ]
             for col, value in enumerate(values, start=1):
                 put(ws, f'{get_column_letter(col)}{row}', value, fmt=STUDDING_FORMATS.get(col))
-            pcs, cts, amount, labour = pcs + line.pcs, cts + line.cts, amount + line.amount, labour + line.labour_amount
+            pcs += line.pcs
+            cts += line.cts
+            amount += line.amount
+            labour += line.labour_amount
             row += 1
+
         totals = {8: 'Total', 9: pcs, 10: num(cts), 13: num(amount), 16: num(labour)}
         for col in range(1, LAST_COL + 1):
             put(ws, f'{get_column_letter(col)}{row}', totals.get(col), bold=col in totals, fmt=STUDDING_FORMATS.get(col))
@@ -204,11 +240,12 @@ class CostCardSheetBuilder:
         for offset, (label, value) in enumerate(labour_rows, start=1):
             merge(ws, f'A{row + offset}:B{row + offset}', label)
             put(ws, f'C{row + offset}', num(value))
-        for col, title in zip('FGHIJKLMNOP', COST_HEADERS):
+
+        for col, title in zip(COST_COLUMNS, COST_HEADERS):
             put(ws, f'{col}{row}', title, bold=True)
-        keys = ['metal', 'studding', 'labour', 'handling', 'markup_pct', 'markup_amount', 'fob', 'duty_pct', 'with_duty', 'margin_pct', 'final']
-        for col, key in zip('FGHIJKLMNOP', keys):
+        for col, key in zip(COST_COLUMNS, COST_KEYS):
             put(ws, f'{col}{row + 1}', num(figures[key]), fmt=MONEY)
+
         return row + len(labour_rows) + 2
 
     def _section_design(self, ws, card, figures, row):
@@ -219,8 +256,6 @@ class CostCardSheetBuilder:
     def _section_footer(self, ws, card, figures, row):
         merge(ws, f'A{row}:P{row}', self.footer_text, border=False)
         return row + 1
-
-    # ---------- helpers ----------
 
     @staticmethod
     def _lines(card):
