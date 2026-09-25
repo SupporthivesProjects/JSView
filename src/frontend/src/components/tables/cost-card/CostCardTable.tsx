@@ -117,7 +117,7 @@ const COST_CARD_BULK_ACTIONS: {
   { key: "po-place", label: () => t`PO Place`, icon: <IconShoppingCart /> },
   {
     key: "picture-presentation",
-    label: () => t`Picture Presentation`,
+    label: () => t`Presentation`,
     icon: <IconPresentation />,
   },
 ];
@@ -929,10 +929,10 @@ export default function CostCardTable() {
     url: ApiEndpoints.cost_card_picture_presentation,
     queryParams: picturePresentationParams,
     method: "GET",
-    title: t`Picture Presentation`,
+    title: t`Presentation`,
     fields: picturePresentationFormFields,
     processFormData: processPicturePresentationData,
-    submitText: t`Export`,
+    submitText: t`Picture Presentation`,
     successMessage: null,
     timeout: 30 * 1000,
     gridColumns: PURCHASE_REQUEST_FORM_GRID_COLUMNS,
