@@ -326,8 +326,7 @@ class CostCardSheetBuilder:
             ws.column_dimensions[letter].width = min(max(length, MIN_COL_WIDTH), MAX_COL_WIDTH)
 
     def _unique_title(self, card, used):
-        base = self.sheet_title(card) if self.sheet_title else card.cost_card_no
-        base = re.sub(r'[\[\]:*?/\\]', '-', str(base)).strip()[:31] or 'Sheet'
+        base = re.sub(r'[\[\]:*?/\\]', '-', str(card.cost_card_no)).strip()[:31] or 'Sheet'
         title, count = base, 1
         while title.lower() in used:
             count += 1
