@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -70,6 +71,7 @@ import {
   IconShoppingCart,
 } from "@tabler/icons-react";
 import { useApi } from "@context/ApiContext";
+import { showApiErrorMessage } from "@helpers/notifications";
 import { useQuery } from "@tanstack/react-query";
 
 // Maximum number of cost card records fetched for client-side filtering
@@ -121,6 +123,19 @@ const COST_CARD_BULK_ACTIONS: {
     icon: <IconPresentation />,
   },
 ];
+
+/*
+ * Pricing inputs on the Presentation form which both exports accept as
+ * overrides. The Picture Presentation export picks them up from the submitted
+ * form data; the Cost Card Representation export runs outside the submit, so
+ * their current values are mirrored into component state as they are edited.
+ */
+const PRESENTATION_OVERRIDE_FIELDS = [
+  "gold_troy_ounce",
+  "silver_troy_ounce",
+  "duty_pct",
+  "margin_pct",
+] as const;
 
 /*
  * Resolved display names for the property tables a stone line points at.
@@ -676,6 +691,15 @@ export default function CostCardTable() {
     id: exportId,
   });
 
+  const [representationId, setRepresentationId] = useState<number | undefined>(
+    undefined,
+  );
+
+  useDataOutput({
+    title: t`Exporting Cost Card Representation`,
+    id: representationId,
+  });
+
   // `cost_card_ids` is not set here: it is assembled at submit time from the
   // style numbers shown on the form (which are pre-filled from the ticked rows).
   const picturePresentationParams = useMemo(
@@ -698,6 +722,13 @@ export default function CostCardTable() {
   const [picturePresentationPo, setPicturePresentationPo] = useState<
     number | null
   >(null);
+
+  // The pricing overrides as they currently stand on the form. Seeded from the
+  // ticked rows when the form is opened, then kept in step with the inputs so
+  // the Cost Card Representation export sends what is on screen.
+  const [presentationOverrides, setPresentationOverrides] = useState<
+    Record<string, any>
+  >({});
 
   /*
    * Cost cards picked on the form which the table has not loaded. The style
@@ -850,6 +881,19 @@ export default function CostCardTable() {
       prefilled[name] = value === undefined ? field : { ...field, value };
     }
 
+    // Track the pricing inputs, so the Cost Card Representation export - which
+    // does not go through the form submit - picks up any edits made here
+    for (const name of PRESENTATION_OVERRIDE_FIELDS) {
+      prefilled[name] = {
+        ...prefilled[name],
+        onValueChange: (value: any) =>
+          setPresentationOverrides((current) => ({
+            ...current,
+            [name]: value,
+          })),
+      };
+    }
+
     // Track the picker, so removing a style from the form also removes its
     // stones from the preview (and the card from the export)
     prefilled.stylenumber = {
@@ -925,6 +969,77 @@ export default function CostCardTable() {
     [selectedPks],
   );
 
+  /*
+   * The Cost Card Representation export builds a different sheet from the same
+   * cost cards and pricing overrides, so it runs from a button on the form
+   * rather than by submitting it - the request is issued here instead, and its
+   * data output is handed to the same download monitor the submit uses.
+   */
+  const representationRunning = useRef<boolean>(false);
+  const closePicturePresentation = useRef<() => void>(() => {});
+
+  const exportCostCardRepresentation = useCallback(async () => {
+    if (representationRunning.current) {
+      return;
+    }
+
+    // Same fallback as the submit: the picker holds what the user last said
+    // should be exported, and only an emptied (P.O.-less) form falls back to
+    // the ticked rows
+    const ids =
+      picturePresentationCards.length > 0 || picturePresentationPo
+        ? picturePresentationCards
+        : Array.from(selectedPks);
+
+    if (ids.length === 0) {
+      showNotification({
+        title: t`Cost Card Representation`,
+        message: t`Select at least one cost card`,
+        color: "red",
+      });
+      return;
+    }
+
+    const params = new URLSearchParams();
+
+    // `cost_card_ids` is repeated once per cost card
+    Array.from(new Set(ids)).forEach((pk) =>
+      params.append("cost_card_ids", String(pk)),
+    );
+
+    for (const name of PRESENTATION_OVERRIDE_FIELDS) {
+      const value = presentationOverrides[name];
+
+      if (value !== undefined && value !== null && value !== "") {
+        params.append(name, String(value));
+      }
+    }
+
+    representationRunning.current = true;
+
+    try {
+      const response = await api.get(
+        apiUrl(ApiEndpoints.cost_card_representation),
+        { params: params, timeout: 30 * 1000 },
+      );
+
+      setRepresentationId(response.data?.pk);
+      closePicturePresentation.current();
+    } catch (error: any) {
+      showApiErrorMessage({
+        error: error,
+        title: t`Cost Card Representation`,
+      });
+    } finally {
+      representationRunning.current = false;
+    }
+  }, [
+    picturePresentationCards,
+    picturePresentationPo,
+    presentationOverrides,
+    selectedPks,
+  ]);
+
   const picturePresentationModal = useCreateApiFormModal({
     url: ApiEndpoints.cost_card_picture_presentation,
     queryParams: picturePresentationParams,
@@ -932,6 +1047,13 @@ export default function CostCardTable() {
     title: t`Presentation`,
     fields: picturePresentationFormFields,
     processFormData: processPicturePresentationData,
+    actions: [
+      {
+        text: t`Cost Card Representation`,
+        color: "green",
+        onClick: exportCostCardRepresentation,
+      },
+    ],
     submitText: t`Picture Presentation`,
     successMessage: null,
     timeout: 30 * 1000,
@@ -943,6 +1065,10 @@ export default function CostCardTable() {
     onFormSuccess: (response: any) => setExportId(response.pk),
   });
 
+  useEffect(() => {
+    closePicturePresentation.current = picturePresentationModal.close;
+  }, [picturePresentationModal.close]);
+
   // Seed the form from the ticked rows *before* it mounts, so the fields come
   // up already filled in rather than being populated a render later
   const openPicturePresentation = useCallback(() => {
@@ -950,8 +1076,17 @@ export default function CostCardTable() {
     // The form comes up with an empty P.O. field, so the filter it drives
     // starts out cleared too
     setPicturePresentationPo(null);
+    // The pricing inputs come up holding the figures shared by the ticked rows
+    setPresentationOverrides(
+      Object.fromEntries(
+        PRESENTATION_OVERRIDE_FIELDS.map((name) => [
+          name,
+          picturePresentationValues[name],
+        ]),
+      ),
+    );
     picturePresentationModal.open();
-  }, [selectedPks, picturePresentationModal.open]);
+  }, [selectedPks, picturePresentationValues, picturePresentationModal.open]);
 
   const runBulkAction = useCallback(
     (action: { key: string; label: () => string }) => {
