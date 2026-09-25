@@ -1,4 +1,4 @@
-import { Modal } from '@mantine/core';
+import { Group, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useCallback } from 'react';
 
@@ -34,7 +34,15 @@ export function useModal(props: UseModalProps): UseModalReturn {
         onClose={close}
         closeOnClickOutside={props.closeOnClickOutside}
         size={props.size ?? 'xl'}
-        title={<StylishText size='xl'>{props.title}</StylishText>}
+        // The title spans the header, so that anything passed alongside it
+        // sits at the right hand side (just before the close button)
+        styles={{ title: { flex: 1 } }}
+        title={
+          <Group justify='space-between' wrap='nowrap' gap='sm'>
+            <StylishText size='xl'>{props.title}</StylishText>
+            {props.titleActions}
+          </Group>
+        }
       >
         {props.children}
       </Modal>

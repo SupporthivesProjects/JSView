@@ -1,6 +1,6 @@
 import type { DefaultMantineColor, MantineStyleProp } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import type { JSX, ReactNode } from 'react';
+import type { JSX, MutableRefObject, ReactNode } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { NavigateFunction } from 'react-router-dom';
 import type { ApiEndpoints } from '../enums/ApiEndpoints';
@@ -222,6 +222,18 @@ export interface ApiFormProps {
   modelType?: ModelType;
   follow?: boolean;
   actions?: ApiFormAction[];
+  /**
+   * Collect the form's actions (and its submit) into a dropdown menu in the
+   * modal header, rather than laying them out as buttons along the footer.
+   * Suits a form which is tall, or which offers several alternative submits.
+   */
+  headerActions?: boolean;
+  /**
+   * Populated by the form with its submit handler, so that a control rendered
+   * outside the form - the header dropdown, see `headerActions` - can submit
+   * it.
+   */
+  submitRef?: MutableRefObject<() => void>;
   timeout?: number;
   navigate?: NavigateFunction;
   keepOpenOption?: boolean;

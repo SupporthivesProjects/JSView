@@ -1047,10 +1047,12 @@ export default function CostCardTable() {
     title: t`Presentation`,
     fields: picturePresentationFormFields,
     processFormData: processPicturePresentationData,
+    // Both exports are offered from a dropdown in the modal header, keeping
+    // the (tall) form itself free of a button row
+    headerActions: true,
     actions: [
       {
         text: t`Cost Card Representation`,
-        color: "green",
         onClick: exportCostCardRepresentation,
       },
     ],

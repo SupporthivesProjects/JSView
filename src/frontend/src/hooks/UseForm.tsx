@@ -1,6 +1,7 @@
 import { t } from '@lingui/core/macro';
-import { Alert, Divider, Stack } from '@mantine/core';
+import { Alert, Button, Divider, Menu, Stack } from '@mantine/core';
 import { useId } from '@mantine/hooks';
+import { IconChevronDown } from '@tabler/icons-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
@@ -29,20 +30,28 @@ export function useApiFormModal(props: ApiFormModalProps) {
     keepOpenRef.current = v;
   };
 
+  // Filled in by the form, so the header dropdown can submit it
+  const submitRef = useRef<() => void>(() => {});
+
   const formProps = useMemo<ApiFormModalProps>(
     () => ({
       ...props,
       onKeepOpenChange: setKeepOpen,
-      actions: [
-        ...(props.actions || []),
-        {
-          text: props.cancelText ?? t`Cancel`,
-          color: props.cancelColor ?? 'blue',
-          onClick: () => {
-            modalClose.current();
-          }
-        }
-      ],
+      submitRef: submitRef,
+      // The header dropdown sits next to the modal's own close button, so it
+      // does not need a "Cancel" entry of its own
+      actions: props.headerActions
+        ? props.actions
+        : [
+            ...(props.actions || []),
+            {
+              text: props.cancelText ?? t`Cancel`,
+              color: props.cancelColor ?? 'blue',
+              onClick: () => {
+                modalClose.current();
+              }
+            }
+          ],
       onFormSuccess: (data, form) => {
         if (!keepOpenRef.current && (props.checkClose?.(data, form) ?? true)) {
           modalClose.current();
@@ -58,9 +67,58 @@ export function useApiFormModal(props: ApiFormModalProps) {
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
+  /*
+   * With `headerActions` set, the submit and the extra actions are offered as
+   * a dropdown in the modal header rather than as a row of buttons along the
+   * footer - the submit is listed first, as the form's primary action.
+   */
+  const titleActions = useMemo(() => {
+    if (!formProps.headerActions) {
+      return undefined;
+    }
+
+    return (
+      <Menu position='bottom-end' withinPortal zIndex={9999}>
+        <Menu.Target>
+          <Button
+            size='xs'
+            variant='light'
+            aria-label='form-actions'
+            rightSection={<IconChevronDown size={16} stroke={1.5} />}
+          >
+            {t`Actions`}
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            color={formProps.submitColor ?? 'green'}
+            onClick={() => submitRef.current()}
+          >
+            {formProps.submitText ?? t`Submit`}
+          </Menu.Item>
+          {formProps.actions?.map((action, i) => (
+            <Menu.Item
+              key={`${i}-${action.text}`}
+              color={action.color}
+              onClick={action.onClick}
+            >
+              {action.text}
+            </Menu.Item>
+          ))}
+        </Menu.Dropdown>
+      </Menu>
+    );
+  }, [
+    formProps.headerActions,
+    formProps.actions,
+    formProps.submitText,
+    formProps.submitColor
+  ]);
+
   const modal = useModal({
     id: modalId,
     title: formProps.title,
+    titleActions: titleActions,
     onOpen: () => {
       queueMicrotask(() => {
         setIsOpen(true);

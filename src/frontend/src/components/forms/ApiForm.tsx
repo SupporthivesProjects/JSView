@@ -679,6 +679,14 @@ export function ApiForm({
     }
   };
 
+  // Hand the submit action to a control rendered outside the form - the modal
+  // header dropdown (see `headerActions`) cannot reach the form itself
+  if (props.submitRef) {
+    props.submitRef.current = () => {
+      form.handleSubmit(submitForm, onFormError)();
+    };
+  }
+
   const onFieldKeyDown = useCallback((value: any) => {
     if (value === 'Enter') {
       submitOnEnterRef.current();
@@ -796,41 +804,49 @@ export function ApiForm({
           </div>
         </Paper>
 
-        {/* Footer with Action Buttons */}
-        <Divider />
-        <Group justify='space-between'>
-          <Group justify='left'>
-            {props.keepOpenOption && (
-              <KeepFormOpenSwitch onChange={onKeepOpenChange} />
-            )}
-          </Group>
-          <Group justify='right'>
-            {props.actions?.map((action, i) => (
-              <Button
-                key={`${i}-${action.text}`}
-                onClick={action.onClick}
-                variant={action.variant ?? 'outline'}
-                radius='sm'
-                color={action.color}
-              >
-                {action.text}
-              </Button>
-            ))}
-            <Button
-              onClick={form.handleSubmit(submitForm, onFormError)}
-              variant='filled'
-              radius='sm'
-              color={props.submitColor ?? 'green'}
-              disabled={
-                props.alwaysEnableSubmit
-                  ? false
-                  : isLoading || (props.fetchInitialData && !isDirty)
-              }
-            >
-              {props.submitText ?? t`Submit`}
-            </Button>
-          </Group>
-        </Group>
+        {/* Footer with Action Buttons - with `headerActions` set the buttons
+            live in the modal header dropdown instead, so the footer is only
+            rendered if it still has the "keep open" switch to show */}
+        {(!props.headerActions || props.keepOpenOption) && (
+          <>
+            <Divider />
+            <Group justify='space-between'>
+              <Group justify='left'>
+                {props.keepOpenOption && (
+                  <KeepFormOpenSwitch onChange={onKeepOpenChange} />
+                )}
+              </Group>
+              {!props.headerActions && (
+                <Group justify='right'>
+                  {props.actions?.map((action, i) => (
+                    <Button
+                      key={`${i}-${action.text}`}
+                      onClick={action.onClick}
+                      variant={action.variant ?? 'outline'}
+                      radius='sm'
+                      color={action.color}
+                    >
+                      {action.text}
+                    </Button>
+                  ))}
+                  <Button
+                    onClick={form.handleSubmit(submitForm, onFormError)}
+                    variant='filled'
+                    radius='sm'
+                    color={props.submitColor ?? 'green'}
+                    disabled={
+                      props.alwaysEnableSubmit
+                        ? false
+                        : isLoading || (props.fetchInitialData && !isDirty)
+                    }
+                  >
+                    {props.submitText ?? t`Submit`}
+                  </Button>
+                </Group>
+              )}
+            </Group>
+          </>
+        )}
       </Boundary>
     </Stack>
   );
