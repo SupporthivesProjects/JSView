@@ -18,7 +18,7 @@ from django.utils import timezone
 
 from openpyxl import Workbook
 from openpyxl.cell.cell import MergedCell
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 from PIL import Image as PILImage
@@ -36,13 +36,6 @@ MONEY = '0.00'
 MIN_COL_WIDTH = 4
 MAX_COL_WIDTH = 26
 FIXED_LABOUR_ROWS = 2  # finish-type rows only; a STONE row is always added on top of these
-
-# Professional, grayscale-only heading treatment - no bright colors.
-# Section bars / column header rows get the slightly darker tone; individual
-# field labels (CC No:, Customer:, row labels, etc.) get the lighter tone.
-SECTION_FILL = PatternFill('solid', fgColor='D9D9D9')
-LABEL_FILL = PatternFill('solid', fgColor='F2F2F2')
-
 STUDDING_HEADERS = [
     'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
     'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
@@ -76,7 +69,7 @@ def size_of(value):
     return '' if value is None else str(value.mm_size or value.name)
 
 
-def put(ws, ref, value, bold=False, border=True, fmt=None, size=11, fill=None):
+def put(ws, ref, value, bold=False, border=True, fmt=None, size=11):
     cell = ws[ref]
     cell.value = value
     cell.font = Font(bold=bold, size=size)
@@ -85,22 +78,16 @@ def put(ws, ref, value, bold=False, border=True, fmt=None, size=11, fill=None):
         cell.border = BORDER
     if fmt:
         cell.number_format = fmt
-    if fill:
-        cell.fill = fill
     return cell
 
 
-def merge(ws, cell_range, value, bold=False, border=True, fmt=None, size=11, fill=None):
+def merge(ws, cell_range, value, bold=False, border=True, fmt=None, size=11):
     ws.merge_cells(cell_range)
-    put(ws, cell_range.split(':')[0], value, bold, border, fmt, size, fill)
+    put(ws, cell_range.split(':')[0], value, bold, border, fmt, size)
     if border:
         for row in ws[cell_range]:
             for cell in row:
                 cell.border = BORDER
-    if fill:
-        for row in ws[cell_range]:
-            for cell in row:
-                cell.fill = fill
 
 
 class CostCardSheetBuilder:
@@ -134,18 +121,16 @@ class CostCardSheetBuilder:
         return buffer.getvalue()
 
     def fill_sheet(self, ws, card):
-        # Keep the workbook's default gridlines visible everywhere. The explicit thin
-        # BORDER boxes drawn per table stay as they are; on top of that we add a single
-        # outer frame around the whole data block (see _apply_outer_border below).
+        # Keep the workbook's default gridlines visible everywhere. Only the explicit
+        # thin BORDER boxes drawn on the Metal / Studding / Labour / Cost tables (the
+        # "data area") are meant to stand out - the rest of the sheet should still show
+        # the normal default book border/gridline like any other worksheet.
         ws.sheet_view.showGridLines = True
         figures = self.figures(card)
         row = 1
         for name in self.sections:
             row = getattr(self, f'_section_{name}')(ws, card, figures, row)
-        last_row = row - 1
-        self._apply_outer_border(ws, last_row)
         self._autofit_columns(ws)
-        self._setup_print(ws, last_row)
 
     def figures(self, card):
         overrides = self.overrides
@@ -183,7 +168,7 @@ class CostCardSheetBuilder:
         }
 
     def _section_title(self, ws, card, figures, row):
-        merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14, fill=SECTION_FILL)
+        merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14)
         if self.logo_path:
             self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
             return row + 5
@@ -204,10 +189,10 @@ class CostCardSheetBuilder:
             ('Modified By :', self.modified_by),
         ]
         for offset, (label, value) in enumerate(left):
-            put(ws, f'A{row + offset}', label, fill=LABEL_FILL)
+            put(ws, f'A{row + offset}', label)
             merge(ws, f'B{row + offset}:C{row + offset}', value)
         for offset, (label, value) in enumerate(right):
-            put(ws, f'E{row + offset}', label, fill=LABEL_FILL)
+            put(ws, f'E{row + offset}', label)
             merge(ws, f'F{row + offset}:G{row + offset}', value)
             ws.row_dimensions[row + offset].height = 22
         if card.front_view:
@@ -216,8 +201,8 @@ class CostCardSheetBuilder:
 
     def _section_metal(self, ws, card, figures, row):
         for col, title in zip('ABCDE', ['Type', 'Tr. Oz', 'KT', 'Net Wt.', 'Loss %']):
-            put(ws, f'{col}{row}', title, bold=True, fill=SECTION_FILL)
-        merge(ws, f'F{row}:G{row}', 'Metal Amount', bold=True, fill=SECTION_FILL)
+            put(ws, f'{col}{row}', title, bold=True)
+        merge(ws, f'F{row}:G{row}', 'Metal Amount', bold=True)
 
         purity = card.metal_purity
         values = [
@@ -233,14 +218,15 @@ class CostCardSheetBuilder:
         return row + 3
 
     def _section_studding(self, ws, card, figures, row):
-        merge(ws, f'A{row}:M{row}', 'Studding Details', bold=True, fill=SECTION_FILL)
-        merge(ws, f'N{row}:P{row}', 'Labour', bold=True, fill=SECTION_FILL)
+        merge(ws, f'A{row}:M{row}', 'Studding Details', bold=True)
+        merge(ws, f'N{row}:P{row}', 'Labour', bold=True)
         for col, title in enumerate(STUDDING_HEADERS, start=1):
-            put(ws, f'{get_column_letter(col)}{row + 1}', title, bold=True, fill=SECTION_FILL)
+            put(ws, f'{get_column_letter(col)}{row + 1}', title, bold=True)
         row += 2
 
+        lines = self._lines(card)
         pcs = cts = amount = labour = 0
-        for kind, line in self._lines(card):
+        for kind, line in lines:
             values = [
                 kind, name_of(line.shape), name_of(line.cut), size_of(line.mm_size), line.sieve_size or '',
                 name_of(line.stone), name_of(line.color), num(line.pointer), line.pcs, num(line.cts),
@@ -254,43 +240,46 @@ class CostCardSheetBuilder:
             labour += line.labour_amount
             row += 1
 
-        # Totals row always shows a value (0 when there are no lines) - never blank.
-        totals = {8: 'Total', 9: pcs, 10: num(cts), 13: num(amount), 16: num(labour)}
+        # No lines -> leave the total values blank (not 0); the "Total" label always stays.
+        has_lines = bool(lines)
+        totals = {
+            8: 'Total',
+            9: pcs if has_lines else None,
+            10: num(cts) if has_lines else None,
+            13: num(amount) if has_lines else None,
+            16: num(labour) if has_lines else None,
+        }
         for col in range(1, LAST_COL + 1):
-            put(
-                ws, f'{get_column_letter(col)}{row}', totals.get(col),
-                bold=col in totals, fmt=STUDDING_FORMATS.get(col),
-                fill=LABEL_FILL if col == 8 else None,
-            )
+            put(ws, f'{get_column_letter(col)}{row}', totals.get(col), bold=col in totals, fmt=STUDDING_FORMATS.get(col))
         return row + 2
 
     def _section_labour_and_cost(self, ws, card, figures, row):
-        merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True, fill=SECTION_FILL)
+        merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True)
 
-        # Fixed layout: always exactly FIXED_LABOUR_ROWS finish-type rows (padded if
-        # there are fewer, truncated if there are more) plus one STONE row - always
-        # 3 rows total, matching the original template. Missing data shows as 0, not
-        # blank, and the STONE row/label is always present.
+        # Fixed layout: always exactly FIXED_LABOUR_ROWS finish-type rows (padded with
+        # blanks if there are fewer, truncated if there are more) plus one STONE row -
+        # matching the original template, regardless of how many finish lines exist.
         finish_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
         finish_rows = finish_rows[:FIXED_LABOUR_ROWS]
         while len(finish_rows) < FIXED_LABOUR_ROWS:
-            finish_rows.append(('', 0))
-        stone_value = sum(line.labour_amount for _, line in self._lines(card))
+            finish_rows.append(('', None))
+        stone_lines = self._lines(card)
+        stone_value = sum(line.labour_amount for _, line in stone_lines) if stone_lines else None
         labour_rows = finish_rows + [('STONE', stone_value)]
 
         for offset, (label, value) in enumerate(labour_rows, start=1):
-            merge(ws, f'A{row + offset}:B{row + offset}', label, fill=LABEL_FILL)
-            put(ws, f'C{row + offset}', num(value) or 0, fmt=MONEY)
+            merge(ws, f'A{row + offset}:B{row + offset}', label)
+            put(ws, f'C{row + offset}', num(value))
 
         for col, title in zip(COST_COLUMNS, COST_HEADERS):
-            put(ws, f'{col}{row}', title, bold=True, fill=SECTION_FILL)
+            put(ws, f'{col}{row}', title, bold=True)
         for col, key in zip(COST_COLUMNS, COST_KEYS):
             put(ws, f'{col}{row + 1}', num(figures[key]), fmt=MONEY)
 
         return row + len(labour_rows) + 2
 
     def _section_design(self, ws, card, figures, row):
-        merge(ws, f'E{row}:F{row + 2}', 'Design Instruction', fill=LABEL_FILL)
+        merge(ws, f'E{row}:F{row + 2}', 'Design Instruction')
         merge(ws, f'G{row}:P{row + 2}', card.design_note or '')
         return row + 4
 
@@ -313,36 +302,6 @@ class CostCardSheetBuilder:
             ws.add_image(XLImage(buffer), anchor)
         except Exception:
             pass
-
-    def _apply_outer_border(self, ws, last_row):
-        """Draws one single thin border around the whole data block (A1:P{last_row})
-        for the sheet, on top of whatever internal borders each table already has."""
-        def edged(cell, **sides):
-            b = cell.border
-            cell.border = Border(
-                left=sides.get('left', b.left),
-                right=sides.get('right', b.right),
-                top=sides.get('top', b.top),
-                bottom=sides.get('bottom', b.bottom),
-            )
-
-        for col in range(1, LAST_COL + 1):
-            edged(ws.cell(row=1, column=col), top=THIN)
-            edged(ws.cell(row=last_row, column=col), bottom=THIN)
-        for r in range(1, last_row + 1):
-            edged(ws.cell(row=r, column=1), left=THIN)
-            edged(ws.cell(row=r, column=LAST_COL), right=THIN)
-
-    def _setup_print(self, ws, last_row):
-        """Auto-fit the sheet's data onto a single printed page."""
-        ws.print_area = f'A1:{get_column_letter(LAST_COL)}{last_row}'
-        ws.page_setup.orientation = 'landscape'
-        ws.page_setup.fitToWidth = 1
-        ws.page_setup.fitToHeight = 1
-        ws.sheet_properties.pageSetUpPr.fitToPage = True
-        ws.print_options.horizontalCentered = True
-        ws.page_margins.left = ws.page_margins.right = 0.3
-        ws.page_margins.top = ws.page_margins.bottom = 0.4
 
     def _autofit_columns(self, ws):
         merged_starts = {
