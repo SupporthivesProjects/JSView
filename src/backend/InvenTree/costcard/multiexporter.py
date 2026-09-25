@@ -130,6 +130,7 @@ class CostCardSheetBuilder:
         row = 1
         for name in self.sections:
             row = getattr(self, f'_section_{name}')(ws, card, figures, row)
+        self._apply_outer_border(ws, row - 1)
         self._autofit_columns(ws)
 
     def figures(self, card):
@@ -139,27 +140,34 @@ class CostCardSheetBuilder:
         price = overrides.get('silver_troy_ounce' if 'silver' in text else 'gold_troy_ounce')
         ratio = price / card.troy_ounce_price if price is not None and card.troy_ounce_price else None
 
-        fob, metal, tr_oz = card.fob, card.metal_amount, card.troy_ounce_price
+        metal, tr_oz = card.metal_amount, card.troy_ounce_price
         if ratio is not None:
-            fob += (card.metal_amount + card.metal_loss_amount) * (ratio - 1)
             metal, tr_oz = metal * ratio, price
 
+        studding = card.stone_amount
+        labour = card.labour_amount
+
+        markup_pct = overrides['markup_pct'] if overrides.get('markup_pct') is not None else card.vendor_markup_pct
         duty_pct = overrides['duty_pct'] if overrides.get('duty_pct') is not None else card.duty_pct
         margin_pct = overrides['margin_pct'] if overrides.get('margin_pct') is not None else card.margin_pct
 
-        if any(value is not None for value in overrides.values()):
-            with_duty = fob + fob * duty_pct / 100
-            final = (with_duty + with_duty * margin_pct / 100).quantize(Decimal('0.01'))
-        else:
-            with_duty, final = fob + card.duty_amount, card.final_amount
+        # FOB, With Duty and Final Price are always derived from the live components
+        # (Metal + Studding + Labour + Markup, then Duty%, then Margin%) rather than
+        # read off the card's stored aggregate columns, which are not kept in sync and
+        # can sit at 0 even when the underlying figures are correct.
+        subtotal = metal + studding + labour
+        markup_amount = subtotal * markup_pct / 100
+        fob = subtotal + markup_amount
+        with_duty = fob + fob * duty_pct / 100
+        final = (with_duty + with_duty * margin_pct / 100).quantize(Decimal('0.01'))
 
         return {
             'tr_oz': tr_oz,
             'metal': metal,
-            'studding': card.stone_amount,
-            'labour': card.labour_amount,
-            'markup_pct': card.vendor_markup_pct,
-            'markup_amount': card.vendor_markup_amount,
+            'studding': studding,
+            'labour': labour,
+            'markup_pct': markup_pct,
+            'markup_amount': markup_amount,
             'fob': fob,
             'duty_pct': duty_pct,
             'with_duty': with_duty,
@@ -170,7 +178,8 @@ class CostCardSheetBuilder:
     def _section_title(self, ws, card, figures, row):
         merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14)
         if self.logo_path:
-            self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
+            # self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
+            self._image(ws, self.logo_path, f'B{row + 1}', (230, 90))
             return row + 5
         return row + 1
 
@@ -302,6 +311,32 @@ class CostCardSheetBuilder:
             ws.add_image(XLImage(buffer), anchor)
         except Exception:
             pass
+
+    def _apply_outer_border(self, ws, last_row, last_col=LAST_COL):
+        """Draw a single thin border around the sheet's whole used range (A1:last_col,
+        1..last_row), preserving whatever inner borders each cell already has."""
+        for col in range(1, last_col + 1):
+            top_cell = ws.cell(row=1, column=col)
+            top_cell.border = Border(
+                left=top_cell.border.left, right=top_cell.border.right,
+                top=THIN, bottom=top_cell.border.bottom,
+            )
+            bottom_cell = ws.cell(row=last_row, column=col)
+            bottom_cell.border = Border(
+                left=bottom_cell.border.left, right=bottom_cell.border.right,
+                top=bottom_cell.border.top, bottom=THIN,
+            )
+        for row in range(1, last_row + 1):
+            left_cell = ws.cell(row=row, column=1)
+            left_cell.border = Border(
+                left=THIN, right=left_cell.border.right,
+                top=left_cell.border.top, bottom=left_cell.border.bottom,
+            )
+            right_cell = ws.cell(row=row, column=last_col)
+            right_cell.border = Border(
+                left=right_cell.border.left, right=THIN,
+                top=right_cell.border.top, bottom=right_cell.border.bottom,
+            )
 
     def _autofit_columns(self, ws):
         merged_starts = {
