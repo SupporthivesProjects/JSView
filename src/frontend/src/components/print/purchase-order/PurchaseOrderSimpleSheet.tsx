@@ -110,9 +110,13 @@ function LineRows({ line }: { line: PurchaseOrderPrintLine }): ReactNode {
 }
 
 /**
- * Printable "vendor" purchase order sheet.
+ * Printable purchase order sheet for the two "simple" formats.
+ *
+ * `vendor` and `self` share the same layout; the only difference is that the
+ * `self` payload also carries the order value, which the vendor sheet must
+ * never show.
  */
-export default function PurchaseOrderVendorSheet({
+export default function PurchaseOrderSimpleSheet({
   data
 }: { data: PurchaseOrderPrintPayload }): ReactNode {
   const po = data.po;
@@ -229,6 +233,13 @@ export default function PurchaseOrderVendorSheet({
               <td>{totals.metal_value}</td>
               <td className='po-totals-label'>Labour Value</td>
               <td>{totals.labour_value}</td>
+              {/* Only returned for the `self` format */}
+              {totals.order_value !== undefined && (
+                <>
+                  <td className='po-totals-label'>Order Value</td>
+                  <td>{totals.order_value}</td>
+                </>
+              )}
             </tr>
           </tbody>
         </table>

@@ -4,13 +4,16 @@ import { IconPrinter } from '@tabler/icons-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import PurchaseOrderVendorSheet from '@components/print/purchase-order/PurchaseOrderVendorSheet';
+import PurchaseOrderSimpleSheet from '@components/print/purchase-order/PurchaseOrderSimpleSheet';
 import { takePrintPayload } from '@components/print/purchase-order/printPayload';
 import type { PurchaseOrderPrintPayload } from '@components/print/purchase-order/types';
 import { useApi } from '@context/ApiContext';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { apiUrl } from '@lib/functions/Api';
 import '@components/print/purchase-order/purchaseOrderPrint.css';
+
+/** Print formats rendered by the simple PO sheet */
+const SIMPLE_PRINT_TYPES = ['vendor', 'self'];
 
 /**
  * Standalone (layout-free) print view for a purchase order.
@@ -78,7 +81,8 @@ export default function PurchaseOrderPrintPage() {
     return null;
   }
 
-  if (printType !== 'vendor') {
+  // The cost card formats are not rendered by this view (yet)
+  if (!SIMPLE_PRINT_TYPES.includes(printType)) {
     return (
       <Alert color='yellow' title={t`Not available`} m='md'>
         {t`This print format is not available yet`}
@@ -96,7 +100,7 @@ export default function PurchaseOrderPrintPage() {
           {t`Print`}
         </Button>
       </div>
-      <PurchaseOrderVendorSheet data={data} />
+      <PurchaseOrderSimpleSheet data={data} />
     </div>
   );
 }
