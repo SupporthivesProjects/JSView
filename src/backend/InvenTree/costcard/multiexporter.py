@@ -33,7 +33,7 @@ THIN = Side(style='thin')
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
-MIN_COL_WIDTH = 8
+MIN_COL_WIDTH = 4
 MAX_COL_WIDTH = 26
 FIXED_LABOUR_ROWS = 2  # finish-type rows only; a STONE row is always added on top of these
 STUDDING_HEADERS = [
@@ -224,8 +224,9 @@ class CostCardSheetBuilder:
             put(ws, f'{get_column_letter(col)}{row + 1}', title, bold=True)
         row += 2
 
+        lines = self._lines(card)
         pcs = cts = amount = labour = 0
-        for kind, line in self._lines(card):
+        for kind, line in lines:
             values = [
                 kind, name_of(line.shape), name_of(line.cut), size_of(line.mm_size), line.sieve_size or '',
                 name_of(line.stone), name_of(line.color), num(line.pointer), line.pcs, num(line.cts),
@@ -239,7 +240,15 @@ class CostCardSheetBuilder:
             labour += line.labour_amount
             row += 1
 
-        totals = {8: 'Total', 9: pcs, 10: num(cts), 13: num(amount), 16: num(labour)}
+        # No lines -> leave the total values blank (not 0); the "Total" label always stays.
+        has_lines = bool(lines)
+        totals = {
+            8: 'Total',
+            9: pcs if has_lines else None,
+            10: num(cts) if has_lines else None,
+            13: num(amount) if has_lines else None,
+            16: num(labour) if has_lines else None,
+        }
         for col in range(1, LAST_COL + 1):
             put(ws, f'{get_column_letter(col)}{row}', totals.get(col), bold=col in totals, fmt=STUDDING_FORMATS.get(col))
         return row + 2
@@ -254,7 +263,9 @@ class CostCardSheetBuilder:
         finish_rows = finish_rows[:FIXED_LABOUR_ROWS]
         while len(finish_rows) < FIXED_LABOUR_ROWS:
             finish_rows.append(('', None))
-        labour_rows = finish_rows + [('STONE', sum(line.labour_amount for _, line in self._lines(card)))]
+        stone_lines = self._lines(card)
+        stone_value = sum(line.labour_amount for _, line in stone_lines) if stone_lines else None
+        labour_rows = finish_rows + [('STONE', stone_value)]
 
         for offset, (label, value) in enumerate(labour_rows, start=1):
             merge(ws, f'A{row + offset}:B{row + offset}', label)
@@ -311,7 +322,8 @@ class CostCardSheetBuilder:
         for col in range(1, LAST_COL + 1):
             letter = get_column_letter(col)
             length = widths.get(letter, 0)
-            ws.column_dimensions[letter].width = min(max(length + 2, MIN_COL_WIDTH), MAX_COL_WIDTH)
+            # Fit tightly to the actual content - no extra padding added on top.
+            ws.column_dimensions[letter].width = min(max(length, MIN_COL_WIDTH), MAX_COL_WIDTH)
 
     def _unique_title(self, card, used):
         base = self.sheet_title(card) if self.sheet_title else card.cost_card_no
