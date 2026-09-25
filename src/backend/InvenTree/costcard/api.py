@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.urls import include, path
 
 from rest_framework import generics, status
