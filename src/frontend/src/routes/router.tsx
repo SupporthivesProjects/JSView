@@ -86,6 +86,11 @@ export const PurchaseOrderDetail = Loadable(
   lazy(() => import("@containers/purchase-order")),
 );
 
+// Standalone (layout-free) printable purchase order sheet
+export const PurchaseOrderPrint = Loadable(
+  lazy(() => import("@containers/purchase-order-print")),
+);
+
 export const SalesIndex = Loadable(lazy(() => import("@containers/sales")));
 
 export const SalesOrderDetail = Loadable(
@@ -173,6 +178,12 @@ export const VerifyEmail = Loadable(
 export const routes = (
   <Routes>
     <Route path="*" element={<NotFound />} errorElement={<ErrorPage />} />
+    {/* Print views render without the application chrome */}
+    <Route
+      path="print/purchase-order/:id"
+      element={<PurchaseOrderPrint />}
+      errorElement={<ErrorPage />}
+    />
     <Route path="/" element={<LayoutComponent />} errorElement={<ErrorPage />}>
       <Route index element={<Home />} />,
       <Route path="home/" element={<Home />} />,

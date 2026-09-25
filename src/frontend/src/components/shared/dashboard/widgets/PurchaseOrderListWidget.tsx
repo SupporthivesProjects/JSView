@@ -7,11 +7,13 @@ import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { UserRoles } from '@lib/enums/Roles';
 import { apiUrl } from '@lib/functions/Api';
 import { cancelEvent } from '@lib/functions/Events';
+import { getBaseUrl } from '@lib/functions/Navigation';
 import useTable from '@lib/hooks/UseTable';
 import type { TableColumn } from '@lib/types/Tables';
 import { useApi } from '@context/ApiContext';
 import { showApiErrorMessage } from '@helpers/notifications';
 import { useUserState } from '@store/UserState';
+import { stashPrintPayload } from '../../../print/purchase-order/printPayload';
 import {
   PURCHASE_ORDER_FORM_GRID_COLUMNS,
   PURCHASE_ORDER_MODAL_SIZE,
@@ -60,12 +62,55 @@ function PurchaseOrderListWidget() {
   const [selectedLines, setSelectedLines] = useState<any[]>([]);
 
 
+  /*
+   * Fetch the print payload for the selected order, park it in temporary
+   * storage and hand it to a standalone print view in a new tab.
+   */
+  const openPrintView = useCallback(
+    async (printType: string) => {
+      if (!selectedPurchaseOrder) {
+        return;
+      }
+
+      try {
+        const response = await api.get(
+          `${apiUrl(ApiEndpoints.purchase_api, selectedPurchaseOrder)}print/`,
+          { params: { type: printType } }
+        );
+
+        const key = stashPrintPayload(response.data);
+
+        const url = new URL(
+          `/${getBaseUrl()}/print/purchase-order/${selectedPurchaseOrder}`,
+          window.location.origin
+        );
+
+        url.searchParams.set('type', printType);
+
+        if (key) {
+          url.searchParams.set('key', key);
+        }
+
+        window.open(url.toString(), '_blank', 'noopener,noreferrer');
+      } catch (error: any) {
+        showApiErrorMessage({
+          error: error,
+          title: t`Error loading purchase order print data`
+        });
+      }
+    },
+    [api, selectedPurchaseOrder]
+  );
+
   const printActions: ApiFormAction[] = useMemo(() => {
     return PO_PRINT_TYPES.map((printType) => ({
       text: printType.label(),
-      onClick: () => {}
+      onClick:
+        printType.type === 'vendor'
+          ? () => openPrintView(printType.type)
+          : () => {}
     }));
-  }, []);
+  }, [openPrintView]);
 
   const editPurchaseOrder = useEditApiFormModal({
     url: ApiEndpoints.purchase_api,

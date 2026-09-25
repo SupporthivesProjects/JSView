@@ -1,0 +1,271 @@
+/*
+ * Styling for the printable Purchase Order sheets.
+ *
+ * The sheet is a plain black-on-white document: it deliberately ignores the
+ * application theme (including dark mode) so that what is on screen is exactly
+ * what comes out of the printer / PDF export.
+ */
+
+.po-print-page {
+	background: #f1f3f5;
+	min-height: 100vh;
+	padding: 16px;
+	color: #000;
+}
+
+.po-print-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	max-width: 1100px;
+	margin: 0 auto 16px auto;
+}
+
+.po-print-toolbar-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: #212529;
+}
+
+.po-print-sheet {
+	background: #fff;
+	color: #000;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 10px;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	line-height: 1.25;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+
+.po-print-sheet table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.po-print-sheet td,
+.po-print-sheet th {
+	border: 1px solid #000;
+	padding: 3px 5px;
+	vertical-align: middle;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+/* --- Letterhead ------------------------------------------------------- */
+
+/*
+ * The sheet is built from stacked tables so that each block keeps its own
+ * column widths; the negative offset collapses the doubled border where two
+ * blocks meet, keeping every rule a single hairline.
+ */
+.po-print-sheet .po-fields-table {
+	margin-top: -1px;
+}
+
+.po-print-sheet .po-meta-table {
+	margin-top: 6px;
+}
+
+.po-print-sheet .po-logo-cell {
+	width: 60px;
+	text-align: center;
+	padding: 4px;
+}
+
+.po-print-sheet .po-logo-cell img {
+	width: 40px;
+	height: 40px;
+	object-fit: contain;
+}
+
+.po-print-sheet .po-company-cell {
+	text-align: center;
+	padding: 6px 8px;
+}
+
+.po-print-sheet .po-company-name {
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.po-print-sheet .po-company-line {
+	font-size: 14px;
+}
+
+.po-print-sheet .po-doc-title {
+	text-align: center;
+	font-weight: 700;
+	font-size: 16px;
+	padding: 4px;
+}
+
+/* --- Header fields ---------------------------------------------------- */
+
+.po-print-sheet .po-field-head th {
+	font-weight: 400;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.po-print-sheet .po-field-value td {
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* --- Vendor address / terms / remarks / stamp ------------------------- */
+
+.po-print-sheet .po-meta-table td {
+	height: 42px;
+}
+
+.po-print-sheet .po-meta-label {
+	width: 100px;
+	text-align: left;
+}
+
+.po-print-sheet .po-meta-value {
+	text-align: left;
+	white-space: pre-wrap;
+}
+
+.po-print-sheet .po-stamp-head {
+	width: 110px;
+	text-align: center;
+}
+
+.po-print-sheet .po-stamp-image {
+	text-align: center;
+	height: 110px;
+}
+
+.po-print-sheet .po-stamp-image img {
+	max-width: 100%;
+	max-height: 100px;
+	object-fit: contain;
+}
+
+/* --- Line items ------------------------------------------------------- */
+
+.po-print-sheet .po-lines-table {
+	margin-top: 10px;
+}
+
+.po-print-sheet .po-lines-table th {
+	text-align: center;
+	font-weight: 700;
+}
+
+.po-print-sheet .po-lines-table td {
+	text-align: center;
+}
+
+.po-print-sheet .po-col-sr {
+	width: 45px;
+}
+
+.po-print-sheet .po-col-style {
+	width: 180px;
+}
+
+.po-print-sheet .po-col-vstyle {
+	width: 130px;
+}
+
+.po-print-sheet .po-col-qty {
+	width: 70px;
+}
+
+.po-print-sheet .po-col-trailing {
+	width: 90px;
+}
+
+/*
+ * The size breakdown sits in a nested table so that its cells size to their
+ * content (as on the reference sheet) rather than to the outer columns.
+ */
+.po-print-sheet .po-breakdown-cell {
+	border: 1px solid #000;
+	padding: 0;
+}
+
+.po-print-sheet .po-breakdown-table {
+	width: auto;
+	border-collapse: collapse;
+	table-layout: auto;
+}
+
+.po-print-sheet .po-breakdown-table td {
+	border: 1px solid #000;
+	border-top: none;
+	border-left: none;
+	padding: 3px 8px;
+	text-align: center;
+	min-width: 42px;
+}
+
+.po-print-sheet .po-breakdown-label {
+	min-width: 100px;
+	text-align: center;
+}
+
+.po-print-sheet .po-breakdown-table tr:last-child td {
+	border-bottom: none;
+}
+
+.po-print-sheet .po-totals-table {
+	margin-top: 10px;
+}
+
+.po-print-sheet .po-totals-table td {
+	text-align: center;
+}
+
+.po-print-sheet .po-totals-label {
+	font-weight: 700;
+}
+
+/* --- Print ------------------------------------------------------------ */
+
+@media print {
+	@page {
+		size: A4 portrait;
+		margin: 8mm;
+	}
+
+	.po-print-no-print {
+		display: none !important;
+	}
+
+	.po-print-page {
+		background: #fff;
+		padding: 0;
+	}
+
+	.po-print-sheet {
+		max-width: none;
+		padding: 0;
+		box-shadow: none;
+		font-size: 10px;
+	}
+
+	.po-print-sheet .po-company-name {
+		font-size: 15px;
+	}
+
+	.po-print-sheet .po-company-line {
+		font-size: 11px;
+	}
+
+	.po-print-sheet .po-doc-title {
+		font-size: 13px;
+	}
+
+	.po-print-sheet tr {
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+}
