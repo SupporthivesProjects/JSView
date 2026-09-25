@@ -35,7 +35,7 @@ CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
 MIN_COL_WIDTH = 8
 MAX_COL_WIDTH = 26
-MIN_LABOUR_ROWS = 2
+FIXED_LABOUR_ROWS = 2  # finish-type rows only; a STONE row is always added on top of these
 STUDDING_HEADERS = [
     'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
     'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
@@ -121,7 +121,11 @@ class CostCardSheetBuilder:
         return buffer.getvalue()
 
     def fill_sheet(self, ws, card):
-        ws.sheet_view.showGridLines = False
+        # Keep the workbook's default gridlines visible everywhere. Only the explicit
+        # thin BORDER boxes drawn on the Metal / Studding / Labour / Cost tables (the
+        # "data area") are meant to stand out - the rest of the sheet should still show
+        # the normal default book border/gridline like any other worksheet.
+        ws.sheet_view.showGridLines = True
         figures = self.figures(card)
         row = 1
         for name in self.sections:
@@ -243,8 +247,12 @@ class CostCardSheetBuilder:
     def _section_labour_and_cost(self, ws, card, figures, row):
         merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True)
 
+        # Fixed layout: always exactly FIXED_LABOUR_ROWS finish-type rows (padded with
+        # blanks if there are fewer, truncated if there are more) plus one STONE row -
+        # matching the original template, regardless of how many finish lines exist.
         finish_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
-        while len(finish_rows) < MIN_LABOUR_ROWS:
+        finish_rows = finish_rows[:FIXED_LABOUR_ROWS]
+        while len(finish_rows) < FIXED_LABOUR_ROWS:
             finish_rows.append(('', None))
         labour_rows = finish_rows + [('STONE', sum(line.labour_amount for _, line in self._lines(card)))]
 
