@@ -34,7 +34,8 @@ BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
 MIN_COL_WIDTH = 8
-MAX_COL_WIDTH = 40
+MAX_COL_WIDTH = 26
+MIN_LABOUR_ROWS = 2
 STUDDING_HEADERS = [
     'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
     'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
@@ -241,8 +242,12 @@ class CostCardSheetBuilder:
 
     def _section_labour_and_cost(self, ws, card, figures, row):
         merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True)
-        labour_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
-        labour_rows.append(('STONE', sum(line.labour_amount for _, line in self._lines(card))))
+
+        finish_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
+        while len(finish_rows) < MIN_LABOUR_ROWS:
+            finish_rows.append(('', None))
+        labour_rows = finish_rows + [('STONE', sum(line.labour_amount for _, line in self._lines(card)))]
+
         for offset, (label, value) in enumerate(labour_rows, start=1):
             merge(ws, f'A{row + offset}:B{row + offset}', label)
             put(ws, f'C{row + offset}', num(value))
@@ -280,10 +285,17 @@ class CostCardSheetBuilder:
             pass
 
     def _autofit_columns(self, ws):
+        merged_starts = {
+            (rng.min_row, rng.min_col)
+            for rng in ws.merged_cells.ranges
+            if rng.max_col > rng.min_col
+        }
         widths = {}
         for row in ws.iter_rows():
             for cell in row:
                 if isinstance(cell, MergedCell) or cell.value is None:
+                    continue
+                if (cell.row, cell.column) in merged_starts:
                     continue
                 length = len(str(cell.value))
                 col = cell.column_letter
