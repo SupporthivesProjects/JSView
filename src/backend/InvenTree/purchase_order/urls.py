@@ -2,13 +2,17 @@ from django.urls import include, path
 
 from . import views
 
-
 purchase_order_api_urls = [
     path('po/', include([
         path(
             '<int:pk>/lines/',
             views.PurchaseOrderLineList.as_view(),
             name='api-po-lines-for-order',
+        ),
+        path(
+            '<int:pk>/print/',
+            views.POPrintView.as_view(),
+            name='api-po-print',
         ),
         path(
             '<int:pk>/',
