@@ -8,6 +8,7 @@ import ColorToggleDashboardWidget from './widgets/ColorToggleWidget';
 import GetStartedWidget from './widgets/GetStartedWidget';
 import LanguageSelectDashboardWidget from './widgets/LanguageSelectWidget';
 import NewsWidget from './widgets/NewsWidget';
+import PurchaseOrderListDashboardWidget from './widgets/PurchaseOrderListWidget';
 import QueryCountDashboardWidget from './widgets/QueryCountDashboardWidget';
 import QueryDashboardWidget from './widgets/QueryDashboardWidget';
 import StocktakeDashboardWidget from './widgets/StocktakeDashboardWidget';
@@ -250,6 +251,14 @@ function BuiltinActionWidgets(): DashboardWidgetProps[] {
 
 /**
  *
+ * @returns A list of built-in dashboard widgets which display a table of records
+ */
+function BuiltinTableWidgets(): DashboardWidgetProps[] {
+  return [PurchaseOrderListDashboardWidget()];
+}
+
+/**
+ *
  * @returns A list of built-in dashboard widgets
  */
 export default function DashboardWidgetLibrary(): DashboardWidgetProps[] {
@@ -257,6 +266,7 @@ export default function DashboardWidgetLibrary(): DashboardWidgetProps[] {
     ...BuiltinQueryCountWidgets(),
     ...BuiltinGettingStartedWidgets(),
     ...BuiltinSettingsWidgets(),
-    ...BuiltinActionWidgets()
+    ...BuiltinActionWidgets(),
+    ...BuiltinTableWidgets()
   ];
 }
