@@ -22,10 +22,10 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 from PIL import Image as PILImage
+import os
+from django.conf import settings
 
-# TODO: replace with the real company logo path once available (or set
-# settings.COST_CARD_LOGO_PATH to point at it).
-DEFAULT_LOGO_PATH = getattr(settings, 'COST_CARD_LOGO_PATH', None) or '/opt/inventree/data/static/img/company_logo.png'
+DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
 
 FOOTER_TEXT = 'The above quotation is based on current market price and is subject to change at any time without prior notice'
 LAST_COL = 16
