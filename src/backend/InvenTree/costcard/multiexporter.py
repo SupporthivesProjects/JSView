@@ -274,7 +274,7 @@ class CostCardSheetBuilder:
             pass
 
     def _unique_title(self, card, used):
-        base = self.sheet_title(card) if self.sheet_title else (card.our_style_no or card.cost_card_no)
+        base = self.sheet_title(card) if self.sheet_title else card.cost_card_no
         base = re.sub(r'[\[\]:*?/\\]', '-', str(base)).strip()[:31] or 'Sheet'
         title, count = base, 1
         while title.lower() in used:
