@@ -1,0 +1,219 @@
+/*
+ * Styling for the printable Purchase Order cost breakdown sheets
+ * (`vendor_costcard` / `self_costcard`).
+ *
+ * Column widths are expressed as percentages of the sheet so that the layout
+ * holds at any paper size.
+ */
+
+.cc-sheet-set {
+	color: #000;
+}
+
+.cc-sheet {
+	break-after: page;
+	page-break-after: always;
+	margin-bottom: 30px;
+}
+
+.cc-sheet:last-child {
+	break-after: auto;
+	page-break-after: auto;
+	margin-bottom: 0;
+}
+
+/*
+ * Auto layout with non-wrapping cells: the column widths declared further down
+ * act as proportions (as on the reference sheet) while a long value widens its
+ * column instead of wrapping onto a second line.
+ */
+.cc-sheet table {
+	border-collapse: collapse;
+	table-layout: auto;
+}
+
+.cc-sheet td,
+.cc-sheet th {
+	border: 1px solid #000;
+	padding: 2px 5px;
+	text-align: center;
+	vertical-align: middle;
+	font-weight: 400;
+	white-space: nowrap;
+}
+
+/* --- Sheet head ------------------------------------------------------- */
+
+.cc-sheet-head {
+	position: relative;
+	min-height: 46px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.cc-logo {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 42px;
+	height: 42px;
+	object-fit: contain;
+}
+
+.cc-title {
+	text-align: center;
+}
+
+/* --- Identification block --------------------------------------------- */
+
+.cc-top {
+	display: flex;
+	align-items: flex-start;
+}
+
+.cc-info-left {
+	min-width: 11.8%;
+	margin-right: 2.8%;
+}
+
+.cc-info-middle {
+	min-width: 13.8%;
+	margin-right: 0.8%;
+}
+
+.cc-sheet .cc-info-label {
+	text-align: right;
+}
+
+.cc-sheet .cc-info-value {
+	text-align: center;
+}
+
+.cc-sheet .cc-info-left .cc-info-label {
+	width: 39%;
+}
+
+.cc-sheet .cc-info-middle .cc-info-label {
+	width: 44%;
+}
+
+.cc-images-table {
+	width: 12.3%;
+	min-width: 150px;
+}
+
+.cc-images-table td {
+	width: 33.33%;
+	height: 100px;
+}
+
+.cc-images-table img {
+	max-width: 100%;
+	max-height: 94px;
+	object-fit: contain;
+}
+
+/* --- Metal ------------------------------------------------------------ */
+
+.cc-metal-table {
+	width: 36.6%;
+	margin-top: 12px;
+}
+
+/* --- Studding --------------------------------------------------------- */
+
+.cc-studding-table {
+	width: 100%;
+	margin-top: 14px;
+}
+
+.cc-sheet .cc-section-label {
+	text-align: left;
+}
+
+.cc-sheet .cc-section-centered {
+	text-align: center;
+}
+
+.cc-sheet .cc-total-label {
+	text-align: right;
+}
+
+/* --- Labour / pricing ------------------------------------------------- */
+
+.cc-bottom {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-top: 14px;
+}
+
+.cc-bottom-left {
+	min-width: 13.7%;
+}
+
+/*
+ * Shrink-to-fit, so the pricing summary sets the width of the block, but never
+ * narrower than the reference proportion (the vendor sheet has fewer columns).
+ */
+.cc-bottom-right {
+	display: inline-block;
+	min-width: 39.4%;
+	max-width: 60%;
+}
+
+.cc-block-title {
+	padding-bottom: 3px;
+}
+
+.cc-labour-table {
+	width: 100%;
+}
+
+.cc-sheet .cc-labour-label {
+	text-align: right;
+}
+
+.cc-sheet .cc-labour-value {
+	text-align: left;
+}
+
+.cc-summary-table {
+	width: auto;
+	margin-left: auto;
+}
+
+.cc-design-table {
+	width: 100%;
+	margin-top: 24px;
+}
+
+.cc-sheet .cc-design-label {
+	width: 19%;
+	text-align: left;
+}
+
+.cc-sheet .cc-design-value {
+	text-align: left;
+	white-space: normal;
+}
+
+@media print {
+	.cc-sheet {
+		margin-bottom: 0;
+	}
+
+	.cc-sheet td,
+	.cc-sheet th {
+		padding: 1px 3px;
+	}
+
+	.cc-images-table td {
+		height: 80px;
+	}
+
+	.cc-images-table img {
+		max-height: 76px;
+	}
+}

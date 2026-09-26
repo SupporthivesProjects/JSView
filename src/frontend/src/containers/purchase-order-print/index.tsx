@@ -4,6 +4,7 @@ import { IconPrinter } from '@tabler/icons-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import PurchaseOrderCostCardSheet from '@components/print/purchase-order/PurchaseOrderCostCardSheet';
 import PurchaseOrderSimpleSheet from '@components/print/purchase-order/PurchaseOrderSimpleSheet';
 import { takePrintPayload } from '@components/print/purchase-order/printPayload';
 import type { PurchaseOrderPrintPayload } from '@components/print/purchase-order/types';
@@ -14,6 +15,9 @@ import '@components/print/purchase-order/purchaseOrderPrint.css';
 
 /** Print formats rendered by the simple PO sheet */
 const SIMPLE_PRINT_TYPES = ['vendor', 'self'];
+
+/** Print formats rendered by the cost breakdown sheet */
+const COSTCARD_PRINT_TYPES = ['vendor_costcard', 'self_costcard'];
 
 /**
  * Standalone (layout-free) print view for a purchase order.
@@ -28,6 +32,7 @@ export default function PurchaseOrderPrintPage() {
   const api = useApi();
 
   const printType = searchParams.get('type') ?? 'vendor';
+  const isCostCard = COSTCARD_PRINT_TYPES.includes(printType);
 
   // Consume the handed-over payload on first render
   const [data, setData] = useState<PurchaseOrderPrintPayload | null>(() =>
@@ -59,6 +64,21 @@ export default function PurchaseOrderPrintPage() {
     }
   }, [data, printType]);
 
+  /*
+   * Paper orientation is a document level rule, so it is injected here rather
+   * than in a stylesheet: the wide cost breakdown sheets need landscape, the
+   * order sheets portrait.
+   */
+  useEffect(() => {
+    const orientation = isCostCard ? 'landscape' : 'portrait';
+    const style = document.createElement('style');
+
+    style.textContent = `@page { size: A4 ${orientation}; margin: 8mm; }`;
+    document.head.appendChild(style);
+
+    return () => style.remove();
+  }, [isCostCard]);
+
   const printSheet = useCallback(() => window.print(), []);
 
   if (loading) {
@@ -81,8 +101,7 @@ export default function PurchaseOrderPrintPage() {
     return null;
   }
 
-  // The cost card formats are not rendered by this view (yet)
-  if (!SIMPLE_PRINT_TYPES.includes(printType)) {
+  if (!SIMPLE_PRINT_TYPES.includes(printType) && !isCostCard) {
     return (
       <Alert color='yellow' title={t`Not available`} m='md'>
         {t`This print format is not available yet`}
@@ -91,7 +110,7 @@ export default function PurchaseOrderPrintPage() {
   }
 
   return (
-    <div className='po-print-page'>
+    <div className={`po-print-page${isCostCard ? ' po-print-page-wide' : ''}`}>
       <div className='po-print-toolbar po-print-no-print'>
         <span className='po-print-toolbar-title'>
           {t`Purchase Order`}: {data.po.pono}
@@ -100,7 +119,11 @@ export default function PurchaseOrderPrintPage() {
           {t`Print`}
         </Button>
       </div>
-      <PurchaseOrderSimpleSheet data={data} />
+      {isCostCard ? (
+        <PurchaseOrderCostCardSheet data={data} />
+      ) : (
+        <PurchaseOrderSimpleSheet data={data} />
+      )}
     </div>
   );
 }

@@ -40,14 +40,23 @@
 	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
-.po-print-sheet table {
+.po-print-page-wide .po-print-toolbar,
+.po-print-sheet-wide {
+	max-width: 1700px;
+}
+
+.po-print-sheet-wide {
+	font-size: 12px;
+}
+
+.po-print-sheet > table {
 	width: 100%;
 	border-collapse: collapse;
 	table-layout: fixed;
 }
 
-.po-print-sheet td,
-.po-print-sheet th {
+.po-print-sheet > table td,
+.po-print-sheet > table th {
 	border: 1px solid #000;
 	padding: 3px 5px;
 	vertical-align: middle;
@@ -231,11 +240,6 @@
 /* --- Print ------------------------------------------------------------ */
 
 @media print {
-	@page {
-		size: A4 portrait;
-		margin: 8mm;
-	}
-
 	.po-print-no-print {
 		display: none !important;
 	}
@@ -250,6 +254,11 @@
 		padding: 0;
 		box-shadow: none;
 		font-size: 10px;
+	}
+
+	/* The cost breakdown sheets carry far more columns per row */
+	.po-print-sheet-wide {
+		font-size: 8px;
 	}
 
 	.po-print-sheet .po-company-name {

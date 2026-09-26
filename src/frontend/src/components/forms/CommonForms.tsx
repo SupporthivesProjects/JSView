@@ -515,7 +515,10 @@ export type POType = "REQUEST" | "ORDER";
  * order additionally names the vendor it is placed with, and the customer's
  * own reference number for it.
  */
-function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet {
+function purchaseHeaderFields(
+  potype: POType,
+  editing = false,
+): ApiFormFieldSet {
   const isOrder = potype === "ORDER";
 
   const currentUser = useUserState.getState().getUser();
@@ -558,7 +561,7 @@ function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet 
       : {}),
 
     // Row 2 - who the record is for, and on what terms
-    
+
     acexeid: {
       label: "Executive",
       api_url: apiUrl(ApiEndpoints.master_executive),
@@ -568,19 +571,19 @@ function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet 
         return instance?.name ?? "";
       },
     },
-    ...(editing
-      ? {}
-      : {
-          prepby_username: {
-            label: "Prepared By",
-            description: `Recorded against your account`,
-            field_type: "string" as const,
-            value: preparedBy,
-            disabled: true,
-            required: false,
-            exclude: true,
-          },
-        }),
+    // ...(editing
+    //   ? {}
+    //   : {
+    prepby_username: {
+      label: "Prepared By",
+      description: `Recorded against your account`,
+      field_type: "string" as const,
+      value: preparedBy,
+      disabled: true,
+      required: false,
+      exclude: true,
+    },
+    // }),
     termsid: {
       label: "Terms",
       api_url: apiUrl(ApiEndpoints.master_terms),
@@ -612,15 +615,17 @@ function purchaseHeaderFields(potype: POType, editing = false): ApiFormFieldSet 
     },
     ...(isOrder
       ? {
-    rem: {
-      label: "Remarks",
-      multiline: true,
-      gridSpan: 1,
-    } }: {
-      rem: {
-      label: "Remarks",
-      }
-    }),
+          rem: {
+            label: "Remarks",
+            multiline: true,
+            gridSpan: 1,
+          },
+        }
+      : {
+          rem: {
+            label: "Remarks",
+          },
+        }),
     ...(isOrder
       ? {
           note: {
@@ -2026,7 +2031,6 @@ export function useCustomStateFields(): ApiFormFieldSet {
     };
   }, [statusOptions]);
 }
-
 
 /** Columns of the Picture Presentation stone summary, in display order */
 const PICTURE_PRESENTATION_STONE_COLUMNS = [

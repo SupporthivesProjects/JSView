@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import CompanyLogo from '@assets/images/inventree-component.svg';
+import { formatPrintDate, splitList } from './format';
 import './purchaseOrderPrint.css';
 import type {
   PurchaseOrderPrintLine,
@@ -17,53 +18,6 @@ const COMPANY = {
   contact:
     'Phone: 1-212-3910312 Fax: 1-212-3910313 E-mail: sarju@jewelsourceinc.com'
 };
-
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec'
-];
-
-/**
- * Format an ISO date (YYYY-MM-DD) as e.g. "13 Aug 2026".
- * Parsed from the string itself, so the printed date never shifts with the
- * browser timezone.
- */
-function formatPrintDate(value: string | null | undefined): string {
-  if (!value) {
-    return '';
-  }
-
-  const [year, month, day] = value.slice(0, 10).split('-');
-  const monthName = MONTHS[Number(month) - 1];
-
-  if (!monthName || !day || !year) {
-    return value;
-  }
-
-  return `${Number(day)} ${monthName} ${year}`;
-}
-
-/** Split a comma separated field (e.g. "6,7,8") into its parts */
-function splitList(value: string | null | undefined): string[] {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-}
 
 function LineRows({ line }: { line: PurchaseOrderPrintLine }): ReactNode {
   const sizes = splitList(line.size);

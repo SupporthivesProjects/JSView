@@ -35,9 +35,6 @@ const PO_PRINT_TYPES: { type: string; label: () => string }[] = [
   { type: 'self_costcard', label: () => t`Self Costcard` }
 ];
 
-/** Print types which the standalone print view can render */
-const PRINTABLE_TYPES: string[] = ['vendor', 'self'];
-
 
 function PlaceholderColumn(accessor: string, title: string): TableColumn {
   return {
@@ -108,9 +105,7 @@ function PurchaseOrderListWidget() {
   const printActions: ApiFormAction[] = useMemo(() => {
     return PO_PRINT_TYPES.map((printType) => ({
       text: printType.label(),
-      onClick: PRINTABLE_TYPES.includes(printType.type)
-        ? () => openPrintView(printType.type)
-        : () => {}
+      onClick: () => openPrintView(printType.type)
     }));
   }, [openPrintView]);
 
