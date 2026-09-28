@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import CompanyLogo from '@assets/images/inventree-component.svg';
+import CompanyLogo from '@assets/images/js_logo.png';
 import { formatPrintDate, splitList } from './format';
 import './purchaseOrderPrint.css';
 import type {
