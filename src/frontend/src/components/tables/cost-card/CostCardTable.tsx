@@ -703,7 +703,7 @@ export default function CostCardTable() {
   // `cost_card_ids` is not set here: it is assembled at submit time from the
   // style numbers shown on the form (which are pre-filled from the ticked rows).
   const picturePresentationParams = useMemo(
-    () => new URLSearchParams({ export: "true" }),
+    () => new URLSearchParams({ export: "true", export_format: "xlsx" }),
     [],
   );
 
