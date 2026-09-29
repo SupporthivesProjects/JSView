@@ -319,6 +319,7 @@ INSTALLED_APPS = [
     'master.apps.MasterConfig',
     'costcard.apps.CostCardConfig',
     'purchase_order.apps.PurchaseOrderConfig',
+    'vendor_shipment.apps.VendorShipmentConfig',
     'properties.apps.PropertiesConfig',
     'revision.apps.RevisionConfig',
     'requisition.apps.RequisitionConfig',
