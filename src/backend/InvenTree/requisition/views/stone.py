@@ -28,29 +28,38 @@ SUMMARY_FIELDS = [
     'sieve_size',
     'pointer',
 ]
+ZERO = Decimal('0')
+FOUR_DP = Decimal('0.0001')
 
 
 def _label(value):
-    """Plain text for a CharField value or a related object (mm_size / name)."""
     if value is None:
         return ''
+
     for attr in ('mm_size', 'name'):
         inner = getattr(value, attr, None)
+
         if inner:
             return str(inner)
+
     return str(value)
 
 
 def _mm_sort(value):
     match = re.search(r'\d+(?:\.\d+)?', value)
+
     return (float(match.group()) if match else 0.0, value)
+
+
+def _stone_totals(stone, qty):
+    return (stone.pcs or 0) * qty, (stone.cts or ZERO) * qty
 
 
 class StoneOrderListView(APIView):
     """Read-only stone requirement for selected PO(s).
 
-    Add ?export=true to get the matching Excel file (summary or details, following
-    view_type) as a DataOutput record instead of JSON.
+    Add ?export=true to get the matching Excel file (summary or details,
+    following view_type) as a DataOutput record instead of JSON.
     """
 
     permission_classes = [RequisitionPermission]
@@ -58,47 +67,70 @@ class StoneOrderListView(APIView):
 
     def get(self, request, *args, **kwargs):
         po_ids = parse_po_ids(request)
-        if not po_ids:
-            return Response({'detail': 'At least one po is required.'}, status=400)
 
-        view_type = request.query_params.get('view_type', 'details')
-        stone_type = request.query_params.get('stone_type', 'DIAMOND')
-        stone_place = request.query_params.get('stone_place')
-        show_rate = request.query_params.get('show_rate', 'no') == 'yes'
+        if not po_ids:
+            return Response(
+                {'detail': 'At least one po is required.'},
+                status=400,
+            )
+
+        params = request.query_params
+        view_type = params.get('view_type', 'details')
+        stone_type = params.get('stone_type', 'DIAMOND')
+        stone_place = params.get('stone_place')
+        show_rate = params.get('show_rate', 'no') == 'yes'
 
         po_lines = list(get_po_lines(po_ids))
-
-        stone_qs = POCostCardLine.objects.filter(
-            po_costcard_id__in={pl.costcardid_id for pl in po_lines},
-            etype=stone_type,
-        ).order_by('pk')
-        if stone_place:
-            stone_qs = stone_qs.filter(stone_place=stone_place)
-
-        stones_by_card = defaultdict(list)
-        for stone in stone_qs:
-            stones_by_card[stone.po_costcard_id].append(stone)
-
+        stones_by_card = self._stones_by_card(po_lines, stone_type, stone_place)
         grouped = group_by_po(po_lines, po_ids)
 
-        if str2bool(request.query_params.get('export')):
-            return self._export(request, grouped, stones_by_card, view_type, stone_type)
+        if str2bool(params.get('export')):
+            return self._export(
+                request,
+                grouped,
+                stones_by_card,
+                view_type,
+                stone_type,
+            )
 
         if view_type == 'summary':
             return Response(self._summary(grouped, stones_by_card, po_ids))
 
-        return Response(self._details(grouped, stones_by_card, po_ids, show_rate))
+        return Response(
+            self._details(grouped, stones_by_card, po_ids, show_rate)
+        )
+
+    @staticmethod
+    def _stones_by_card(po_lines, stone_type, stone_place):
+        stone_qs = POCostCardLine.objects.filter(
+            po_costcard_id__in={pl.costcardid_id for pl in po_lines},
+            etype=stone_type,
+        ).order_by('pk')
+
+        if stone_place:
+            stone_qs = stone_qs.filter(stone_place=stone_place)
+
+        stones_by_card = defaultdict(list)
+
+        for stone in stone_qs:
+            stones_by_card[stone.po_costcard_id].append(stone)
+
+        return stones_by_card
 
     @staticmethod
     def _details(grouped, stones_by_card, po_ids, show_rate):
         result = []
 
-        for po_id, po_lines in grouped.items():
+        for po_lines in grouped.values():
             rows = []
+
             for po_line in po_lines:
                 cc = po_line.costcardid
+                qty = po_line.qty or 0
+
                 for stone in stones_by_card.get(cc.pk, []):
-                    qty = po_line.qty or 0
+                    total_pcs, total_cts = _stone_totals(stone, qty)
+
                     row = {
                         'sr_no': len(rows) + 1,
                         'style_no': cc.our_style_no,
@@ -116,11 +148,13 @@ class StoneOrderListView(APIView):
                         'pcs': stone.pcs,
                         'cts': stone.cts,
                         'po_qty': qty,
-                        'total_pcs': (stone.pcs or 0) * qty,
-                        'total_cts': (stone.cts or Decimal('0')) * qty,
+                        'total_pcs': total_pcs,
+                        'total_cts': total_cts,
                     }
+
                     if show_rate:
                         row.update({'rate': stone.rate, 'amount': stone.amount})
+
                     rows.append(row)
 
             if not rows:
@@ -157,16 +191,23 @@ class StoneOrderListView(APIView):
         for po_lines in grouped.values():
             for po_line in po_lines:
                 qty = po_line.qty or 0
+
                 for stone in stones_by_card.get(po_line.costcardid_id, []):
-                    key = tuple(getattr(stone, f) for f in SUMMARY_FIELDS)
+                    key = tuple(getattr(stone, field) for field in SUMMARY_FIELDS)
                     bucket = buckets.setdefault(
-                        key, {'total_pcs': 0, 'total_cts': Decimal('0')}
+                        key,
+                        {'total_pcs': 0, 'total_cts': ZERO},
                     )
-                    bucket['total_pcs'] += (stone.pcs or 0) * qty
-                    bucket['total_cts'] += (stone.cts or Decimal('0')) * qty
+                    total_pcs, total_cts = _stone_totals(stone, qty)
+                    bucket['total_pcs'] += total_pcs
+                    bucket['total_cts'] += total_cts
+
+        def sort_key(key):
+            return tuple('' if value is None else str(value) for value in key)
 
         rows = []
-        for key in sorted(buckets, key=lambda k: tuple('' if v is None else str(v) for v in k)):
+
+        for key in sorted(buckets, key=sort_key):
             rows.append({
                 'sr_no': len(rows) + 1,
                 **dict(zip(SUMMARY_FIELDS, key)),
@@ -192,12 +233,14 @@ class StoneOrderListView(APIView):
             report = self._export_details(grouped, stones_by_card)
             total = sum(len(po['lines']) for po in report['data'])
             file_name = 'StoneOrderDetails.xlsx'
+
         report['stone_type'] = stone_type
 
         builder = StoneOrderSheetBuilder()
         content = builder.to_bytes(builder.build(report))
 
         user = request.user if request.user.is_authenticated else None
+
         output = DataOutput.objects.create(
             user=user,
             total=total,
@@ -206,6 +249,7 @@ class StoneOrderListView(APIView):
             output_type=DataOutput.DataOutputTypes.EXPORT,
             plugin='requisition-stone-order',
         )
+
         output.output.save(file_name, ContentFile(content), save=True)
 
         return Response(DataOutputSerializer(output).data, status=200)
@@ -222,6 +266,7 @@ class StoneOrderListView(APIView):
             for po_line in po_lines:
                 cc = po_line.costcardid
                 stones = stones_by_card.get(cc.pk, [])
+
                 if not stones:
                     continue
 
@@ -230,6 +275,8 @@ class StoneOrderListView(APIView):
                 qty_total += qty
 
                 for stone in stones:
+                    total_pcs, total_cts = _stone_totals(stone, qty)
+
                     rows.append({
                         'sr_no': sr_no,
                         'style_no': cc.our_style_no,
@@ -245,9 +292,9 @@ class StoneOrderListView(APIView):
                         'sieve_size': _label(stone.sieve_size),
                         'pointer': stone.pointer,
                         'pcs': stone.pcs or 0,
-                        'cts': stone.cts or Decimal('0'),
-                        'total_pcs': (stone.pcs or 0) * qty,
-                        'total_cts': (stone.cts or Decimal('0')) * qty,
+                        'cts': stone.cts or ZERO,
+                        'total_pcs': total_pcs,
+                        'total_cts': total_cts,
                     })
 
             if not rows:
@@ -266,7 +313,11 @@ class StoneOrderListView(APIView):
                 'stone_ship_date': po.esdstone,
                 'customer': _label(customer),
                 'vendor': _label(vendor),
-                'prepared': (prepby.get_full_name() or prepby.get_username()) if prepby else '',
+                'prepared': (
+                    (prepby.get_full_name() or prepby.get_username())
+                    if prepby
+                    else ''
+                ),
                 'ac_exe': _label(po.acexeid),
                 'category': po.pocategory,
                 'remarks': po.rem,
@@ -286,10 +337,11 @@ class StoneOrderListView(APIView):
     def _export_summary(grouped, stones_by_card):
         """Order list laid out like the reference sheet.
 
-        Rows are grouped per PO and stone spec, so the same spec on two POs is listed
-        once for each. Pointer is derived: total cts / total pcs to 4 decimals, blank
-        when there are no pieces.
+        Rows are grouped per PO and stone spec, so the same spec on two POs
+        is listed once for each. Pointer is derived: total cts / total pcs
+        to 4 decimals, blank when there are no pieces.
         """
+
         buckets = {}
         po_nos = []
 
@@ -299,27 +351,48 @@ class StoneOrderListView(APIView):
 
             for po_line in po_lines:
                 qty = po_line.qty or 0
+
                 for stone in stones_by_card.get(po_line.costcardid_id, []):
                     key = (
-                        po_index, _label(stone.stone), _label(stone.shape), _label(stone.cut),
-                        _label(stone.colour), _label(stone.quality), _label(stone.mm_size),
+                        po_index,
+                        _label(stone.stone),
+                        _label(stone.shape),
+                        _label(stone.cut),
+                        _label(stone.colour),
+                        _label(stone.quality),
+                        _label(stone.mm_size),
                         _label(stone.sieve_size),
                     )
-                    bucket = buckets.setdefault(key, {'pcs': 0, 'cts': Decimal('0')})
-                    bucket['pcs'] += (stone.pcs or 0) * qty
-                    bucket['cts'] += (stone.cts or Decimal('0')) * qty
+                    bucket = buckets.setdefault(key, {'pcs': 0, 'cts': ZERO})
+                    total_pcs, total_cts = _stone_totals(stone, qty)
+                    bucket['pcs'] += total_pcs
+                    bucket['cts'] += total_cts
 
         def sort_key(key):
             po_index, stone, shape, cut, colour, quality, mm_size, sieve_size = key
-            return (stone, shape, cut, colour, quality, _mm_sort(mm_size), sieve_size, po_index)
+
+            return (
+                stone,
+                shape,
+                cut,
+                colour,
+                quality,
+                _mm_sort(mm_size),
+                sieve_size,
+                po_index,
+            )
 
         rows = []
+
         for key in sorted(buckets, key=sort_key):
             _po_index, stone, shape, cut, colour, quality, mm_size, sieve_size = key
             pcs, cts = buckets[key]['pcs'], buckets[key]['cts']
             pointer = (
-                (cts / Decimal(pcs)).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP) if pcs else None
+                (cts / Decimal(pcs)).quantize(FOUR_DP, rounding=ROUND_HALF_UP)
+                if pcs
+                else None
             )
+
             rows.append({
                 'sr_no': len(rows) + 1,
                 'stone': stone,
