@@ -1,25 +1,27 @@
 """Shared helpers for requisition views."""
 
-from collections import OrderedDict
-
 from purchase_order.models import PurchaseOrderLine
 
 
 def parse_po_ids(request):
     """Return a de-duplicated list of integer PO ids from ?po=1&po=2 or ?po=1,2."""
+
     ids = []
+
     for value in request.query_params.getlist('po'):
         for part in value.split(','):
             part = part.strip()
+
             if part.isdigit() and int(part) not in ids:
                 ids.append(int(part))
+
     return ids
 
 
 def get_po_lines(po_ids):
-    """PO lines (with their cost card) for the given POs."""
     return (
-        PurchaseOrderLine.objects.filter(poid__pk__in=po_ids)
+        PurchaseOrderLine.objects
+        .filter(poid__pk__in=po_ids)
         .select_related(
             'poid',
             'poid__prepby',
@@ -36,8 +38,9 @@ def get_po_lines(po_ids):
 
 
 def group_by_po(po_lines, po_ids):
-    """Group PO lines by PO id, following the order of po_ids."""
-    grouped = OrderedDict((pk, []) for pk in po_ids)
+    grouped = {pk: [] for pk in po_ids}
+
     for line in po_lines:
         grouped[line.poid_id].append(line)
+
     return grouped
