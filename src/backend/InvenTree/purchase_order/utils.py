@@ -207,7 +207,7 @@ def create_po_costcard_snapshot(po_line) -> None:
                 amount=line.amount,
                 labour_rate=line.labour_rate,
                 labour_amount=line.labour_amount,
-                default_rate=line.default_rate,
+                default_rate=_default_rate_flag(line.default_rate),
             )
             for line in costcard.diamond_lines.all()
         ])
@@ -234,7 +234,7 @@ def create_po_costcard_snapshot(po_line) -> None:
                 amount=line.amount,
                 labour_rate=line.labour_rate,
                 labour_amount=line.labour_amount,
-                default_rate=line.default_rate,
+                default_rate=_default_rate_flag(line.default_rate),
             )
             for line in costcard.colorstone_lines.all()
         ])
