@@ -2,12 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
 import { useMemo } from "react";
 
-import {
-  IconCoin,
-  IconDiamond,
-  IconScale,
-  IconTag,
-} from "@tabler/icons-react";
+import { IconCoin, IconDiamond, IconScale, IconTag } from "@tabler/icons-react";
 
 import { UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
@@ -18,7 +13,6 @@ import { useUserState } from "@store/UserState";
 import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
-import StoneRequisitionTable from "@components/tables/requisition/StoneRequisitionTable";
 
 export default function RequisitionTypeIndex() {
   const user = useUserState();
@@ -29,7 +23,7 @@ export default function RequisitionTypeIndex() {
         name: "stone",
         label: t`Stone`,
         icon: <IconCoin />,
-        content: <StoneRequisitionTable />,
+        content: <MetalPurityTable />,
       },
       {
         name: "metal",
