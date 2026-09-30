@@ -55,6 +55,11 @@ def _stone_totals(stone, qty):
     return (stone.pcs or 0) * qty, (stone.cts or ZERO) * qty
 
 
+def _stone_ship_date(po):
+    """Stone ship date: the PO's ESD Stone, else the vendor confirmed ship date."""
+    return po.esdstone or po.vcsdate
+
+
 class StoneOrderListView(APIView):
     """Read-only stone requirement for selected PO(s).
 
@@ -189,7 +194,7 @@ class StoneOrderListView(APIView):
                 'po_date': po.podate,
                 'due_date': po.ddate,
                 'customer': cc.customer.name if cc.customer else None,
-                'stone_ship_date': po.esdstone,
+                'stone_ship_date': _stone_ship_date(po),
                 'vendor': cc.vendor.name if cc.vendor else None,
                 'prepared': po.prepby.get_full_name() if po.prepby else None,
                 'ac_exe': po.acexeid.name if po.acexeid else None,
@@ -330,7 +335,7 @@ class StoneOrderListView(APIView):
                 'po_no': po.pono,
                 'po_date': po.podate,
                 'due_date': po.ddate,
-                'stone_ship_date': po.esdstone,
+                'stone_ship_date': _stone_ship_date(po),
                 'customer': _label(customer),
                 'vendor': _label(vendor),
                 'prepared': (
