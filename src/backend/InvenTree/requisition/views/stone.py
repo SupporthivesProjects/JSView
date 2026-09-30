@@ -102,10 +102,29 @@ class StoneOrderListView(APIView):
 
     @staticmethod
     def _stones_by_card(po_lines, stone_type, stone_place):
+        """Map each PO line's cost card to its stone lines.
+
+        POCostCardLine.po_costcard_id is the frozen POCostCard snapshot's own
+        pk, while PurchaseOrderLine.costcardid_id is the pk of the original
+        CostCard it was copied from -- these are different id spaces. The
+        real link is POCostCard.costcard (back to the original CostCard) and
+        POCostCard.poid (the PurchaseOrder), so lookups are keyed on
+        (poid_id, costcard_id) to also avoid mixing stone lines from two
+        different POs that happen to snapshot the same original CostCard.
+        """
+        keys = {(pl.poid_id, pl.costcardid_id) for pl in po_lines if pl.costcardid_id}
+
+        if not keys:
+            return {}
+
+        po_ids = {poid for poid, _ in keys}
+        costcard_ids = {costcard_id for _, costcard_id in keys}
+
         stone_qs = POCostCardLine.objects.filter(
-            po_costcard_id__in={pl.costcardid_id for pl in po_lines},
+            po_costcard__poid_id__in=po_ids,
+            po_costcard__costcard_id__in=costcard_ids,
             etype=stone_type,
-        ).order_by('pk')
+        ).select_related('po_costcard').order_by('pk')
 
         if stone_place:
             stone_qs = stone_qs.filter(stone_place=stone_place)
@@ -113,7 +132,8 @@ class StoneOrderListView(APIView):
         stones_by_card = defaultdict(list)
 
         for stone in stone_qs:
-            stones_by_card[stone.po_costcard_id].append(stone)
+            key = (stone.po_costcard.poid_id, stone.po_costcard.costcard_id)
+            stones_by_card[key].append(stone)
 
         return stones_by_card
 
@@ -128,7 +148,7 @@ class StoneOrderListView(APIView):
                 cc = po_line.costcardid
                 qty = po_line.qty or 0
 
-                for stone in stones_by_card.get(cc.pk, []):
+                for stone in stones_by_card.get((po_line.poid_id, po_line.costcardid_id), []):
                     total_pcs, total_cts = _stone_totals(stone, qty)
 
                     row = {
@@ -192,7 +212,7 @@ class StoneOrderListView(APIView):
             for po_line in po_lines:
                 qty = po_line.qty or 0
 
-                for stone in stones_by_card.get(po_line.costcardid_id, []):
+                for stone in stones_by_card.get((po_line.poid_id, po_line.costcardid_id), []):
                     key = tuple(getattr(stone, field) for field in SUMMARY_FIELDS)
                     bucket = buckets.setdefault(
                         key,
@@ -265,7 +285,7 @@ class StoneOrderListView(APIView):
 
             for po_line in po_lines:
                 cc = po_line.costcardid
-                stones = stones_by_card.get(cc.pk, [])
+                stones = stones_by_card.get((po_line.poid_id, po_line.costcardid_id), [])
 
                 if not stones:
                     continue
@@ -352,7 +372,7 @@ class StoneOrderListView(APIView):
             for po_line in po_lines:
                 qty = po_line.qty or 0
 
-                for stone in stones_by_card.get(po_line.costcardid_id, []):
+                for stone in stones_by_card.get((po_line.poid_id, po_line.costcardid_id), []):
                     key = (
                         po_index,
                         _label(stone.stone),
