@@ -15,10 +15,10 @@ import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
-import MetalTypeTable from "@components/tables/metal/MetalTypeTable";
 import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
+import StoneRequisitionTable from "@components/tables/requisition/StoneRequisitionTable";
 
 export default function RequisitionTypeIndex() {
   const user = useUserState();
@@ -29,7 +29,7 @@ export default function RequisitionTypeIndex() {
         name: "stone",
         label: t`Stone`,
         icon: <IconCoin />,
-        content: <MetalTypeTable />,
+        content: <StoneRequisitionTable />,
       },
       {
         name: "metal",
@@ -58,7 +58,7 @@ export default function RequisitionTypeIndex() {
 
   return (
     <Stack>
-      <PageDetail title={t`Requisition`} />
+      <PageDetail title={t`Requisition`} customsubtitle={t`stone`} />
       <PanelGroup pageKey="requisition-type-index" panels={panels} fillHeight />
     </Stack>
   );
