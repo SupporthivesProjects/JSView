@@ -5,6 +5,7 @@ plus frozen POCostCard snapshot creation (mirrors legacy tbpocostcard1/2).
 """
 
 from datetime import date
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Max
@@ -85,6 +86,21 @@ def _name(obj) -> str | None:
     return str(obj)
 
 
+def _s(value) -> str:
+    """Text for a NOT NULL text column: None becomes an empty string."""
+    return '' if value is None else value
+
+
+def _d(value) -> Decimal:
+    """Number for a NOT NULL decimal column: None becomes 0."""
+    return Decimal('0') if value is None else value
+
+
+def _i(value) -> int:
+    """Number for a NOT NULL integer column: None becomes 0."""
+    return 0 if value is None else value
+
+
 def _default_rate_flag(value) -> bool:
     """Coerce a cost card D.R. value to the boolean frozen flag.
 
@@ -113,6 +129,8 @@ def create_po_costcard_snapshot(po_line) -> None:
     - Copy ALL lines from CostCardDiamondLine / CostCardColorStoneLine /
       CostCardFinishLine → POCostCardLine, storing lookup values as
       NAME STRINGS so the snapshot survives deletion of the originals.
+    - NULL values on the source cost card are converted to empty / zero
+      values for columns that do not allow NULL (e.g. karat).
     """
     po = po_line.poid
 
@@ -136,53 +154,53 @@ def create_po_costcard_snapshot(po_line) -> None:
         po_costcard = POCostCard.objects.create(
             poid=po,
             costcard=costcard,
-            costcardno=costcard.cost_card_no,
-            our_style_no=costcard.our_style_no,
+            costcardno=_s(costcard.cost_card_no),
+            our_style_no=_s(costcard.our_style_no),
             vendor_style_no=costcard.vendor_style_no,
             vendor=costcard.vendor,
             customer=costcard.customer,
-            karat=costcard.karat,
-            metal_grams=costcard.metal_grams,
+            karat=_s(costcard.karat),
+            metal_grams=_d(costcard.metal_grams),
             net_weight=costcard.net_weight,
             gross_weight=costcard.gross_weight,
             troy_ounce_price=costcard.troy_ounce_price,
-            finding_price=costcard.finding_price,
-            metal_loss_pct=costcard.metal_loss_pct,
-            metal_loss_amount=costcard.metal_loss_amount,
-            metal_amount=costcard.metal_amount,
-            dia_pcs=costcard.dia_pcs,
-            dia_cts=costcard.dia_cts,
-            dia_amount=costcard.dia_amount,
-            col_pcs=costcard.col_pcs,
-            col_cts=costcard.col_cts,
-            col_amount=costcard.col_amount,
-            stone_pcs=costcard.stone_pcs,
-            stone_cts=costcard.stone_cts,
-            stone_amount=costcard.stone_amount,
+            finding_price=_d(costcard.finding_price),
+            metal_loss_pct=_d(costcard.metal_loss_pct),
+            metal_loss_amount=_d(costcard.metal_loss_amount),
+            metal_amount=_d(costcard.metal_amount),
+            dia_pcs=_i(costcard.dia_pcs),
+            dia_cts=_d(costcard.dia_cts),
+            dia_amount=_d(costcard.dia_amount),
+            col_pcs=_i(costcard.col_pcs),
+            col_cts=_d(costcard.col_cts),
+            col_amount=_d(costcard.col_amount),
+            stone_pcs=_i(costcard.stone_pcs),
+            stone_cts=_d(costcard.stone_cts),
+            stone_amount=_d(costcard.stone_amount),
             labour_amount=(
-                costcard.labour_amount
+                _d(costcard.labour_amount)
                 or (
-                    costcard.labour_finish_amount
-                    + costcard.labour_diamond_amount
-                    + costcard.labour_colorstone_amount
+                    _d(costcard.labour_finish_amount)
+                    + _d(costcard.labour_diamond_amount)
+                    + _d(costcard.labour_colorstone_amount)
                 )
             ),
-            dia_handling_pct=costcard.dia_handling_pct,
-            dia_handling_amount=costcard.dia_handling_amount,
-            col_handling_pct=costcard.col_handling_pct,
-            col_handling_amount=costcard.col_handling_amount,
-            vendor_markup_pct=costcard.vendor_markup_pct,
-            vendor_markup_amount=costcard.vendor_markup_amount,
-            fob=costcard.fob,
-            duty_pct=costcard.duty_pct,
-            duty_amount=costcard.duty_amount,
-            margin_pct=costcard.margin_pct,
-            margin_amount=costcard.margin_amount,
-            final_amount=costcard.final_amount,
+            dia_handling_pct=_d(costcard.dia_handling_pct),
+            dia_handling_amount=_d(costcard.dia_handling_amount),
+            col_handling_pct=_d(costcard.col_handling_pct),
+            col_handling_amount=_d(costcard.col_handling_amount),
+            vendor_markup_pct=_d(costcard.vendor_markup_pct),
+            vendor_markup_amount=_d(costcard.vendor_markup_amount),
+            fob=_d(costcard.fob),
+            duty_pct=_d(costcard.duty_pct),
+            duty_amount=_d(costcard.duty_amount),
+            margin_pct=_d(costcard.margin_pct),
+            margin_amount=_d(costcard.margin_amount),
+            final_amount=_d(costcard.final_amount),
             category=costcard.category,
             sub_category=costcard.sub_category,
             metal_purity=costcard.metal_purity,
-            stnoauto=po_line.stnoauto,
+            stnoauto=_i(po_line.stnoauto),
         )
 
         # 5b. Freeze diamond lines (etype='DIAMOND')
@@ -200,13 +218,13 @@ def create_po_costcard_snapshot(po_line) -> None:
                 setting=_name(line.setting),
                 stone_place=_name(line.stone_place),
                 pointer=line.pointer,
-                pcs=line.pcs,
-                cts=line.cts,
-                rate=line.rate,
-                pc=line.pc,
-                amount=line.amount,
-                labour_rate=line.labour_rate,
-                labour_amount=line.labour_amount,
+                pcs=_i(line.pcs),
+                cts=_d(line.cts),
+                rate=_d(line.rate),
+                pc=line.pc or 'C',
+                amount=_d(line.amount),
+                labour_rate=_d(line.labour_rate),
+                labour_amount=_d(line.labour_amount),
                 default_rate=_default_rate_flag(line.default_rate),
             )
             for line in costcard.diamond_lines.all()
@@ -227,13 +245,13 @@ def create_po_costcard_snapshot(po_line) -> None:
                 setting=_name(line.setting),
                 stone_place=_name(line.stone_place),
                 pointer=line.pointer,
-                pcs=line.pcs,
-                cts=line.cts,
-                rate=line.rate,
-                pc=line.pc,
-                amount=line.amount,
-                labour_rate=line.labour_rate,
-                labour_amount=line.labour_amount,
+                pcs=_i(line.pcs),
+                cts=_d(line.cts),
+                rate=_d(line.rate),
+                pc=line.pc or 'C',
+                amount=_d(line.amount),
+                labour_rate=_d(line.labour_rate),
+                labour_amount=_d(line.labour_amount),
                 default_rate=_default_rate_flag(line.default_rate),
             )
             for line in costcard.colorstone_lines.all()
@@ -245,8 +263,8 @@ def create_po_costcard_snapshot(po_line) -> None:
                 po_costcard=po_costcard,
                 etype='FINISHTYPE',
                 stone=_name(line.finish_type),
-                rate=line.rate,
-                amount=line.rate,
+                rate=_d(line.rate),
+                amount=_d(line.rate),
             )
             for line in costcard.finish_lines.all()
         ])

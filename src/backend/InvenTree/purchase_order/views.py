@@ -1,5 +1,6 @@
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.db.models import ProtectedError, RestrictedError
 from django.shortcuts import get_object_or_404
 
 import django_filters.rest_framework.filters as rest_filters
@@ -94,6 +95,40 @@ class PurchaseOrderDetail(RetrieveUpdateDestroyAPI):
         'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
     ).prefetch_related('lines').all()
     serializer_class = po_serializers.PurchaseOrderSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a PO, or return 409 explaining which records are using it."""
+        po = self.get_object()
+
+        try:
+            self.perform_destroy(po)
+        except (ProtectedError, RestrictedError) as exc:
+            objects = getattr(exc, 'protected_objects', None) or getattr(
+                exc, 'restricted_objects', []
+            )
+
+            used_in = {}
+            for obj in objects:
+                name = str(obj._meta.verbose_name_plural).title()
+                used_in.setdefault(name, []).append(str(obj))
+
+            used_text = '; '.join(
+                f"{name} ({', '.join(items[:5])})" for name, items in used_in.items()
+            )
+
+            return Response(
+                {
+                    'error': 'ProtectedError',
+                    'detail': (
+                        f'Cannot delete PO {po.pono} because it is already used in: '
+                        f'{used_text}. Remove those records first.'
+                    ),
+                    'used_in': used_in,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PurchaseOrderLineList(DataExportViewMixin, ListCreateAPI):
