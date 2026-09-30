@@ -19,6 +19,7 @@ interface PageDetailInterface {
   title?: string;
   icon?: ReactNode;
   subtitle?: string;
+  customsubtitle?: string;
   imageUrl?: string;
   badges?: ReactNode[];
   breadcrumbs?: Breadcrumb[];
@@ -40,6 +41,7 @@ export function PageDetail({
   title,
   icon,
   subtitle,
+  customsubtitle,
   badges,
   imageUrl,
   thumbnailUrl,
@@ -86,6 +88,15 @@ export function PageDetail({
         len: 75
       }),
     [subtitle]
+  );
+
+  const customdescription = useMemo(
+    () =>
+      shortenString({
+        str: customsubtitle,
+        len: 75
+      }),
+    [customsubtitle]
   );
 
   // breadcrumb caching
@@ -166,7 +177,16 @@ export function PageDetail({
                   />
                 )}
                 <Stack gap='xs'>
-                  {title && <StylishText size='lg'>{title}</StylishText>}
+                  {/* Header / Breadcrumb Row */}
+                  {(title || customsubtitle) && (
+                    <Group gap='xs' align='center'>
+                      {title && <StylishText size='lg'>{title}</StylishText>}
+                      {title && customsubtitle && <Text size='lg' color='dimmed'>&gt;</Text>}
+                      {customsubtitle && <StylishText size='lg'>{customsubtitle}</StylishText>}
+                    </Group>
+                  )}
+
+                  {/* Subtitle / Description Row */}
                   {subtitle && (
                     <Group gap='xs'>
                       {icon}
