@@ -4,7 +4,7 @@ from io import BytesIO
 
 from openpyxl import Workbook
 
-from .base import LEFT, fit_columns, landscape_fit, merge, num, put
+from .base import LEFT, fit_columns, landscape_fit, merge, num, put, up
 
 HEADERS = ['Sr. No', 'Style No.', 'Qty', 'Net. Weight', 'KT', 'Gold(24KT)', 'Silver', 'Platinum']
 NCOLS = len(HEADERS)
@@ -54,7 +54,7 @@ class MetalOrderSheetBuilder:
 
         for r in po['lines']:
             values = [
-                r['sr_no'], r['style_no'], r['qty'], num(r['net_weight']), r['kt'],
+                r['sr_no'], up(r['style_no']), r['qty'], num(r['net_weight']), up(r['kt']),
                 num(r['gold']), num(r['silver']), num(r['platinum']),
             ]
             for col, value in enumerate(values, start=1):
