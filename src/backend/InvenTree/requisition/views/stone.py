@@ -147,20 +147,30 @@ class StoneOrderListView(APIView):
         result = []
 
         for po_lines in grouped.values():
-            rows = []
+            styles = []
+            sr_no = 0
+            qty_total = 0
+            line_pcs_total = 0
+            line_cts_total = ZERO
+            pcs_total = 0
+            cts_total = ZERO
 
             for po_line in po_lines:
                 cc = po_line.costcardid
-                qty = po_line.qty or 0
+                stones = stones_by_card.get((po_line.poid_id, po_line.costcardid_id), [])
 
-                for stone in stones_by_card.get((po_line.poid_id, po_line.costcardid_id), []):
+                if not stones:
+                    continue
+
+                sr_no += 1
+                qty = po_line.qty or 0
+                qty_total += qty
+                lines = []
+
+                for stone in stones:
                     total_pcs, total_cts = _stone_totals(stone, qty)
 
-                    row = {
-                        'sr_no': len(rows) + 1,
-                        'style_no': cc.our_style_no,
-                        'front_view': cc.front_view.url if cc.front_view else None,
-                        'category': cc.sub_category.name if cc.sub_category else None,
+                    line = {
                         'setting': stone.setting,
                         'stone': stone.stone,
                         'shape': stone.shape,
@@ -172,17 +182,29 @@ class StoneOrderListView(APIView):
                         'pointer': stone.pointer,
                         'pcs': stone.pcs,
                         'cts': stone.cts,
-                        'po_qty': qty,
                         'total_pcs': total_pcs,
                         'total_cts': total_cts,
                     }
 
                     if show_rate:
-                        row.update({'rate': stone.rate, 'amount': stone.amount})
+                        line.update({'rate': stone.rate, 'amount': stone.amount})
 
-                    rows.append(row)
+                    lines.append(line)
+                    line_pcs_total += stone.pcs or 0
+                    line_cts_total += stone.cts or ZERO
+                    pcs_total += total_pcs
+                    cts_total += total_cts
 
-            if not rows:
+                styles.append({
+                    'sr_no': sr_no,
+                    'style_no': cc.our_style_no,
+                    'front_view': cc.front_view.url if cc.front_view else None,
+                    'category': cc.sub_category.name if cc.sub_category else None,
+                    'po_qty': qty,
+                    'lines': lines,
+                })
+
+            if not styles:
                 continue
 
             po = po_lines[0].poid
@@ -200,10 +222,13 @@ class StoneOrderListView(APIView):
                 'ac_exe': po.acexeid.name if po.acexeid else None,
                 'category': po.pocategory,
                 'remarks': po.rem,
-                'lines': rows,
+                'styles': styles,
                 'totals': {
-                    'pcs': sum(r['total_pcs'] for r in rows),
-                    'cts': sum(r['total_cts'] for r in rows),
+                    'qty': qty_total,
+                    'pcs': line_pcs_total,
+                    'cts': line_cts_total,
+                    'total_pcs': pcs_total,
+                    'total_cts': cts_total,
                 },
             })
 
