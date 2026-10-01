@@ -7,57 +7,71 @@ the Django ORM against the local database tables:
   * ``fn_vendor_style(poid, opcl)``           -> :func:`get_vendor_style_list`
   * ``fn_tbvendorship1_vendorpo(vendorid)``   -> :func:`get_confirm_pending_invoices`
   * ``fn_tbvendorship_data(vendorid, vsid)``  -> :func:`get_confirm_pending_data`
+
+Both ``fn_po_vendorstatus`` and ``fn_vendor_style`` compare the ordered
+quantity (``tbpo2.qty`` -> :class:`PurchaseOrderLine.qty`) against the received
+quantity stored on the shipment lines (``tbvendorship2.pcs`` ->
+:class:`VendorShipmentLine.pcs`), matching on ``(poid, costcardid)``.
+
+``tbpo2.costcardid`` references the original cost card (``tbcostcard1`` ->
+:class:`costcard.models.CostCard`), *not* the PO snapshot
+(``tbpocostcard1`` / :class:`purchase_order.models.POCostCard`). The FK on
+:class:`VendorShipmentLine` therefore points at :class:`CostCard` directly.
 """
 
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Case, F, IntegerField, Sum, When
 
-from purchase_order.models import POCostCard, PurchaseOrder, PurchaseOrderLine
+from purchase_order.models import PurchaseOrder, PurchaseOrderLine
 
 from .models import VendorShipment, VendorShipmentLine
 
 ZERO = Decimal('0')
 
 
-def _po_status_maps(po_ids):
-    """Ordered vs received quantity per ``(poid, original cost card id)``.
+def _received_pcs(po_ids, require_diawt=False):
+    """Sum of shipped pieces keyed by ``(poid, costcard_id)``.
 
-    Returns two dicts keyed by ``(poid, costcard_id)``:
-
-    * ``ordered``  — sum of ``PurchaseOrderLine.qty``
-    * ``received`` — sum of ``VendorShipmentLine.pcs``
-
-    Shipment lines point at a :class:`POCostCard` snapshot, so the original
-    cost card id is resolved through ``costcardid__costcard_id`` to make the
-    comparison against the PO lines possible.
+    Mirrors the legacy correlated sub-select. When ``require_diawt`` is set
+    the sum reproduces the ``fn_vendor_style`` expression
+    ``SUM(CASE WHEN diawt IS NULL THEN 0 ELSE pcs END)``; otherwise
+    ``fn_po_vendorstatus`` simply sums ``pcs``.
     """
-    po_ids = list(po_ids)
-    ordered = {}
     received = {}
+    po_ids = list(po_ids)
 
     if not po_ids:
-        return ordered, received
+        return received
 
-    for row in (
-        PurchaseOrderLine.objects
-        .filter(poid_id__in=po_ids, costcardid__isnull=False)
-        .values('poid_id', 'costcardid_id')
-        .annotate(total=Sum('qty'))
-    ):
-        ordered[(row['poid_id'], row['costcardid_id'])] = row['total'] or 0
+    qs = VendorShipmentLine.objects.filter(
+        poid_id__in=po_ids,
+        costcardid__isnull=False,
+    )
 
-    for row in (
-        VendorShipmentLine.objects
-        .filter(poid_id__in=po_ids, costcardid__costcard__isnull=False)
-        .values('poid_id', 'costcardid__costcard_id')
-        .annotate(total=Sum('pcs'))
-    ):
-        key = (row['poid_id'], row['costcardid__costcard_id'])
-        received[key] = received.get(key, 0) + (row['total'] or 0)
+    if require_diawt:
+        qs = qs.annotate(
+            counted=Case(
+                When(diawt__isnull=True, then=0),
+                default=F('pcs'),
+                output_field=IntegerField(),
+            )
+        )
+        rows = qs.values('poid_id', 'costcardid_id').annotate(total=Sum('counted'))
+    else:
+        rows = qs.values('poid_id', 'costcardid_id').annotate(total=Sum('pcs'))
 
-    return ordered, received
+    for row in rows:
+        received[(row['poid_id'], row['costcardid_id'])] = row['total'] or 0
+
+    return received
+
+
+def _balance(ordered, received):
+    """``balpcs`` — ``max(0, ordered - received)`` (legacy clamp)."""
+    balance = ordered - received
+    return 0 if balance < 0 else balance
 
 
 def get_vendor_po_list(vendorid=None, is_open=True):
@@ -65,9 +79,14 @@ def get_vendor_po_list(vendorid=None, is_open=True):
 
     Returns a list of ``{'poid', 'pono'}`` for the given vendor.
 
-    * ``is_open=True``  -> purchase orders which are not fully shipped
-      (received qty < ordered qty for at least one cost card)
-    * ``is_open=False`` -> purchase orders which are fully shipped
+    The ordered vs received comparison is evaluated per purchase order line
+    (i.e. per ``costcardid``), exactly like the legacy query: a PO qualifies
+    for the open list when at least one of its lines still has a balance, and
+    for the closed list when at least one of its lines is fully received.
+    The ``GROUP BY poid, pono`` in the SQL simply de-duplicates the result.
+
+    * ``is_open=True``  -> lines with ``balpcs > 0``
+    * ``is_open=False`` -> lines with ``balpcs = 0``
     """
     po_qs = PurchaseOrder.objects.filter(potype='ORDER', active=True)
 
@@ -79,16 +98,22 @@ def get_vendor_po_list(vendorid=None, is_open=True):
     if not po_map:
         return []
 
-    ordered, received = _po_status_maps(po_map.keys())
+    received = _received_pcs(po_map.keys())
 
-    with_lines = {key[0] for key in ordered}
-    open_po_ids = {
-        key[0]
-        for key, qty in ordered.items()
-        if received.get(key, 0) < qty
-    }
+    selected = set()
 
-    selected = open_po_ids if is_open else (with_lines - open_po_ids)
+    for line in (
+        PurchaseOrderLine.objects
+        .filter(poid_id__in=po_map.keys())
+        .only('poid_id', 'costcardid_id', 'qty')
+    ):
+        balance = _balance(
+            line.qty,
+            received.get((line.poid_id, line.costcardid_id), 0),
+        )
+
+        if (balance != 0) == is_open:
+            selected.add(line.poid_id)
 
     return [
         {'poid': po_id, 'pono': po_map[po_id]}
@@ -99,63 +124,55 @@ def get_vendor_po_list(vendorid=None, is_open=True):
 def get_vendor_style_list(poid, is_open=True):
     """Replicate ``fn_vendor_style``.
 
-    Returns a list of ``{'costcardid', 'styleno', 'costcard'}`` for the styles
-    of a purchase order. ``costcardid`` is the :class:`POCostCard` snapshot id
-    (the value stored on :class:`VendorShipmentLine`), while ``costcard`` is
-    the original ``costcard.CostCard`` id.
+    Returns a list of ``{'costcardid', 'styleno'}`` for the styles of a
+    purchase order. ``costcardid`` is the original
+    :class:`costcard.models.CostCard` id (the value stored on
+    :class:`VendorShipmentLine`).
 
-    * ``is_open=True``  -> styles which are not fully shipped
-    * ``is_open=False`` -> styles which are fully shipped
+    The received quantity only counts shipment lines which carry a diamond
+    weight (``CASE WHEN diawt IS NULL THEN 0 ELSE pcs END``), matching the
+    legacy function.
+
+    * ``is_open=True``  -> styles with ``balpcs > 0``
+    * ``is_open=False`` -> styles with ``balpcs = 0``
     """
     if not poid:
         return []
 
-    snapshots = list(
-        POCostCard.objects
-        .filter(poid_id=poid, active=True)
-        .select_related('costcard')
-        .order_by('id')
-    )
-
-    if not snapshots:
-        return []
-
-    ordered = {}
-    for row in (
+    lines = (
         PurchaseOrderLine.objects
         .filter(poid_id=poid, costcardid__isnull=False)
-        .values('costcardid_id')
-        .annotate(total=Sum('qty'))
-    ):
-        ordered[row['costcardid_id']] = row['total'] or 0
+        .select_related('costcardid')
+        .order_by('costcardid_id', 'styleno')
+    )
 
-    received = {}
-    for row in (
-        VendorShipmentLine.objects
-        .filter(poid_id=poid, costcardid__costcard__isnull=False)
-        .values('costcardid__costcard_id')
-        .annotate(total=Sum('pcs'))
-    ):
-        received[row['costcardid__costcard_id']] = row['total'] or 0
+    received = _received_pcs([poid], require_diawt=True)
 
     result = []
+    seen = set()
 
-    for snapshot in snapshots:
-        costcard_id = snapshot.costcard_id
-        ordered_qty = ordered.get(costcard_id, 0)
-        received_qty = received.get(costcard_id, 0)
+    for line in lines:
+        balance = _balance(
+            line.qty,
+            received.get((line.poid_id, line.costcardid_id), 0),
+        )
 
-        if (received_qty < ordered_qty) != is_open:
+        if (balance != 0) != is_open:
             continue
 
-        style_no = snapshot.our_style_no
-        if not style_no and snapshot.costcard:
-            style_no = snapshot.costcard.our_style_no
+        costcard_id = line.costcardid_id
+        styleno = line.styleno or line.costcardid.our_style_no
+
+        key = (costcard_id, styleno)
+
+        if key in seen:
+            continue
+
+        seen.add(key)
 
         result.append({
-            'costcardid': snapshot.pk,
-            'styleno': style_no or '',
-            'costcard': costcard_id,
+            'costcardid': costcard_id,
+            'styleno': styleno or '',
         })
 
     return result
@@ -188,8 +205,8 @@ def get_confirm_pending_data(vendorid=None, vendorshipid=None):
     """Replicate ``fn_tbvendorship_data``.
 
     Returns the detailed shipment lines of one shipment, joined with the
-    purchase order, the ordered quantity and the frozen PO cost card values
-    so the confirmation screen can compare received vs ordered.
+    purchase order, the ordered quantity and the cost card values so the
+    confirmation screen can compare received vs ordered.
     """
     qs = VendorShipment.objects.filter(pk=vendorshipid)
 
@@ -222,7 +239,7 @@ def get_confirm_pending_data(vendorid=None, vendorshipid=None):
 
     for line in lines:
         costcard = line.costcardid
-        costcard_id = costcard.costcard_id if costcard else None
+        costcard_id = line.costcardid_id
         po_line = po_lines.get((line.poid_id, costcard_id))
 
         pono = line.poid.pono if line.poid else None
@@ -259,10 +276,35 @@ def get_confirm_pending_data(vendorid=None, vendorshipid=None):
     return result
 
 
+def _entry_pk(entry):
+    """Shipment line pk from a confirm-update entry.
+
+    ``tableid`` is the canonical key; the legacy Go client sent the same value
+    as ``id``, so that is accepted as a fallback to keep ports working.
+    Returns ``None`` when no usable identifier is present.
+    """
+    for key in ('tableid', 'id'):
+        try:
+            value = entry.get(key)
+        except AttributeError:
+            return None
+
+        if value in (None, ''):
+            continue
+
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+
+    return None
+
+
 def update_confirm_flags(entries):
     """Bulk update the ``confrm`` flag of shipment lines.
 
-    ``entries`` is a list of ``{'tableid': <line pk>, 'confrm': <bool>}``.
+    ``entries`` is a list of ``{'tableid': <line pk>, 'confrm': <bool>}``
+    (``id`` is accepted as an alias for ``tableid``).
     A truthy ``confrm`` marks the line as confirmed; any falsy / missing value
     resets it to the pending state (``NULL``), matching the legacy semantics
     where ``confrm IS NULL`` means "not confirmed yet".
@@ -272,13 +314,7 @@ def update_confirm_flags(entries):
     if not entries:
         return 0
 
-    def _to_pk(entry):
-        try:
-            return int(entry.get('tableid'))
-        except (AttributeError, TypeError, ValueError):
-            return None
-
-    ids = [pk for pk in (_to_pk(entry) for entry in entries) if pk is not None]
+    ids = [pk for pk in (_entry_pk(entry) for entry in entries) if pk is not None]
 
     if not ids:
         return 0
@@ -291,7 +327,7 @@ def update_confirm_flags(entries):
     updated = []
 
     for entry in entries:
-        pk = _to_pk(entry)
+        pk = _entry_pk(entry)
 
         if pk is None or pk not in lines:
             continue

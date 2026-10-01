@@ -18,7 +18,7 @@ from company.models import Company
 from costcard.models import CostCard
 from InvenTree.unit_test import InvenTreeAPITestCase
 from master.models import CourierService
-from purchase_order.models import POCostCard, PurchaseOrder, PurchaseOrderLine
+from purchase_order.models import PurchaseOrder, PurchaseOrderLine
 
 from . import utils
 from .models import VendorShipment, VendorShipmentLine
@@ -71,10 +71,6 @@ def build_scenario(cls):
         poid=cls.order, costcardid=cls.card2, styleno='JS-002', qty=4,
     )
 
-    # Snapshots are created automatically when the ORDER lines are saved
-    cls.snapshot1 = POCostCard.objects.get(poid=cls.order, costcard=cls.card1)
-    cls.snapshot2 = POCostCard.objects.get(poid=cls.order, costcard=cls.card2)
-
 
 def make_shipment(vendor=None, vsno='INV-0001', **kwargs):
     """Create a shipment header with sensible defaults."""
@@ -106,7 +102,7 @@ class VendorShipmentUtilTests(TestCase):
         VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=10,
         )
 
@@ -115,11 +111,11 @@ class VendorShipmentUtilTests(TestCase):
 
     def test_po_list_closed_when_fully_shipped(self):
         shipment = make_shipment(self.vendor)
-        for snapshot, pcs in ((self.snapshot1, 10), (self.snapshot2, 4)):
+        for card, pcs in ((self.card1, 10), (self.card2, 4)):
             VendorShipmentLine.objects.create(
                 vendorshipid=shipment,
                 poid=self.order,
-                costcardid=snapshot,
+                costcardid=card,
                 pcs=pcs,
             )
 
@@ -141,7 +137,7 @@ class VendorShipmentUtilTests(TestCase):
         )
         self.assertEqual(
             {row['costcardid'] for row in rows},
-            {self.snapshot1.pk, self.snapshot2.pk},
+            {self.card1.pk, self.card2.pk},
         )
 
     def test_style_list_excludes_fully_shipped_style(self):
@@ -149,7 +145,7 @@ class VendorShipmentUtilTests(TestCase):
         VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=10,
         )
 
@@ -167,7 +163,7 @@ class VendorShipmentUtilTests(TestCase):
     def test_pending_invoices_lists_unconfirmed(self):
         shipment = make_shipment(self.vendor)
         VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot1, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
         )
 
         rows = utils.get_confirm_pending_invoices(self.vendor.pk)
@@ -181,7 +177,7 @@ class VendorShipmentUtilTests(TestCase):
         line = VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=1,
             confrm=True,
         )
@@ -200,7 +196,7 @@ class VendorShipmentUtilTests(TestCase):
         line = VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=3,
             metalwt=Decimal('2.500'),
             diawt=Decimal('0.250'),
@@ -232,12 +228,12 @@ class VendorShipmentUtilTests(TestCase):
         # Ordered / frozen cost card values
         self.assertEqual(row['qty'], 10)
         self.assertEqual(row['metalgms'], Decimal('10.500'))
-        self.assertEqual(row['touncep'], self.snapshot1.troy_ounce_price)
+        self.assertEqual(row['touncep'], self.card1.troy_ounce_price)
 
     def test_confirm_data_respects_vendor(self):
         shipment = make_shipment(self.vendor)
         VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot1, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
         )
         self.assertEqual(
             utils.get_confirm_pending_data(self.other_vendor.pk, shipment.pk), []
@@ -251,10 +247,10 @@ class VendorShipmentUtilTests(TestCase):
     def test_update_confirm_flags(self):
         shipment = make_shipment(self.vendor)
         line1 = VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot1, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
         )
         line2 = VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot2, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card2, pcs=1,
         )
 
         updated = utils.update_confirm_flags([
@@ -268,6 +264,18 @@ class VendorShipmentUtilTests(TestCase):
         self.assertIs(line1.confrm, True)
         # Falsy -> back to pending (NULL)
         self.assertIsNone(line2.confrm)
+
+    def test_update_confirm_flags_accepts_legacy_id_key(self):
+        """The legacy client used ``id`` instead of ``tableid``."""
+        shipment = make_shipment(self.vendor)
+        line = VendorShipmentLine.objects.create(
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
+        )
+
+        self.assertEqual(utils.update_confirm_flags([{'id': line.pk, 'confrm': True}]), 1)
+
+        line.refresh_from_db()
+        self.assertIs(line.confrm, True)
 
     def test_update_confirm_flags_ignores_unknown_and_empty(self):
         self.assertEqual(utils.update_confirm_flags([]), 0)
@@ -302,7 +310,7 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
             'lines': [
                 {
                     'poid': self.order.pk,
-                    'costcardid': self.snapshot1.pk,
+                    'costcardid': self.card1.pk,
                     'pcs': 10,
                     'metalwt': '10.500',
                     'diawt': '0.250',
@@ -314,7 +322,7 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
                 },
                 {
                     'poid': self.order.pk,
-                    'costcardid': self.snapshot2.pk,
+                    'costcardid': self.card2.pk,
                     'pcs': 4,
                 },
             ],
@@ -328,11 +336,11 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
         self.assertEqual(shipment.lines.count(), 2)
         self.assertEqual(shipment.luser, self.user.get_username())
 
-        line = shipment.lines.get(costcardid=self.snapshot1)
+        line = shipment.lines.get(costcardid=self.card1)
         self.assertEqual(line.pcs, 10)
         self.assertEqual(line.stplace, 'Center')
         self.assertEqual(line.metalwt, Decimal('10.500'))
-        self.assertIsNone(shipment.lines.get(costcardid=self.snapshot2).confrm)
+        self.assertIsNone(shipment.lines.get(costcardid=self.card2).confrm)
 
     def test_create_shipment_rolls_back_on_invalid_line(self):
         url = reverse('api-vendor-shipment-list')
@@ -350,7 +358,7 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
         VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=3,
         )
 
@@ -378,15 +386,60 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
         self.assertEqual(vsnos, ['MINE'])
         self.assertEqual(response.data['results'][0]['pk'], mine.pk)
 
+    def test_post_line_via_nested_route_uses_url_shipment(self):
+        """``POST <pk>/lines/`` does not need ``vendorshipid`` in the body."""
+        shipment = self._create_shipment()
+
+        response = self.post(
+            reverse(
+                'api-vendor-shipment-lines-for-shipment',
+                kwargs={'pk': shipment.pk},
+            ),
+            {'poid': self.order.pk, 'costcardid': self.card1.pk, 'pcs': 5},
+            expected_code=201,
+        )
+
+        self.assertEqual(response.data['vendorshipid'], shipment.pk)
+        self.assertEqual(shipment.lines.count(), 1)
+
+    def test_post_line_via_nested_route_forces_url_shipment(self):
+        """A conflicting ``vendorshipid`` in the body cannot hijack the row."""
+        shipment = self._create_shipment()
+        other = self._create_shipment(vsno='INV-0002')
+
+        self.post(
+            reverse(
+                'api-vendor-shipment-lines-for-shipment',
+                kwargs={'pk': shipment.pk},
+            ),
+            {
+                'vendorshipid': other.pk,
+                'poid': self.order.pk,
+                'costcardid': self.card1.pk,
+                'pcs': 5,
+            },
+            expected_code=201,
+        )
+
+        self.assertEqual(shipment.lines.count(), 1)
+        self.assertEqual(other.lines.count(), 0)
+
+    def test_post_line_via_flat_route_requires_vendorshipid(self):
+        self.post(
+            reverse('api-vendor-shipment-line-list'),
+            {'poid': self.order.pk, 'costcardid': self.card1.pk, 'pcs': 5},
+            expected_code=400,
+        )
+
     def test_lines_scoped_to_shipment(self):
         shipment = self._create_shipment()
         other = self._create_shipment(vsno='INV-0002')
 
         VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot1, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
         )
         VendorShipmentLine.objects.create(
-            vendorshipid=other, poid=self.order, costcardid=self.snapshot2, pcs=1,
+            vendorshipid=other, poid=self.order, costcardid=self.card2, pcs=1,
         )
 
         scoped = self.get(
@@ -406,7 +459,7 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
     def test_line_detail_patch(self):
         shipment = self._create_shipment()
         line = VendorShipmentLine.objects.create(
-            vendorshipid=shipment, poid=self.order, costcardid=self.snapshot1, pcs=1,
+            vendorshipid=shipment, poid=self.order, costcardid=self.card1, pcs=1,
         )
 
         self.patch(
@@ -445,7 +498,7 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
         line = VendorShipmentLine.objects.create(
             vendorshipid=shipment,
             poid=self.order,
-            costcardid=self.snapshot1,
+            costcardid=self.card1,
             pcs=3,
         )
 
@@ -488,6 +541,48 @@ class VendorShipmentAPITests(InvenTreeAPITestCase):
             {'vendorid': self.vendor.pk},
         )
         self.assertEqual(invoices.data, [])
+
+    def test_confirm_update_accepts_data_wrapper(self):
+        """The legacy client posted ``{ data: [...] }``; that shape still works."""
+        shipment = self._create_shipment()
+        line = VendorShipmentLine.objects.create(
+            vendorshipid=shipment,
+            poid=self.order,
+            costcardid=self.card1,
+            pcs=1,
+        )
+
+        response = self.post(
+            reverse('api-vendor-shipment-confirm-update'),
+            {'data': [{'tableid': line.pk, 'confrm': True}]},
+            expected_code=200,
+        )
+
+        self.assertEqual(response.data, {'updated': 1})
+
+        line.refresh_from_db()
+        self.assertIs(line.confrm, True)
+
+    def test_confirm_update_accepts_legacy_client_shape(self):
+        """Legacy body: ``{data: [{id, confrm}]}`` — wrapper + ``id`` key."""
+        shipment = self._create_shipment()
+        line = VendorShipmentLine.objects.create(
+            vendorshipid=shipment,
+            poid=self.order,
+            costcardid=self.card1,
+            pcs=1,
+        )
+
+        response = self.post(
+            reverse('api-vendor-shipment-confirm-update'),
+            {'data': [{'id': line.pk, 'confrm': True}]},
+            expected_code=200,
+        )
+
+        self.assertEqual(response.data, {'updated': 1})
+
+        line.refresh_from_db()
+        self.assertIs(line.confrm, True)
 
     def test_confirm_update_rejects_non_list(self):
         self.post(

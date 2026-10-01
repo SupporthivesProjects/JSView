@@ -15,8 +15,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from company.models import Company
+from costcard.models import CostCard
 from master.models import CourierService
-from purchase_order.models import POCostCard, PurchaseOrder
+from purchase_order.models import PurchaseOrder
 
 
 class VendorShipmentFieldsMixin(models.Model):
@@ -122,13 +123,13 @@ class VendorShipmentLine(VendorShipmentFieldsMixin):
         help_text=_('Purchase order this item was shipped against.'),
     )
     costcardid = models.ForeignKey(
-        POCostCard,
+        CostCard,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name='shipment_lines',
-        verbose_name=_('PO Cost Card'),
-        help_text=_('PO cost card (style) this item was shipped against.'),
+        verbose_name=_('Cost Card'),
+        help_text=_('Cost card this item was shipped against.'),
     )
     pcs = models.IntegerField(
         default=0,
