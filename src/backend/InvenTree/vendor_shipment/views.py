@@ -7,6 +7,8 @@ Two sections are exposed:
    dropdown/helper endpoints which replicate the legacy PostgreSQL functions.
 """
 
+from django.shortcuts import get_object_or_404
+
 from rest_framework import status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
@@ -107,6 +109,41 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
             queryset = queryset.filter(vendorshipid_id=shipment_pk)
         return queryset
 
+    def get_serializer(self, *args, **kwargs):
+        """On the nested ``<pk>/lines/`` route the shipment comes from the URL.
+
+        ``vendorshipid`` is therefore not required in the body, and a value
+        supplied in the body is discarded so the URL always wins.
+
+        The value has to be injected as a *field default* rather than set in
+        ``perform_create``: ``InvenTreeModelSerializer.run_validation()``
+        builds a RAM-only model instance and runs ``full_clean()`` on it, so a
+        null FK would fail validation before ``perform_create`` ever runs.
+        """
+        shipment_pk = self.kwargs.get('pk')
+        is_write = 'data' in kwargs
+
+        if shipment_pk is not None and is_write:
+            data = kwargs.get('data')
+
+            if isinstance(data, dict):
+                kwargs['data'] = {
+                    key: value
+                    for key, value in data.items()
+                    if key != 'vendorshipid'
+                }
+
+        serializer = super().get_serializer(*args, **kwargs)
+
+        if shipment_pk is not None and is_write:
+            field = getattr(serializer, 'fields', {}).get('vendorshipid')
+
+            if field is not None:
+                field.required = False
+                field.default = get_object_or_404(VendorShipment, pk=shipment_pk)
+
+        return serializer
+
 
 class VendorShipmentLineDetail(RetrieveUpdateDestroyAPI):
     """Detail view of a single vendor shipment line."""
@@ -203,7 +240,10 @@ class ConfirmPendingDataView(APIView):
 class ConfirmUpdateView(APIView):
     """POST /api/vendor-shipment/confirm/update/.
 
-    Body: ``[{"tableid": 1, "confrm": true}, ...]``
+    Body: a bare list ``[{"tableid": 1, "confrm": true}, ...]``. For ease of
+    porting the legacy client, an object wrapper is also accepted:
+    ``{"data": [{"tableid": 1, "confrm": true}]}`` (the legacy Go client
+    posted ``{ data: [...] }`` to ``/shipment/confirm-upd``).
 
     Bulk updates the ``confrm`` flag of the referenced shipment lines.
     """
@@ -215,7 +255,12 @@ class ConfirmUpdateView(APIView):
         entries = request.data
 
         if isinstance(entries, dict):
-            entries = entries.get('lines') or entries.get('items') or [entries]
+            entries = (
+                entries.get('data')
+                or entries.get('lines')
+                or entries.get('items')
+                or [entries]
+            )
 
         if not isinstance(entries, list):
             return Response(
