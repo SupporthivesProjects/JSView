@@ -1,9 +1,10 @@
 import { t } from "@lingui/core/macro";
-import { Table, TextInput } from "@mantine/core";
+import { NumberInput, Select, Table, TextInput } from "@mantine/core";
 import { randomId } from "@mantine/hooks";
 import { IconUsers } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useWatch } from "react-hook-form";
 
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
 import { ModelType } from "@lib/enums/ModelType";
@@ -866,6 +867,466 @@ export async function savePurchaseRequestLines({
       requests.push(api.patch(`${url}${row.pk}/`, payload));
     } else {
       requests.push(api.post(url, { ...payload, poid: poPk }));
+    }
+  }
+
+  await Promise.all(requests);
+}
+
+/** Width of the vendor shipment modal, matching the purchase order modal */
+export const VENDOR_SHIPMENT_MODAL_SIZE = "90rem";
+
+export const VENDOR_SHIPMENT_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
+
+/** Numeric columns of a shipment line, in display order */
+const SHIPMENT_LINE_NUMBER_FIELDS: {
+  key: string;
+  title: string;
+  decimals: number;
+}[] = [
+  { key: "pcs", title: "Pcs", decimals: 0 },
+  { key: "metalwt", title: "Metal Wt.", decimals: 3 },
+  { key: "diawt", title: "Dia. Wt.", decimals: 3 },
+  { key: "colwt", title: "Col. Wt.", decimals: 3 },
+  { key: "labour", title: "Labour", decimals: 2 },
+  { key: "finding", title: "Finding", decimals: 2 },
+  { key: "triounce", title: "Troy Ounce", decimals: 4 },
+];
+
+/** Build select options, keeping the row's current value even if it is no longer listed */
+function selectOptions(
+  records: any[],
+  valueKey: string,
+  labelKey: string,
+  current?: { value: any; label: any },
+) {
+  const options = (records ?? []).map((record: any) => ({
+    value: String(record[valueKey]),
+    label: String(record[labelKey] ?? record[valueKey]),
+  }));
+
+  if (
+    current?.value &&
+    !options.some((option) => option.value === String(current.value))
+  ) {
+    options.unshift({
+      value: String(current.value),
+      label: String(current.label || current.value),
+    });
+  }
+
+  return options;
+}
+
+/**
+ * A single line item row in the vendor shipment form.
+ *
+ * The P.O. list is narrowed to the purchase orders of the vendor picked in
+ * the header, and the style list to the open styles of the picked P.O.
+ */
+function VendorShipmentLineRow({
+  props,
+}: Readonly<{ props: TableFieldRowProps }>) {
+  const { item, rowId, rowErrors, changeFn, removeFn } = props;
+
+  const api = useApi();
+  const vendorId = useWatch({ name: "vendorid" });
+
+  // Changing the header vendor invalidates the P.O. / style picked on this row
+  const previousVendor = useRef(vendorId);
+  useEffect(() => {
+    if (previousVendor.current !== vendorId) {
+      previousVendor.current = vendorId;
+      changeFn(rowId, "poid", null);
+      changeFn(rowId, "pono", "");
+      changeFn(rowId, "costcardid", null);
+      changeFn(rowId, "styleno", "");
+    }
+  }, [vendorId, rowId, changeFn]);
+
+  // Purchase orders placed with the vendor picked in the header
+  const poField: ApiFormFieldType = useMemo(() => {
+    return {
+      field_type: "related field",
+      api_url: apiUrl(ApiEndpoints.purchase_api),
+      filters: { potype: "ORDER", active: true, },
+      required: false,
+      disabled: !vendorId,
+      placeholder: t`P.O. No.`,
+      value: item.poid,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.pono ?? "";
+      },
+      onValueChange: (value: any, instance: any) => {
+        if (value === item.poid) {
+          return;
+        }
+        changeFn(rowId, "poid", value ?? null);
+        changeFn(rowId, "pono", instance?.pono ?? "");
+        // A different P.O. has a different set of styles
+        changeFn(rowId, "costcardid", null);
+        changeFn(rowId, "styleno", "");
+      },
+    };
+  }, [vendorId, item.poid, rowId, changeFn]);
+
+  const styleQuery = useQuery({
+    queryKey: ["vendor-shipment-style-list", item.poid],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.vendor_shipment_style_list), {
+          params: { poid: item.poid, is_open: true },
+        })
+        .then((response) => response.data ?? []),
+    enabled: !!item.poid,
+    staleTime: 30 * 1000,
+  });
+
+  const stonePlaceQuery = useQuery({
+    queryKey: ["vendor-shipment-stone-place-list"],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.stone_place), {
+          params: { active: true, limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const styleOptions = useMemo(
+    () =>
+      selectOptions(styleQuery.data, "costcardid", "styleno", {
+        value: item.costcardid,
+        label: item.styleno,
+      }),
+    [styleQuery.data, item.costcardid, item.styleno],
+  );
+
+  const stonePlaceOptions = useMemo(() => {
+    const names = new Set<string>(
+      (stonePlaceQuery.data ?? [])
+        .map((record: any) => record.name)
+        .filter((name: any) => !!name),
+    );
+    if (item.stplace) {
+      names.add(item.stplace);
+    }
+    return Array.from(names);
+  }, [stonePlaceQuery.data, item.stplace]);
+
+  return (
+    <Table.Tr key={`table-row-${rowId}`}>
+      <Table.Td>
+        <StandaloneField
+          fieldName="poid"
+          fieldDefinition={poField}
+          error={rowErrors?.poid?.message}
+          hideLabels
+        />
+      </Table.Td>
+      <Table.Td>
+        <Select
+          aria-label="select-field-costcardid"
+          searchable
+          placeholder={item.poid ? t`Select style` : t`Select P.O. first`}
+          disabled={!item.poid}
+          data={styleOptions}
+          value={item.costcardid ? String(item.costcardid) : null}
+          nothingFoundMessage={t`No open styles`}
+          onChange={(value) => {
+            const option = styleOptions.find((entry) => entry.value === value);
+            changeFn(rowId, "costcardid", value ? Number(value) : null);
+            changeFn(rowId, "styleno", option?.label ?? "");
+          }}
+          error={rowErrors?.costcardid?.message}
+        />
+      </Table.Td>
+      {SHIPMENT_LINE_NUMBER_FIELDS.slice(0, 3).map((field) => (
+        <LineNumberCell key={field.key} field={field} props={props} />
+      ))}
+      <Table.Td>
+        <Select
+          aria-label="select-field-stplace"
+          searchable
+          clearable
+          data={stonePlaceOptions}
+          value={item.stplace || null}
+          onChange={(value) => changeFn(rowId, "stplace", value ?? "")}
+          error={rowErrors?.stplace?.message}
+        />
+      </Table.Td>
+      {SHIPMENT_LINE_NUMBER_FIELDS.slice(3).map((field) => (
+        <LineNumberCell key={field.key} field={field} props={props} />
+      ))}
+      <Table.Td>
+        <RemoveRowButton onClick={() => removeFn(rowId)} />
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+function LineNumberCell({
+  field,
+  props,
+}: Readonly<{
+  field: { key: string; decimals: number };
+  props: TableFieldRowProps;
+}>) {
+  const { item, rowId, rowErrors, changeFn } = props;
+
+  return (
+    <Table.Td>
+      <NumberInput
+        aria-label={`number-field-${field.key}`}
+        min={0}
+        decimalScale={field.decimals}
+        allowDecimal={field.decimals > 0}
+        hideControls
+        value={item[field.key] ?? ""}
+        onChange={(value) =>
+          changeFn(rowId, field.key, value === "" ? "" : toNumber(value))
+        }
+        error={rowErrors?.[field.key]?.message}
+      />
+    </Table.Td>
+  );
+}
+
+function newVendorShipmentLineItem() {
+  return {
+    uuid: randomId(),
+    poid: null,
+    pono: "",
+    costcardid: null,
+    styleno: "",
+    pcs: "",
+    metalwt: "",
+    diawt: "",
+    stplace: "",
+    colwt: "",
+    labour: "",
+    finding: "",
+    triounce: "",
+  };
+}
+
+/** The editable grid of shipment lines, shared by the create and edit forms */
+function vendorShipmentLineTable(): ApiFormFieldType {
+  return {
+    label: "Line Items",
+    description: "Styles received against the vendor's purchase orders",
+    field_type: "table",
+    required: false,
+    gridSpan: "full",
+    headers: [
+      { title: "P.O. No.", style: { minWidth: "150px" } },
+      { title: "Style No", style: { minWidth: "150px" } },
+      ...SHIPMENT_LINE_NUMBER_FIELDS.slice(0, 3).map((field) => ({
+        title: field.title,
+        style: { minWidth: "90px" },
+      })),
+      { title: "Stone Place", style: { minWidth: "120px" } },
+      ...SHIPMENT_LINE_NUMBER_FIELDS.slice(3).map((field) => ({
+        title: field.title,
+        style: { minWidth: "90px" },
+      })),
+      { title: "", style: { width: "50px" } },
+    ],
+    modelRenderer: (row: TableFieldRowProps) => (
+      <VendorShipmentLineRow key={row.rowId} props={row} />
+    ),
+    addRow: newVendorShipmentLineItem,
+  };
+}
+
+export function vendorShipmentFields(editing = false): ApiFormFieldSet {
+  return {
+    vsno: {
+      label: "Vendor Shipment No",
+    },
+    vsdate: {
+      label: "Shipment Date",
+      default: new Date().toISOString().split("T")[0],
+    },
+    vendorid: {
+      label: "Vendor",
+      required: true,
+      api_url: apiUrl(ApiEndpoints.master_vendor_customer),
+      filters: {
+        active: true,
+        is_supplier: true,
+      },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.code ?? instance?.name ?? "";
+      },
+    },
+    courierid: {
+      label: "Courier",
+      api_url: apiUrl(ApiEndpoints.courier_service),
+      filters: { active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.name ?? "";
+      },
+    },
+    trackref: {
+      label: "Tracking Reference",
+    },
+    // active: { boxed: true },
+    lines: {
+      ...vendorShipmentLineTable(),
+      // On edit the header endpoint ignores lines - they are saved separately
+      ...(editing ? { exclude: true, default: [] } : { value: [] }),
+    },
+  };
+}
+
+/** The payload for a single shipment line */
+function vendorShipmentLinePayload(row: any) {
+  return {
+    poid: row.poid ?? null,
+    costcardid: row.costcardid ?? null,
+    pcs: Math.round(toNumber(row.pcs)),
+    metalwt: toNumber(row.metalwt),
+    diawt: toNumber(row.diawt),
+    stplace: row.stplace ?? "",
+    colwt: toNumber(row.colwt),
+    labour: toNumber(row.labour),
+    finding: toNumber(row.finding),
+    triounce: toNumber(row.triounce),
+  };
+}
+
+/** A row with nothing entered in any of its editable columns */
+function isEmptyVendorShipmentLine(row: any): boolean {
+  return (
+    !row?.poid &&
+    !row?.costcardid &&
+    !String(row?.stplace ?? "").trim() &&
+    SHIPMENT_LINE_NUMBER_FIELDS.every((field) => !toNumber(row?.[field.key]))
+  );
+}
+
+/**
+ * Validate the line items of a vendor shipment before it is submitted.
+ * Errors are attached to the offending rows, and false cancels the submit.
+ *
+ * @param requireRow : Reject the submit when the table holds no rows at all
+ */
+export function validateVendorShipmentLines(requireRow = false) {
+  return (data: any, form: any): boolean => {
+    let valid = true;
+    const rows = data?.lines ?? [];
+
+    if (!data?.vendorid) {
+      form.setError("vendorid", { message: "Vendor is required" });
+      valid = false;
+    }
+
+    if (requireRow && rows.length === 0) {
+      form.setError("lines", {
+        message: "At least one line item is required",
+      });
+      return false;
+    }
+
+    rows.forEach((row: any, idx: number) => {
+      const path = `lines.${idx}`;
+
+      if (isEmptyVendorShipmentLine(row)) {
+        form.setError(`${path}.non_field_errors`, {
+          message: "Empty row cannot be saved - fill it in or remove it",
+        });
+        valid = false;
+        return;
+      }
+
+      if (!row.poid) {
+        form.setError(`${path}.poid`, { message: "P.O. is required" });
+        valid = false;
+      }
+
+      if (!row.costcardid) {
+        form.setError(`${path}.costcardid`, { message: "Style is required" });
+        valid = false;
+      }
+
+      if (toNumber(row.pcs) <= 0) {
+        form.setError(`${path}.pcs`, { message: "Pcs must be more than 0" });
+        valid = false;
+      }
+    });
+
+    return valid;
+  };
+}
+
+/** Strip the client-side row keys from the line items before submission */
+export function processVendorShipmentData(data: any) {
+  return {
+    ...data,
+    lines: (data.lines ?? []).map(vendorShipmentLinePayload),
+  };
+}
+
+/**
+ * The header endpoint only stamps the last user on create, so an edit sends
+ * the current user's name itself
+ */
+export function processVendorShipmentHeaderData(data: any) {
+  const currentUser = useUserState.getState().getUser();
+
+  return {
+    ...data,
+    luser: currentUser?.username ?? data.luser ?? "",
+  };
+}
+
+/**
+ * Write the edited line grid of an existing shipment: delete removed rows,
+ * patch existing rows and create new ones.
+ */
+export async function saveVendorShipmentLines({
+  api,
+  shipmentPk,
+  originalLines,
+  rows,
+}: {
+  api: any;
+  shipmentPk: number;
+  originalLines: any[];
+  rows: any[];
+}) {
+  const url = apiUrl(ApiEndpoints.vendor_shipment_line);
+  const keptPks = new Set(
+    (rows ?? []).map((row: any) => row.pk).filter((pk: any) => !!pk),
+  );
+
+  const requests: Promise<any>[] = [];
+
+  // Rows the user removed from the grid. A row that something else already
+  // deleted is treated as done rather than as a failure.
+  for (const line of originalLines ?? []) {
+    if (line.pk && !keptPks.has(line.pk)) {
+      requests.push(
+        api.delete(`${url}${line.pk}/`).catch((error: any) => {
+          if (error?.response?.status !== 404) {
+            throw error;
+          }
+        }),
+      );
+    }
+  }
+
+  for (const row of rows ?? []) {
+    const payload = vendorShipmentLinePayload(row);
+
+    if (row.pk) {
+      requests.push(api.patch(`${url}${row.pk}/`, payload));
+    } else {
+      requests.push(api.post(url, { ...payload, vendorshipid: shipmentPk }));
     }
   }
 

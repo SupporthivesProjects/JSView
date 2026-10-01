@@ -193,6 +193,11 @@ export enum ApiEndpoints {
   requisition_metal = "requisition/metal/",
   requisition_metal_sent = "requisition/metal-sent/",
 
+  // Vendor shipment API endpoints
+  vendor_shipment = "vendor-shipment/",
+  vendor_shipment_line = "vendor-shipment/lines/",
+  vendor_shipment_style_list = "vendor-shipment/style-list/",
+
   // Stock location endpoints
   stock_location_list = "stock/location/",
   stock_location_type_list = "stock/location-type/",

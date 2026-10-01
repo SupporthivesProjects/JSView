@@ -12,6 +12,7 @@ import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import StoneRequisitionPanel from "@components/tables/requisition/StoneRequisitionPanel";
+import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipmentTable";
 import MetalRequisitionPanel from "@components/tables/requisition/MetalRequisitionPanel";
 import MetalRequisitionSentTable from "@components/tables/requisition/MetalRequisitionSentTable";
 
@@ -24,7 +25,7 @@ export default function VendorShipmentIndex() {
         name: "shipment",
         label: t`Shipment`,
         icon: <IconCoin />,
-        content: <StoneRequisitionPanel />,
+        content: <VendorShipmentTable />,
       },
       {
         name: "confirm-shipment",
