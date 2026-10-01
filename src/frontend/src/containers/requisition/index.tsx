@@ -11,9 +11,9 @@ import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
-import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
 import StoneRequisitionPanel from "@components/tables/requisition/StoneRequisitionPanel";
 import MetalRequisitionPanel from "@components/tables/requisition/MetalRequisitionPanel";
+import MetalRequisitionSentTable from "@components/tables/requisition/MetalRequisitionSentTable";
 
 export default function RequisitionTypeIndex() {
   const user = useUserState();
@@ -42,7 +42,7 @@ export default function RequisitionTypeIndex() {
         name: "metal-sent",
         label: t`Metal Sent`,
         icon: <IconTag />,
-        content: <JewellerySubCategoryTable />,
+        content: <MetalRequisitionSentTable />,
       },
     ];
   }, []);

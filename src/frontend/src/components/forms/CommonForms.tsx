@@ -48,6 +48,25 @@ export function metalTypeFields(): ApiFormFieldSet {
   };
 }
 
+export function metalRequisitionSentFields(): ApiFormFieldSet {
+  return {
+    invoice_no: {},
+    metal_sent_date: {},
+    purchase_order: {
+      api_url: apiUrl(ApiEndpoints.purchase_api),
+      filters: { potype: "ORDER", limit: 50, active: true },
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.pono ?? (instance?.pono ? `#${instance.pono}` : "");
+      },
+    },
+    triounce: {},
+    metal_gms: {},
+    metal_amount: {},
+    active: { boxed: true },
+  };
+}
+
 export function stonePlaceFields(): ApiFormFieldSet {
   return {
     name: {},
