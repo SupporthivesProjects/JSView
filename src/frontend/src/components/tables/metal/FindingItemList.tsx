@@ -36,7 +36,7 @@ export default function FindingItemTable() {
   );
 
   const { nameByPk: findingMetalNameByPk } = useNameLookup(
-    ApiEndpoints.finding_item,
+    ApiEndpoints.metal_purity_list,
     "finding-metal-lookup",
   );
 
@@ -54,11 +54,11 @@ export default function FindingItemTable() {
         sortable: true,
         switchable: false,
       },
-      {
-        accessor: "type",
-        sortable: true,
-        switchable: false,
-      },
+      // {
+      //   accessor: "type",
+      //   sortable: true,
+      //   switchable: false,
+      // },
       {
         accessor: "weight",
         sortable: true,
