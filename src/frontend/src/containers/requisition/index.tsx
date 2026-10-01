@@ -13,7 +13,7 @@ import { useUserState } from "@store/UserState";
 import MetalPurityTable from "@components/tables/metal/MetalPurityTable";
 import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import JewellerySubCategoryTable from "@components/tables/metal/JewellerySubCategoryTable";
-import StoneRequisitionTable from "@components/tables/requisition/StoneRequisitionTable";
+import StoneRequisitionPanel from "@components/tables/requisition/StoneRequisitionPanel";
 
 export default function RequisitionTypeIndex() {
   const user = useUserState();
@@ -24,7 +24,7 @@ export default function RequisitionTypeIndex() {
         name: "stone",
         label: t`Stone`,
         icon: <IconCoin />,
-        content: <StoneRequisitionTable />,
+        content: <StoneRequisitionPanel />,
       },
       {
         name: "metal",
