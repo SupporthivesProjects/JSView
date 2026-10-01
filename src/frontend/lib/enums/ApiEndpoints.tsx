@@ -190,6 +190,7 @@ export enum ApiEndpoints {
 
   // Requisition API endpoints
   requisition_stone = "requisition/stone/",
+  requisition_metal = "requisition/metal/",
 
   // Stock location endpoints
   stock_location_list = "stock/location/",

@@ -91,3 +91,45 @@ export type StoneRequisitionResponse =
       data: StoneSummaryRow[];
       totals: StoneTotals;
     };
+
+/** Response types for the metal requisition report (`requisition/metal/`) */
+
+type MetalNumber = number | string | null;
+
+/** A single style line of a P.O. block */
+export interface MetalLine {
+  sr_no: number;
+  style_no: string | null;
+  qty: number | null;
+  // Weight of one piece
+  net_weight: MetalNumber;
+  // Weight of one piece x qty
+  total_weight: MetalNumber;
+  kt: MetalNumber;
+  gold: MetalNumber;
+  silver: MetalNumber;
+  platinum: MetalNumber;
+}
+
+export interface MetalTotals {
+  qty: number | null;
+  total_weight: MetalNumber;
+  gold: MetalNumber;
+  silver: MetalNumber;
+  platinum: MetalNumber;
+}
+
+/** One P.O. block: order header plus its style lines */
+export interface MetalPo {
+  po_id: number;
+  po_no: string | null;
+  vendor: string | null;
+  lines: MetalLine[];
+  totals: MetalTotals;
+}
+
+export interface MetalRequisitionResponse {
+  po_ids: number[];
+  data: MetalPo[];
+  grand_totals: MetalTotals;
+}

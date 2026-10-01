@@ -1,0 +1,87 @@
+/*
+ * Styling for the metal order requisition sheet.
+ *
+ * Plain ruled HTML tables, matching the layout of the Excel workbook the
+ * backend builds. Colours come from the Mantine theme, so the sheet follows
+ * the light / dark colour scheme.
+ */
+
+.mr-sheet {
+	color: var(--mantine-color-text);
+	overflow-x: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 28px;
+}
+
+.mr-po-block {
+	break-inside: avoid;
+}
+
+/* --- P.O. header line --------------------------------------------------- */
+
+.mr-info {
+	display: flex;
+	gap: 8px;
+	margin: 0 0 8px 2px;
+	font-size: var(--mantine-font-size-sm);
+}
+
+.mr-info > div {
+	flex: 0 0 50%;
+}
+
+.mr-label {
+	font-weight: 700;
+	margin-right: 4px;
+}
+
+/* --- Ruled tables ------------------------------------------------------- */
+
+.mr-table {
+	border-collapse: collapse;
+	font-size: var(--mantine-font-size-sm);
+	min-width: 680px;
+}
+
+.mr-table th,
+.mr-table td {
+	border: 1px solid var(--mantine-color-default-border);
+	padding: 4px 8px;
+	text-align: center;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.mr-table th {
+	font-weight: 700;
+}
+
+.mr-table tbody td {
+	height: 40px;
+}
+
+.mr-table .mr-style {
+	min-width: 180px;
+}
+
+.mr-table .mr-total-label {
+	text-align: right;
+}
+
+.mr-table tfoot th,
+.mr-table tfoot td {
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+/* --- Grand total -------------------------------------------------------- */
+
+.mr-grand {
+	min-width: 0;
+}
+
+.mr-grand .mr-grand-label {
+	min-width: 130px;
+}
