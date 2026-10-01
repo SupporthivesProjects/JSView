@@ -1,10 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Box, Button, Group, Input, Stack, Text } from "@mantine/core";
-import { useId } from "@mantine/hooks";
+import { useDebouncedValue, useId } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import Select from "react-select";
-import CreatableSelect from "react-select/creatable";
 
+import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
+import { apiUrl } from "@lib/functions/Api";
+import { useApi } from "@context/ApiContext";
 import {
   selectFieldStyles,
   useSelectFieldColors,
@@ -28,7 +31,6 @@ interface Option {
 }
 
 const FILTER_COL = { flex: "1 1 160px", minWidth: 160 };
-
 
 function FilterSelect({
   label,
@@ -71,7 +73,6 @@ function FilterSelect({
   );
 }
 
-
 export default function StoneRequisitionPanel() {
   const [viewType, setViewType] = useState<StoneViewType>("details");
   const [stonePlace, setStonePlace] = useState<StonePlace>("NONE");
@@ -81,13 +82,47 @@ export default function StoneRequisitionPanel() {
 
   const [, setFilters] = useState<StoneRequisitionFilters | null>(null);
 
+  const api = useApi();
   const poFieldId = useId();
   const colors = useSelectFieldColors();
 
-  const poValue = useMemo(
-    () => poIds.map((po) => ({ value: po, label: po })),
-    [poIds],
+  // P.O. search is run against the API, so the labels of the selected orders
+  // are kept here - a new search replaces the available options
+  const [poSearch, setPoSearch] = useState("");
+  const [debouncedPoSearch] = useDebouncedValue(poSearch, 300);
+  const [poLabels, setPoLabels] = useState<Record<string, string>>({});
+
+  const poQuery = useQuery({
+    queryKey: ["requisition-stone-po-search", debouncedPoSearch],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.purchase_api), {
+          params: { potype: "ORDER", search: debouncedPoSearch, limit: 50 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+  });
+
+  const poOptions: Option[] = useMemo(
+    () =>
+      (poQuery.data ?? []).map((po: any) => ({
+        value: String(po.pk),
+        label: po.pono || `#${po.pk}`,
+      })),
+    [poQuery.data],
   );
+
+  const poValue = useMemo(
+    () => poIds.map((po) => ({ value: po, label: poLabels[po] ?? po })),
+    [poIds, poLabels],
+  );
+
+  const handlePoChange = (options: readonly Option[]) => {
+    setPoIds(options.map((option) => option.value));
+    setPoLabels((previous) => ({
+      ...previous,
+      ...Object.fromEntries(options.map((o) => [o.value, o.label])),
+    }));
+  };
 
   const currentFilters = (): StoneRequisitionFilters => ({
     view_type: viewType,
@@ -158,25 +193,27 @@ export default function StoneRequisitionPanel() {
             onChange={(value) => setShowRate(value as "yes" | "no")}
           />
         </Box>
-        <Button onClick={handleGetData} >
-          {t`Get Data`}
-        </Button>
+        <Button onClick={handleGetData}>{t`Get Data`}</Button>
       </Group>
       <Group align="flex-end" gap="md" wrap="nowrap">
         <Box style={{ flex: 1 }}>
-          <CreatableSelect
+          <Select
             id={poFieldId}
             aria-label={t`P.O.`}
             isMulti
             isClearable
-            options={[]}
+            options={poOptions}
             value={poValue}
-            onChange={(options: any) =>
-              setPoIds((options ?? []).map((option: any) => option.value))
-            }
+            onChange={(options: any) => handlePoChange(options ?? [])}
+            inputValue={poSearch}
+            onInputChange={(input, { action }) => {
+              // Keep the typed search when the menu closes on a selection
+              if (action === "input-change") setPoSearch(input);
+            }}
+            filterOption={null}
+            isLoading={poQuery.isFetching}
             placeholder={t`P.O.`}
-            formatCreateLabel={(input: string) => t`Add P.O. ${input}`}
-            noOptionsMessage={() => t`Type a P.O. number to add it`}
+            noOptionsMessage={() => t`No purchase orders found`}
             menuPortalTarget={document.body}
             menuPosition="fixed"
             styles={selectFieldStyles}
@@ -186,10 +223,7 @@ export default function StoneRequisitionPanel() {
             })}
           />
         </Box>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-        >
+        <Button variant="outline" onClick={handleExport}>
           {t`Export`}
         </Button>
       </Group>
