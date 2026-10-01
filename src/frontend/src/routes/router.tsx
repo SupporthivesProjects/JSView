@@ -52,6 +52,8 @@ export const MasterIndex = Loadable(lazy(() => import("@containers/master")));
 
 export const RequisitionIndex = Loadable(lazy(() => import("@containers/requisition")));
 
+export const VendorShipmentIndex = Loadable(lazy(() => import("@containers/vendor-shipment")));
+
 export const CostCardIndex = Loadable(lazy(() => import("@containers/cost-card")));
 
 export const PurchaseRequestIndex = Loadable(lazy(() => import("@containers/purchase")));
@@ -225,6 +227,10 @@ export const routes = (
       <Route path="requisition/">
         <Route index element={<Navigate to="stone/" />} />
         <Route path="*" element={<RequisitionIndex />} />
+      </Route>
+      <Route path="vendor-shipment/">
+        <Route index element={<Navigate to="shipment/" />} />
+        <Route path="*" element={<VendorShipmentIndex />} />
       </Route>
       <Route path="cards/">
         <Route index element={<Navigate to="cost-card/" />} />
