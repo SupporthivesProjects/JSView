@@ -40,6 +40,7 @@ export default function MetalRequisitionSentTable() {
   const { nameByPk: metalRequisitionPurchaseOrderByPk } = useNameLookup(
     ApiEndpoints.purchase_api,
     "metal-requisition-purchase-order-lookup",
+    "pono",
   );
 
   
@@ -55,7 +56,7 @@ export default function MetalRequisitionSentTable() {
       },
       DateColumn({
         accessor: "metal_sent_date",
-        title: "Invoice No",
+        title: t`Metal Sent Date`,
         sortable: true,
         switchable: false,
         ...columnFilter("metal_sent_date_search", t`Metal Sent. Date`, "YYYY-MM-DD"),
@@ -65,7 +66,7 @@ export default function MetalRequisitionSentTable() {
         title: "Purchase Order",
         sortable: true,
         switchable: false,
-        render: (record: any) => metalRequisitionPurchaseOrderByPk[record.pono] ?? record.pono,
+        render: (record: any) => metalRequisitionPurchaseOrderByPk[record.purchase_order] ?? record.purchase_order,
       },
       // {
       //   accessor: "triounce",
