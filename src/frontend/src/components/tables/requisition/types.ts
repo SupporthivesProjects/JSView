@@ -5,11 +5,6 @@ export type StoneType = "DIAMOND" | "COLOURSTONE";
 
 /** A single stone line of a style, within a P.O. block */
 export interface StoneDetailLine {
-  sr_no: number;
-  style_no: string | null;
-  front_view: string | null;
-  category: string | null;
-  po_qty: number | null;
   setting: string | null;
   stone: string | null;
   shape: string | null;
@@ -28,7 +23,26 @@ export interface StoneDetailLine {
   amount?: number | string | null;
 }
 
-/** One P.O. block of the details view: order header plus its stone lines */
+/** One style of a P.O., with the stone lines it is made up of */
+export interface StoneDetailStyle {
+  sr_no: number;
+  style_no: string | null;
+  front_view: string | null;
+  category: string | null;
+  po_qty: number | null;
+  lines: StoneDetailLine[];
+}
+
+/** Footer totals of a P.O. block */
+export interface StoneDetailTotals {
+  qty: number | null;
+  pcs: number | null;
+  cts: number | string | null;
+  total_pcs: number | null;
+  total_cts: number | string | null;
+}
+
+/** One P.O. block of the details view: order header plus its styles */
 export interface StoneDetailPo {
   po_id: number;
   po_no: string | null;
@@ -41,7 +55,8 @@ export interface StoneDetailPo {
   ac_exe: string | null;
   category: string | null;
   remarks: string | null;
-  lines: StoneDetailLine[];
+  styles: StoneDetailStyle[];
+  totals: StoneDetailTotals;
 }
 
 /** A stone of the summary view, totalled across every selected P.O. */

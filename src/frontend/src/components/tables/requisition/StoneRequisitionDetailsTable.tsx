@@ -1,10 +1,9 @@
 import { t } from "@lingui/core/macro";
-import { useMemo } from "react";
 
 import { generateUrl } from "@helpers/urls";
 import { formatPrintDate, text } from "../../print/purchase-order/format";
 import "./stoneRequisition.css";
-import type { StoneDetailLine, StoneDetailPo } from "./types";
+import type { StoneDetailPo } from "./types";
 
 /** Columns between the Qty and Pcs columns, spanned by the second "Total :" */
 const STONE_COLUMN_SPAN = 9;
@@ -17,30 +16,6 @@ function decimal(value: number | string | null | undefined, places = 2) {
   const numeric = Number(value);
 
   return Number.isNaN(numeric) ? String(value) : numeric.toFixed(places);
-}
-
-function sum(values: (number | string | null | undefined)[]) {
-  return values.reduce<number>((total, value) => total + (Number(value) || 0), 0);
-}
-
-/**
- * The stone lines of one style, which share the Sr. No / Style / Category /
- * Qty cells - those are merged across the group, as on the printed sheet.
- */
-function groupByStyle(lines: StoneDetailLine[]): StoneDetailLine[][] {
-  const groups: StoneDetailLine[][] = [];
-
-  lines.forEach((line) => {
-    const current = groups[groups.length - 1];
-
-    if (current && current[0].sr_no === line.sr_no) {
-      current.push(line);
-    } else {
-      groups.push([line]);
-    }
-  });
-
-  return groups;
 }
 
 function PoHeader({ po }: Readonly<{ po: StoneDetailPo }>) {
@@ -84,10 +59,7 @@ function PoBlock({
   po,
   showRate,
 }: Readonly<{ po: StoneDetailPo; showRate: boolean }>) {
-  const groups = useMemo(() => groupByStyle(po.lines), [po.lines]);
-
-  // The report totals the qty of each style once, not once per stone line
-  const qtyTotal = sum(groups.map((group) => group[0].po_qty));
+  const totals = po.totals;
 
   return (
     <div className="sr-po-block">
@@ -117,23 +89,23 @@ function PoBlock({
           </tr>
         </thead>
         <tbody>
-          {groups.map((group) =>
-            group.map((line, index) => (
-              <tr key={`${line.sr_no}-${index}`}>
+          {po.styles.map((style) =>
+            style.lines.map((line, index) => (
+              <tr key={`${style.sr_no}-${index}`}>
                 {index === 0 && (
                   <>
-                    <td rowSpan={group.length}>{text(line.sr_no)}</td>
-                    <td className="sr-style" rowSpan={group.length}>
-                      {text(line.style_no)}
-                      {line.front_view && (
+                    <td rowSpan={style.lines.length}>{text(style.sr_no)}</td>
+                    <td className="sr-style" rowSpan={style.lines.length}>
+                      {text(style.style_no)}
+                      {style.front_view && (
                         <img
-                          src={generateUrl(line.front_view)}
-                          alt={text(line.style_no)}
+                          src={generateUrl(style.front_view)}
+                          alt={text(style.style_no)}
                         />
                       )}
                     </td>
-                    <td rowSpan={group.length}>{text(line.category)}</td>
-                    <td rowSpan={group.length}>{text(line.po_qty)}</td>
+                    <td rowSpan={style.lines.length}>{text(style.category)}</td>
+                    <td rowSpan={style.lines.length}>{text(style.po_qty)}</td>
                   </>
                 )}
                 <td>{text(line.setting)}</td>
@@ -158,14 +130,14 @@ function PoBlock({
         <tfoot>
           <tr>
             <th colSpan={3}>{t`Total :`}</th>
-            <th>{qtyTotal}</th>
+            <th>{text(totals.qty)}</th>
             <th colSpan={STONE_COLUMN_SPAN}>{t`Total :`}</th>
-            <th>{sum(po.lines.map((line) => line.pcs))}</th>
-            <th>{decimal(sum(po.lines.map((line) => line.cts)))}</th>
-            <th>{sum(po.lines.map((line) => line.total_pcs))}</th>
-            <th>{decimal(sum(po.lines.map((line) => line.total_cts)))}</th>
+            <th>{text(totals.pcs)}</th>
+            <th>{decimal(totals.cts)}</th>
+            <th>{text(totals.total_pcs)}</th>
+            <th>{decimal(totals.total_cts)}</th>
             {showRate && <th />}
-            {showRate && <th>{decimal(sum(po.lines.map((l) => l.amount)))}</th>}
+            {showRate && <th />}
           </tr>
         </tfoot>
       </table>
