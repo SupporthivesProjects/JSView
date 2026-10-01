@@ -5,7 +5,7 @@ from math import ceil
 
 from openpyxl import Workbook
 
-from .base import LEFT, fit_columns, fmt_date, landscape_fit, merge, num, put
+from .base import LEFT, fit_columns, fmt_date, landscape_fit, merge, num, put, up
 
 SUMMARY_HEADERS = [
     '#', 'Stone', 'Shape', 'Cut', 'Color', 'Quality', 'MM Size', 'Sieve Size', 'Pointer', 'Pcs', 'Cts.',
@@ -63,8 +63,8 @@ class StoneOrderSheetBuilder:
         row = 4
         for r in report['data']:
             values = [
-                r['sr_no'], r['stone'], r['shape'], r['cut'], r['colour'], r['quality'],
-                r['mm_size'], r['sieve_size'], num(r['pointer']), r['pcs'], num(r['cts']),
+                r['sr_no'], up(r['stone']), up(r['shape']), up(r['cut']), up(r['colour']), up(r['quality']),
+                up(r['mm_size']), up(r['sieve_size']), num(r['pointer']), r['pcs'], num(r['cts']),
             ]
             for col, value in enumerate(values, start=1):
                 put(ws, row, col, value, fmt=POINTER_FMT if col == 9 else None)
@@ -117,11 +117,11 @@ class StoneOrderSheetBuilder:
             previous = r['sr_no']
             values = [
                 r['sr_no'] if first else None,
-                r['style_no'] if first else None,
-                r['category'] if first else None,
+                up(r['style_no']) if first else None,
+                up(r['category']) if first else None,
                 r['po_qty'] if first else None,
-                r['setting'], r['stone'], r['shape'], r['cut'], r['colour'], r['quality'],
-                r['mm_size'], r['sieve_size'], num(r['pointer']), r['pcs'], num(r['cts']),
+                up(r['setting']), up(r['stone']), up(r['shape']), up(r['cut']), up(r['colour']), up(r['quality']),
+                up(r['mm_size']), up(r['sieve_size']), num(r['pointer']), r['pcs'], num(r['cts']),
                 r['total_pcs'], num(r['total_cts']),
             ]
             for col, value in enumerate(values, start=1):

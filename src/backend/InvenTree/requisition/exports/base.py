@@ -27,6 +27,11 @@ def num(value):
     return None if value is None else float(value)
 
 
+def up(value):
+    """Uppercase text values; numbers and None pass through unchanged."""
+    return value.upper() if isinstance(value, str) else value
+
+
 def put(ws, row, col, value, bold=False, border=True, fmt=None, size=11, align=CENTER):
     cell = ws.cell(row=row, column=col, value=value)
     cell.font = Font(bold=bold, size=size)

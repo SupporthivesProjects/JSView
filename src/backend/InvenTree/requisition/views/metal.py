@@ -52,11 +52,26 @@ def _karat(cost_card):
     return None
 
 
+def _metal_values(cost_card, total_weight):
+    """Gold as 24KT (weight x KT / 24, 3 decimals, ties to even); others as weight."""
+    values = {metal: None for metal in METALS}
+    kind = _metal_kind(cost_card)
+
+    if kind == 'gold':
+        karat = _karat(cost_card)
+        pure = total_weight * karat / 24 if karat else total_weight
+        values['gold'] = pure.quantize(THREE_DP, rounding=ROUND_HALF_EVEN)
+    elif kind:
+        values[kind] = total_weight
+
+    return values
+
+
 def _json_totals():
     return {
         'qty': 0,
         'total_weight': ZERO,
-        **{metal: ZERO for metal in METALS},
+        **{metal: None for metal in METALS},
     }
 
 
@@ -127,30 +142,27 @@ class MetalOrderRequisitionView(APIView):
             for sr_no, po_line in enumerate(po_lines, start=1):
                 cc = po_line.costcardid
                 qty = po_line.qty or 0
-                net_weight = cc.metal_grams or ZERO
-                total_weight = net_weight * qty
-                metal_type = (
-                    cc.metal_purity.metal_type.name
-                    if cc.metal_purity and cc.metal_purity.metal_type
-                    else None
-                )
 
-                metal_values = {
-                    metal: (
-                        total_weight
-                        if metal_type and metal_type.lower() == metal
-                        else ZERO
-                    )
-                    for metal in METALS
-                }
+                if cc is None:
+                    net_weight = ZERO
+                    total_weight = ZERO
+                    metal_values = {metal: None for metal in METALS}
+                    style_no = None
+                    kt = None
+                else:
+                    net_weight = getattr(cc, WEIGHT_FIELD, None) or ZERO
+                    total_weight = net_weight * qty
+                    metal_values = _metal_values(cc, total_weight)
+                    style_no = cc.our_style_no
+                    kt = cc.karat
 
                 rows.append({
                     'sr_no': sr_no,
-                    'style_no': cc.our_style_no,
+                    'style_no': style_no,
                     'qty': qty,
                     'net_weight': net_weight,
                     'total_weight': total_weight,
-                    'kt': cc.karat,
+                    'kt': kt,
                     **metal_values,
                 })
 
@@ -158,10 +170,13 @@ class MetalOrderRequisitionView(APIView):
                 totals['total_weight'] += total_weight
 
                 for metal in METALS:
-                    totals[metal] += metal_values[metal]
+                    totals[metal] = _add_optional(totals[metal], metal_values[metal])
 
             po = po_lines[0].poid
-            vendor = po_lines[0].costcardid.vendor
+            first_card = po_lines[0].costcardid
+            vendor = getattr(po, 'vendorid', None) or (
+                first_card.vendor if first_card else None
+            )
 
             data.append({
                 'po_id': po.pk,
@@ -171,8 +186,11 @@ class MetalOrderRequisitionView(APIView):
                 'totals': totals,
             })
 
-            for key, value in totals.items():
-                grand[key] += value
+            grand['qty'] += totals['qty']
+            grand['total_weight'] += totals['total_weight']
+
+            for metal in METALS:
+                grand[metal] = _add_optional(grand[metal], totals[metal])
 
         return data, grand
 
@@ -224,27 +242,24 @@ class MetalOrderRequisitionView(APIView):
             for sr_no, po_line in enumerate(po_lines, start=1):
                 cc = po_line.costcardid
                 qty = po_line.qty or 0
-                net_weight = (getattr(cc, WEIGHT_FIELD, None) or ZERO) * qty
-                kind = _metal_kind(cc)
-                karat = _karat(cc)
 
-                values = {metal: None for metal in METALS}
-
-                if kind == 'gold':
-                    pure = net_weight * karat / 24 if karat else net_weight
-                    values['gold'] = pure.quantize(
-                        THREE_DP,
-                        rounding=ROUND_HALF_EVEN,
-                    )
-                elif kind:
-                    values[kind] = net_weight
+                if cc is None:
+                    net_weight = ZERO
+                    values = {metal: None for metal in METALS}
+                    style_no = None
+                    kt = None
+                else:
+                    net_weight = (getattr(cc, WEIGHT_FIELD, None) or ZERO) * qty
+                    values = _metal_values(cc, net_weight)
+                    style_no = cc.our_style_no
+                    kt = cc.karat
 
                 rows.append({
                     'sr_no': sr_no,
-                    'style_no': cc.our_style_no,
+                    'style_no': style_no,
                     'qty': qty,
                     'net_weight': net_weight,
-                    'kt': cc.karat,
+                    'kt': kt,
                     **values,
                 })
 
@@ -255,7 +270,10 @@ class MetalOrderRequisitionView(APIView):
                     totals[metal] = _add_optional(totals[metal], value)
 
             po = po_lines[0].poid
-            vendor = getattr(po, 'vendorid', None) or po_lines[0].costcardid.vendor
+            first_card = po_lines[0].costcardid
+            vendor = getattr(po, 'vendorid', None) or (
+                first_card.vendor if first_card else None
+            )
 
             data.append({
                 'po_no': po.pono,
