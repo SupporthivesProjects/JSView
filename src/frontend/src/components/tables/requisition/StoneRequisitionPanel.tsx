@@ -8,6 +8,7 @@ import Select from "react-select";
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
 import { apiUrl } from "@lib/functions/Api";
 import { useApi } from "@context/ApiContext";
+import useDataOutput from "../../../hooks/UseDataOutput";
 import {
   selectFieldStyles,
   useSelectFieldColors,
@@ -31,7 +32,7 @@ export interface StoneRequisitionFilters {
   po: string[];
 }
 
-function buildParams(filters: StoneRequisitionFilters) {
+function buildParams(filters: StoneRequisitionFilters, exportData = false) {
   const params: Record<string, string> = {
     po: filters.po.join(","),
     view_type: filters.view_type,
@@ -40,6 +41,7 @@ function buildParams(filters: StoneRequisitionFilters) {
 
   if (filters.stone_place) params.stone_place = filters.stone_place;
   if (filters.show_rate) params.show_rate = "yes";
+  if (exportData) params.export = "true";
 
   return params;
 }
@@ -152,6 +154,14 @@ export default function StoneRequisitionPanel() {
         .then((response) => response.data),
   });
 
+  const [exportId, setExportId] = useState<number | undefined>(undefined);
+  const [exporting, setExporting] = useState(false);
+
+  useDataOutput({
+    title: t`Exporting Stone Order List`,
+    id: exportId,
+  });
+
   const currentFilters = (): StoneRequisitionFilters => ({
     view_type: viewType,
     stone_place: stonePlace,
@@ -164,8 +174,17 @@ export default function StoneRequisitionPanel() {
     setFilters(currentFilters());
   };
 
+  /* The export builds the workbook server side and returns a DataOutput
+   * record, which is then monitored until the file can be downloaded.
+   */
   const handleExport = () => {
-    currentFilters();
+    setExporting(true);
+    api
+      .get(apiUrl(ApiEndpoints.requisition_stone), {
+        params: buildParams(currentFilters(), true),
+      })
+      .then((response) => setExportId(response.data?.pk))
+      .finally(() => setExporting(false));
   };
 
   // The title follows the stone type the data was fetched with, not the
@@ -262,7 +281,12 @@ export default function StoneRequisitionPanel() {
             })}
           />
         </Box>
-        <Button variant="outline" onClick={handleExport}>
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          loading={exporting}
+          disabled={poIds?.length == 0}
+        >
           {t`Export`}
         </Button>
       </Group>
