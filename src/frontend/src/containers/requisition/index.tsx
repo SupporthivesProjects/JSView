@@ -10,10 +10,10 @@ import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
-import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
 import StoneRequisitionPanel from "@components/tables/requisition/StoneRequisitionPanel";
 import MetalRequisitionPanel from "@components/tables/requisition/MetalRequisitionPanel";
 import MetalRequisitionSentTable from "@components/tables/requisition/MetalRequisitionSentTable";
+import FluteEntryTable from "@components/tables/requisition/FluteEntryTable";
 
 export default function RequisitionTypeIndex() {
   const user = useUserState();
@@ -33,10 +33,10 @@ export default function RequisitionTypeIndex() {
         content: <MetalRequisitionPanel />,
       },
       {
-        name: "flute-metal",
-        label: t`Flute Metal`,
+        name: "flute-entry",
+        label: t`Flute Entry`,
         icon: <IconDiamond />,
-        content: <JewelleryCategoryTable />,
+        content: <FluteEntryTable />,
       },
       {
         name: "metal-sent",
