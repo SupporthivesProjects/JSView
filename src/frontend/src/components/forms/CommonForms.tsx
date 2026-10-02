@@ -873,6 +873,393 @@ export async function savePurchaseRequestLines({
   await Promise.all(requests);
 }
 
+export const FLUTE_ENTRY_FORM_GRID_COLUMNS = { base: 1, sm: 2, lg: 3 };
+
+/** Width of the flute entry modal, wide enough for the line item grid */
+export const FLUTE_ENTRY_MODAL_SIZE = "90rem";
+
+/** Stone types which can be assigned to a flute entry line */
+export const FLUTE_STONE_TYPE_CHOICES = [
+  { value: "diamond", label: "Diamond" },
+  { value: "color_stone", label: "Color Stone" },
+];
+
+/** Line amount - always rate x cts, to the two decimals it is stored with */
+function fluteEntryLineAmount(row: any): number {
+  return Math.round(toNumber(row?.rate) * toNumber(row?.cts) * 100) / 100;
+}
+
+/**
+ * A single line item row in the flute entry form.
+ *
+ * The style list is narrowed to the lines of the P.O. picked on the row.
+ * Lines already saved against the entry (those with a pk) are shown
+ * read-only: the flute entry endpoint can only append new lines, it cannot
+ * change or remove existing ones.
+ */
+function FluteEntryLineRow({
+  props,
+}: Readonly<{ props: TableFieldRowProps }>) {
+  const { item, rowId, rowErrors, changeFn, removeFn } = props;
+
+  const api = useApi();
+  const saved = !!item.pk;
+
+  const poField: ApiFormFieldType = useMemo(() => {
+    return {
+      field_type: "related field",
+      api_url: apiUrl(ApiEndpoints.purchase_api),
+      filters: { potype: "ORDER", active: true },
+      required: true,
+      disabled: saved,
+      placeholder: t`P.O. No.`,
+      value: item.purchase_order,
+      modelRenderer: (arg: any) => {
+        const instance = arg?.instance ?? arg;
+        return instance?.pono ?? "";
+      },
+      onValueChange: (value: any) => {
+        if (value === item.purchase_order) {
+          return;
+        }
+        changeFn(rowId, "purchase_order", value ?? null);
+        // A different P.O. has a different set of styles
+        changeFn(rowId, "cost_card", null);
+      },
+    };
+  }, [item.purchase_order, saved, rowId, changeFn]);
+
+  // The lines of the picked P.O., one option per style (cost card)
+  const poLinesQuery = useQuery({
+    queryKey: ["flute-entry-po-lines", item.purchase_order],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.purchase_api_line), {
+          params: { poid: item.purchase_order, active: true, limit: 1000 },
+        })
+        .then((response) => response.data?.results ?? response.data ?? []),
+    enabled: !!item.purchase_order,
+    staleTime: 30 * 1000,
+  });
+
+  const styleOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const lines = (poLinesQuery.data ?? []).filter((line: any) => {
+      const key = String(line.costcardid ?? "");
+      if (!line.costcardid || seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+
+    return selectOptions(lines, "costcardid", "styleno", {
+      value: item.cost_card,
+      label: item.cost_card,
+    });
+  }, [poLinesQuery.data, item.cost_card]);
+
+  const changeNumber = (key: string, value: any) => {
+    changeFn(rowId, key, value === "" ? "" : toNumber(value));
+  };
+
+  return (
+    <Table.Tr key={`table-row-${rowId}`}>
+      <Table.Td>
+        <StandaloneField
+          fieldName="purchase_order"
+          fieldDefinition={poField}
+          error={rowErrors?.purchase_order?.message}
+          hideLabels
+        />
+      </Table.Td>
+      <Table.Td>
+        <NumberInput
+          aria-label="number-field-rate"
+          min={0}
+          decimalScale={4}
+          hideControls
+          disabled={saved}
+          value={item.rate ?? ""}
+          onChange={(value) => changeNumber("rate", value)}
+          error={rowErrors?.rate?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <Select
+          aria-label="select-field-cost_card"
+          searchable
+          placeholder={
+            item.purchase_order ? t`Select style` : t`Select P.O. first`
+          }
+          disabled={saved || !item.purchase_order}
+          data={styleOptions}
+          value={item.cost_card ? String(item.cost_card) : null}
+          nothingFoundMessage={t`No styles on this P.O.`}
+          onChange={(value) =>
+            changeFn(rowId, "cost_card", value ? Number(value) : null)
+          }
+          error={rowErrors?.cost_card?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <NumberInput
+          aria-label="number-field-cts"
+          min={0}
+          decimalScale={4}
+          hideControls
+          disabled={saved}
+          value={item.cts ?? ""}
+          onChange={(value) => changeNumber("cts", value)}
+          error={rowErrors?.cts?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <Select
+          aria-label="select-field-stone_type"
+          data={FLUTE_STONE_TYPE_CHOICES}
+          allowDeselect={false}
+          disabled={saved}
+          value={item.stone_type ?? null}
+          onChange={(value) => changeFn(rowId, "stone_type", value)}
+          error={rowErrors?.stone_type?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <NumberInput
+          aria-label="number-field-sets"
+          min={0}
+          decimalScale={2}
+          hideControls
+          disabled={saved}
+          value={item.sets ?? ""}
+          onChange={(value) => changeNumber("sets", value)}
+          error={rowErrors?.sets?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        {/* Always rate x cts, never typed by hand */}
+        <NumberInput
+          aria-label="number-field-amount"
+          decimalScale={2}
+          fixedDecimalScale
+          hideControls
+          disabled
+          value={saved ? toNumber(item.amount) : fluteEntryLineAmount(item)}
+          error={rowErrors?.amount?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        <NumberInput
+          aria-label="number-field-cost_card_rate"
+          min={0}
+          decimalScale={2}
+          hideControls
+          disabled={saved}
+          value={item.cost_card_rate ?? ""}
+          onChange={(value) => changeNumber("cost_card_rate", value)}
+          error={rowErrors?.cost_card_rate?.message}
+        />
+      </Table.Td>
+      <Table.Td>
+        {!saved && <RemoveRowButton onClick={() => removeFn(rowId)} />}
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+function newFluteEntryLineItem() {
+  return {
+    uuid: randomId(),
+    purchase_order: null,
+    rate: "",
+    cost_card: null,
+    cts: "",
+    stone_type: "diamond",
+    sets: "",
+    cost_card_rate: "",
+  };
+}
+
+/**
+ * Fields for the flute entry create / edit forms.
+ *
+ * The line items live in `lines` for both: on create they are all new, on
+ * edit the saved lines are loaded (read-only) alongside any rows the user
+ * appends.
+ */
+export function fluteEntryFields(): ApiFormFieldSet {
+  return {
+    invoice_no: {
+      label: "Invoice No.",
+      field_type: "string",
+      required: true,
+    },
+    flute_date: {
+      label: "Flute Date",
+      field_type: "date",
+      required: true,
+      default: new Date().toISOString().split("T")[0],
+    },
+    active: {
+      label: "Active",
+      field_type: "boolean",
+      default: true,
+      boxed: true,
+    },
+    lines: {
+      label: "Line Items",
+      description: "Stones recorded against this flute entry",
+      field_type: "table",
+      required: false,
+      gridSpan: "full",
+      // A default rather than a value, so the saved lines fetched for an
+      // existing entry take over on edit
+      default: [],
+      headers: [
+        { title: "P.O. No.", style: { minWidth: "150px" } },
+        { title: "Rate", style: { minWidth: "100px" } },
+        { title: "Our Style No.", style: { minWidth: "160px" } },
+        { title: "Cts.", style: { minWidth: "100px" } },
+        { title: "Stone Type", style: { minWidth: "140px" } },
+        { title: "Sets", style: { minWidth: "90px" } },
+        { title: "Amount", style: { minWidth: "110px" } },
+        { title: "Cost Card Rate", style: { minWidth: "110px" } },
+        { title: "", style: { width: "50px" } },
+      ],
+      modelRenderer: (row: TableFieldRowProps) => (
+        <FluteEntryLineRow key={row.rowId} props={row} />
+      ),
+      addRow: newFluteEntryLineItem,
+    },
+  };
+}
+
+/** A row with nothing entered in any of its editable columns */
+function isEmptyFluteEntryLine(row: any): boolean {
+  return (
+    !row?.purchase_order &&
+    !row?.cost_card &&
+    !toNumber(row?.cts) &&
+    !toNumber(row?.sets) &&
+    !toNumber(row?.rate) &&
+    !toNumber(row?.cost_card_rate)
+  );
+}
+
+/**
+ * Validate the new (unsaved) line items of a flute entry before submit.
+ * Errors are attached to the offending rows, and false cancels the submit.
+ *
+ * @param requireRow : Reject the submit when there are no new rows at all
+ */
+export function validateFluteEntryLines(requireRow = false) {
+  return (data: any, form: any): boolean => {
+    let valid = true;
+    const rows: any[] = data?.lines ?? [];
+
+    if (requireRow && !rows.some((row) => !row.pk)) {
+      form.setError("lines", {
+        message: "At least one line item is required",
+      });
+      return false;
+    }
+
+    rows.forEach((row: any, idx: number) => {
+      // Saved lines are read-only, nothing to check
+      if (row.pk) return;
+
+      const path = `lines.${idx}`;
+
+      if (isEmptyFluteEntryLine(row)) {
+        form.setError(`${path}.non_field_errors`, {
+          message: "Empty row cannot be saved - fill it in or remove it",
+        });
+        valid = false;
+        return;
+      }
+
+      if (!row.purchase_order) {
+        form.setError(`${path}.purchase_order`, {
+          message: "P.O. No. is required",
+        });
+        valid = false;
+      }
+
+      if (!row.cost_card) {
+        form.setError(`${path}.cost_card`, {
+          message: "Our Style No. is required",
+        });
+        valid = false;
+      }
+
+      if (!row.stone_type) {
+        form.setError(`${path}.stone_type`, {
+          message: "Stone type is required",
+        });
+        valid = false;
+      }
+    });
+
+    return valid;
+  };
+}
+
+/**
+ * Send only the new lines - the endpoint appends whatever `lines` it is
+ * given, so saved lines must never be resent.
+ */
+export function processFluteEntryData(data: any) {
+  const { lines, ...header } = data;
+
+  const newLines = (lines ?? [])
+    .filter((row: any) => !row.pk)
+    .map((row: any) => ({
+      purchase_order: row.purchase_order ?? null,
+      cost_card: row.cost_card ?? null,
+      cts: toNumber(row.cts),
+      stone_type: row.stone_type ?? "diamond",
+      sets: toNumber(row.sets),
+      rate: toNumber(row.rate),
+      amount: fluteEntryLineAmount(row),
+      cost_card_rate: toNumber(row.cost_card_rate),
+    }));
+
+  // An empty list is rejected by the endpoint, so omit it when editing
+  // only the header
+  return newLines.length > 0 ? { ...header, lines: newLines } : header;
+}
+
+/**
+ * Backend line errors are indexed against the new lines that were sent,
+ * not the full grid (which also holds the saved lines). Move each error
+ * onto the grid row it actually belongs to.
+ */
+export function remapFluteEntryLineErrors(error: any, form: any) {
+  const lineErrors = error?.response?.data?.lines;
+
+  if (!Array.isArray(lineErrors)) return;
+
+  const rows: any[] = form.getValues("lines") ?? [];
+  const newRowIndexes = rows
+    .map((row: any, idx: number) => (row.pk ? null : idx))
+    .filter((idx: number | null) => idx !== null);
+
+  form.clearErrors("lines");
+
+  lineErrors.forEach((rowErrors: any, idx: number) => {
+    const formIdx = newRowIndexes[idx];
+
+    if (formIdx === undefined || !rowErrors) return;
+
+    for (const [key, value] of Object.entries(rowErrors)) {
+      form.setError(`lines.${formIdx}.${key}`, {
+        message: Array.isArray(value) ? value.join(", ") : String(value),
+      });
+    }
+  });
+}
+
 /** Width of the vendor shipment modal, matching the purchase order modal */
 export const VENDOR_SHIPMENT_MODAL_SIZE = "90rem";
 
