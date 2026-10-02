@@ -893,17 +893,11 @@ function fluteEntryLineAmount(row: any): number {
  * A single line item row in the flute entry form.
  *
  * The style list is narrowed to the lines of the P.O. picked on the row.
- * Lines already saved against the entry (those with a pk) are shown
- * read-only: the flute entry endpoint can only append new lines, it cannot
- * change or remove existing ones.
  */
-function FluteEntryLineRow({
-  props,
-}: Readonly<{ props: TableFieldRowProps }>) {
+function FluteEntryLineRow({ props }: Readonly<{ props: TableFieldRowProps }>) {
   const { item, rowId, rowErrors, changeFn, removeFn } = props;
 
   const api = useApi();
-  const saved = !!item.pk;
 
   const poField: ApiFormFieldType = useMemo(() => {
     return {
@@ -911,7 +905,6 @@ function FluteEntryLineRow({
       api_url: apiUrl(ApiEndpoints.purchase_api),
       filters: { potype: "ORDER", active: true },
       required: true,
-      disabled: saved,
       placeholder: t`P.O. No.`,
       value: item.purchase_order,
       modelRenderer: (arg: any) => {
@@ -927,7 +920,7 @@ function FluteEntryLineRow({
         changeFn(rowId, "cost_card", null);
       },
     };
-  }, [item.purchase_order, saved, rowId, changeFn]);
+  }, [item.purchase_order, rowId, changeFn]);
 
   // The lines of the picked P.O., one option per style (cost card)
   const poLinesQuery = useQuery({
@@ -979,7 +972,6 @@ function FluteEntryLineRow({
           min={0}
           decimalScale={4}
           hideControls
-          disabled={saved}
           value={item.rate ?? ""}
           onChange={(value) => changeNumber("rate", value)}
           error={rowErrors?.rate?.message}
@@ -992,7 +984,7 @@ function FluteEntryLineRow({
           placeholder={
             item.purchase_order ? t`Select style` : t`Select P.O. first`
           }
-          disabled={saved || !item.purchase_order}
+          disabled={!item.purchase_order}
           data={styleOptions}
           value={item.cost_card ? String(item.cost_card) : null}
           nothingFoundMessage={t`No styles on this P.O.`}
@@ -1008,7 +1000,6 @@ function FluteEntryLineRow({
           min={0}
           decimalScale={4}
           hideControls
-          disabled={saved}
           value={item.cts ?? ""}
           onChange={(value) => changeNumber("cts", value)}
           error={rowErrors?.cts?.message}
@@ -1019,7 +1010,6 @@ function FluteEntryLineRow({
           aria-label="select-field-stone_type"
           data={FLUTE_STONE_TYPE_CHOICES}
           allowDeselect={false}
-          disabled={saved}
           value={item.stone_type ?? null}
           onChange={(value) => changeFn(rowId, "stone_type", value)}
           error={rowErrors?.stone_type?.message}
@@ -1031,7 +1021,6 @@ function FluteEntryLineRow({
           min={0}
           decimalScale={2}
           hideControls
-          disabled={saved}
           value={item.sets ?? ""}
           onChange={(value) => changeNumber("sets", value)}
           error={rowErrors?.sets?.message}
@@ -1045,7 +1034,7 @@ function FluteEntryLineRow({
           fixedDecimalScale
           hideControls
           disabled
-          value={saved ? toNumber(item.amount) : fluteEntryLineAmount(item)}
+          value={fluteEntryLineAmount(item)}
           error={rowErrors?.amount?.message}
         />
       </Table.Td>
@@ -1055,14 +1044,13 @@ function FluteEntryLineRow({
           min={0}
           decimalScale={2}
           hideControls
-          disabled={saved}
           value={item.cost_card_rate ?? ""}
           onChange={(value) => changeNumber("cost_card_rate", value)}
           error={rowErrors?.cost_card_rate?.message}
         />
       </Table.Td>
       <Table.Td>
-        {!saved && <RemoveRowButton onClick={() => removeFn(rowId)} />}
+        <RemoveRowButton onClick={() => removeFn(rowId)} />
       </Table.Td>
     </Table.Tr>
   );
@@ -1085,18 +1073,19 @@ function newFluteEntryLineItem() {
  * Fields for the flute entry create / edit forms.
  *
  * The line items live in `lines` for both: on create they are all new, on
- * edit the saved lines are loaded (read-only) alongside any rows the user
- * appends.
+ * edit the saved lines are loaded alongside any rows the user appends.
  */
 export function fluteEntryFields(): ApiFormFieldSet {
   return {
     invoice_no: {
       label: "Invoice No.",
+      description: "Enter Invoice Number",
       field_type: "string",
       required: true,
     },
     flute_date: {
       label: "Flute Date",
+      description: "Enter Flute Date",
       field_type: "date",
       required: true,
       default: new Date().toISOString().split("T")[0],
@@ -1106,6 +1095,7 @@ export function fluteEntryFields(): ApiFormFieldSet {
       field_type: "boolean",
       default: true,
       boxed: true,
+      hidden: true,
     },
     lines: {
       label: "Line Items",
@@ -1148,17 +1138,17 @@ function isEmptyFluteEntryLine(row: any): boolean {
 }
 
 /**
- * Validate the new (unsaved) line items of a flute entry before submit.
+ * Validate the line items of a flute entry before submit.
  * Errors are attached to the offending rows, and false cancels the submit.
  *
- * @param requireRow : Reject the submit when there are no new rows at all
+ * @param requireRow : Reject the submit when the table holds no rows at all
  */
 export function validateFluteEntryLines(requireRow = false) {
   return (data: any, form: any): boolean => {
     let valid = true;
     const rows: any[] = data?.lines ?? [];
 
-    if (requireRow && !rows.some((row) => !row.pk)) {
+    if (requireRow && rows.length === 0) {
       form.setError("lines", {
         message: "At least one line item is required",
       });
@@ -1166,9 +1156,6 @@ export function validateFluteEntryLines(requireRow = false) {
     }
 
     rows.forEach((row: any, idx: number) => {
-      // Saved lines are read-only, nothing to check
-      if (row.pk) return;
-
       const path = `lines.${idx}`;
 
       if (isEmptyFluteEntryLine(row)) {
@@ -1205,25 +1192,31 @@ export function validateFluteEntryLines(requireRow = false) {
   };
 }
 
+/** The payload for a single flute entry line */
+function fluteEntryLinePayload(row: any) {
+  return {
+    purchase_order: row.purchase_order ?? null,
+    cost_card: row.cost_card ?? null,
+    cts: toNumber(row.cts),
+    stone_type: row.stone_type ?? "diamond",
+    sets: toNumber(row.sets),
+    rate: toNumber(row.rate),
+    amount: fluteEntryLineAmount(row),
+    cost_card_rate: toNumber(row.cost_card_rate),
+  };
+}
+
 /**
- * Send only the new lines - the endpoint appends whatever `lines` it is
- * given, so saved lines must never be resent.
+ * Send only the new lines - the header endpoint appends whatever `lines` it
+ * is given, so saved lines must never be resent. Saved lines are written
+ * afterwards by `saveFluteEntryLines`.
  */
 export function processFluteEntryData(data: any) {
   const { lines, ...header } = data;
 
   const newLines = (lines ?? [])
     .filter((row: any) => !row.pk)
-    .map((row: any) => ({
-      purchase_order: row.purchase_order ?? null,
-      cost_card: row.cost_card ?? null,
-      cts: toNumber(row.cts),
-      stone_type: row.stone_type ?? "diamond",
-      sets: toNumber(row.sets),
-      rate: toNumber(row.rate),
-      amount: fluteEntryLineAmount(row),
-      cost_card_rate: toNumber(row.cost_card_rate),
-    }));
+    .map(fluteEntryLinePayload);
 
   // An empty list is rejected by the endpoint, so omit it when editing
   // only the header
@@ -1258,6 +1251,52 @@ export function remapFluteEntryLineErrors(error: any, form: any) {
       });
     }
   });
+}
+
+/**
+ * Write the saved lines of an existing flute entry: delete the rows removed
+ * from the grid and patch the ones still in it. New rows are not handled
+ * here, they are appended by the header update itself.
+ */
+export async function saveFluteEntryLines({
+  api,
+  entryPk,
+  originalLines,
+  rows,
+}: {
+  api: any;
+  entryPk: number;
+  originalLines: any[];
+  rows: any[];
+}) {
+  const url = `${apiUrl(ApiEndpoints.requisition_flute_entry, entryPk)}lines/`;
+  const keptPks = new Set(
+    (rows ?? []).map((row: any) => row.pk).filter((pk: any) => !!pk),
+  );
+
+  const requests: Promise<any>[] = [];
+
+  // Rows the user removed from the grid. A row that something else already
+  // deleted is treated as done rather than as a failure.
+  for (const line of originalLines ?? []) {
+    if (line.pk && !keptPks.has(line.pk)) {
+      requests.push(
+        api.delete(`${url}${line.pk}/`).catch((error: any) => {
+          if (error?.response?.status !== 404) {
+            throw error;
+          }
+        }),
+      );
+    }
+  }
+
+  for (const row of rows ?? []) {
+    if (row.pk) {
+      requests.push(api.patch(`${url}${row.pk}/`, fluteEntryLinePayload(row)));
+    }
+  }
+
+  await Promise.all(requests);
 }
 
 /** Width of the vendor shipment modal, matching the purchase order modal */
@@ -1336,7 +1375,7 @@ function VendorShipmentLineRow({
     return {
       field_type: "related field",
       api_url: apiUrl(ApiEndpoints.purchase_api),
-      filters: { potype: "ORDER", active: true, },
+      filters: { potype: "ORDER", active: true },
       required: false,
       disabled: !vendorId,
       placeholder: t`P.O. No.`,

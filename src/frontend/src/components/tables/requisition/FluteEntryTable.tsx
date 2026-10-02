@@ -20,6 +20,7 @@ import {
   fluteEntryFields,
   processFluteEntryData,
   remapFluteEntryLineErrors,
+  saveFluteEntryLines,
   validateFluteEntryLines,
 } from "../../forms/CommonForms";
 import {
@@ -27,6 +28,8 @@ import {
   useDeleteApiFormModal,
   useEditApiFormModal,
 } from "../../../hooks/UseForm";
+import { useApi } from "@context/ApiContext";
+import { showApiErrorMessage } from "@helpers/notifications";
 import { useUserState } from "@store/UserState";
 
 /** Sum one numeric column across the lines of an entry */
@@ -48,6 +51,7 @@ export default function FluteEntryTable() {
   const table = useTable("flute-entry");
 
   const user = useUserState();
+  const api = useApi();
 
   // --- Table columns -------------------------------------------------
   const columns: TableColumn[] = useMemo(() => {
@@ -117,6 +121,10 @@ export default function FluteEntryTable() {
     number | undefined
   >(undefined);
 
+  // The line items the edit modal was opened with, used to work out which
+  // rows the user deleted from the grid
+  const [selectedLines, setSelectedLines] = useState<any[]>([]);
+
   const editFluteEntry = useEditApiFormModal({
     url: ApiEndpoints.requisition_flute_entry,
     pk: selectedFluteEntry,
@@ -129,7 +137,24 @@ export default function FluteEntryTable() {
     successMessage: t`Flute entry updated`,
     gridColumns: FLUTE_ENTRY_FORM_GRID_COLUMNS,
     size: FLUTE_ENTRY_MODAL_SIZE,
-    table: table,
+    // The header update only appends new lines, so the saved rows are
+    // patched / deleted separately once the header itself has saved
+    onFormSuccess: (data: any, form: any) => {
+      saveFluteEntryLines({
+        api: api,
+        entryPk: data?.pk ?? selectedFluteEntry,
+        originalLines: selectedLines,
+        rows: form?.getValues("lines") ?? [],
+      })
+        .then(() => table.refreshTable())
+        .catch((error: any) => {
+          showApiErrorMessage({
+            error: error,
+            title: t`Error saving line items`,
+          });
+          table.refreshTable();
+        });
+    },
   });
 
   const deleteFluteEntry = useDeleteApiFormModal({
@@ -149,6 +174,7 @@ export default function FluteEntryTable() {
           hidden: !user.hasChangeRole(UserRoles.part),
           onClick: () => {
             setSelectedFluteEntry(record.pk);
+            setSelectedLines(record.lines ?? []);
             editFluteEntry.open();
           },
         }),
