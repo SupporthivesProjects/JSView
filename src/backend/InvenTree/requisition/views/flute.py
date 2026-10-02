@@ -42,7 +42,10 @@ def serialize_entry(pk, request):
 
     entry = flute_entry_queryset().get(pk=pk)
 
-    return FluteEntrySerializer(entry, context={'request': request}).data
+    return FluteEntrySerializer(
+        entry,
+        context={'request': request},
+    ).data
 
 
 def parse_lines(raw_lines, *, required=True):
@@ -72,12 +75,17 @@ def create_lines(flute_entry, raw_lines, request):
 
     for line_data in raw_lines:
         if not isinstance(line_data, dict):
-            errors.append({'non_field_errors': ['Each line must be an object.']})
+            errors.append({
+                'non_field_errors': ['Each line must be an object.']
+            })
             continue
 
         # flute_entry is always assigned by the backend, never the client.
         serializer = FluteEntryLineCreateSerializer(
-            data={**line_data, 'flute_entry': flute_entry.pk},
+            data={
+                **line_data,
+                'flute_entry': flute_entry.pk,
+            },
             context={'request': request},
         )
 
@@ -102,12 +110,17 @@ class FluteEntryList(APIView):
     def get(self, request, *args, **kwargs):
         """Return a paginated list of active flute entries."""
 
-        entries = flute_entry_queryset().order_by('-flute_date', '-id')
+        entries = flute_entry_queryset().order_by(
+            '-flute_date',
+            '-id',
+        )
 
         search = request.query_params.get('search', '').strip()
 
         if search:
-            entries = entries.filter(invoice_no__icontains=search)
+            entries = entries.filter(
+                invoice_no__icontains=search
+            )
 
         paginator = RequisitionPagination()
         page = paginator.paginate_queryset(entries, request)
@@ -124,7 +137,9 @@ class FluteEntryList(APIView):
     def post(self, request, *args, **kwargs):
         """Create a Flute Entry with multiple lines."""
 
-        lines = parse_lines(request.data.get('lines'))
+        lines = parse_lines(
+            request.data.get('lines')
+        )
 
         header_data = {
             key: request.data[key]
@@ -136,15 +151,30 @@ class FluteEntryList(APIView):
             data=header_data,
             context={'request': request},
         )
+
         header.is_valid(raise_exception=True)
 
         flute_entry = header.save(
-            prepby=request.user if request.user.is_authenticated else None
+            prepby=(
+                request.user
+                if request.user.is_authenticated
+                else None
+            )
         )
 
-        create_lines(flute_entry, lines, request)
+        create_lines(
+            flute_entry,
+            lines,
+            request,
+        )
 
-        return Response(serialize_entry(flute_entry.pk, request), status=201)
+        return Response(
+            serialize_entry(
+                flute_entry.pk,
+                request,
+            ),
+            status=201,
+        )
 
 
 class FluteEntryLineDetail(APIView):
@@ -153,6 +183,8 @@ class FluteEntryLineDetail(APIView):
     permission_classes = [RequisitionPermission]
 
     def get_object(self, flute_entry_id, line_id):
+        """Return an active line belonging to the specified Flute Entry."""
+
         try:
             return FluteEntryLine.objects.get(
                 pk=line_id,
@@ -160,12 +192,55 @@ class FluteEntryLineDetail(APIView):
                 active=True,
             )
         except FluteEntryLine.DoesNotExist:
-            raise NotFound('Flute entry line not found.')
+            raise NotFound(
+                'Flute entry line not found.'
+            )
 
-    def patch(self, request, flute_entry_id, line_id, *args, **kwargs):
+    def get(
+        self,
+        request,
+        flute_entry_id,
+        line_id,
+        *args,
+        **kwargs,
+    ):
+        """Return a particular Flute Entry line."""
+
+        line = self.get_object(
+            flute_entry_id,
+            line_id,
+        )
+
+        serializer = FluteEntryLineCreateSerializer(
+            line,
+            context={'request': request},
+        )
+
+        return Response(serializer.data)
+
+    @transaction.atomic
+    def patch(
+        self,
+        request,
+        flute_entry_id,
+        line_id,
+        *args,
+        **kwargs,
+    ):
         """Update a particular Flute Entry line."""
 
-        line = self.get_object(flute_entry_id, line_id)
+        # Make sure the parent Flute Entry exists and is active.
+        try:
+            flute_entry_queryset().get(pk=flute_entry_id)
+        except FluteEntry.DoesNotExist:
+            raise NotFound(
+                'Flute entry not found.'
+            )
+
+        line = self.get_object(
+            flute_entry_id,
+            line_id,
+        )
 
         serializer = FluteEntryLineCreateSerializer(
             line,
@@ -178,11 +253,37 @@ class FluteEntryLineDetail(APIView):
         serializer.save()
 
         return Response(
-            FluteEntrySerializer(
-                flute_entry_queryset().get(pk=flute_entry_id),
-                context={'request': request},
-            ).data
+            serialize_entry(
+                flute_entry_id,
+                request,
+            )
         )
+
+    @transaction.atomic
+    def delete(
+        self,
+        request,
+        flute_entry_id,
+        line_id,
+        *args,
+        **kwargs,
+    ):
+        """Soft-delete a particular Flute Entry line."""
+
+        line = self.get_object(
+            flute_entry_id,
+            line_id,
+        )
+
+        line.active = False
+        line.save(
+            update_fields=[
+                'active',
+                'updated_at',
+            ]
+        )
+
+        return Response(status=204)
 
 
 class FluteEntryDetail(APIView):
@@ -196,7 +297,9 @@ class FluteEntryDetail(APIView):
         try:
             return flute_entry_queryset().get(pk=pk)
         except FluteEntry.DoesNotExist:
-            raise NotFound('Flute entry not found.')
+            raise NotFound(
+                'Flute entry not found.'
+            )
 
     def get(self, request, pk, *args, **kwargs):
         """Return a single flute entry."""
@@ -204,20 +307,31 @@ class FluteEntryDetail(APIView):
         entry = self.get_object(pk)
 
         return Response(
-            FluteEntrySerializer(entry, context={'request': request}).data
+            FluteEntrySerializer(
+                entry,
+                context={'request': request},
+            ).data
         )
 
     @transaction.atomic
     def put(self, request, pk, *args, **kwargs):
         """Update a Flute Entry and optionally add multiple lines."""
 
-        return self._update(request, pk, partial=False)
+        return self._update(
+            request,
+            pk,
+            partial=False,
+        )
 
     @transaction.atomic
     def patch(self, request, pk, *args, **kwargs):
         """Partially update a Flute Entry and optionally add lines."""
 
-        return self._update(request, pk, partial=True)
+        return self._update(
+            request,
+            pk,
+            partial=True,
+        )
 
     @transaction.atomic
     def delete(self, request, pk, *args, **kwargs):
@@ -226,8 +340,16 @@ class FluteEntryDetail(APIView):
         flute_entry = self.get_object(pk)
 
         flute_entry.active = False
-        flute_entry.save(update_fields=['active', 'updated_at'])
-        flute_entry.lines.update(active=False)
+        flute_entry.save(
+            update_fields=[
+                'active',
+                'updated_at',
+            ]
+        )
+
+        flute_entry.lines.update(
+            active=False
+        )
 
         return Response(status=204)
 
@@ -239,7 +361,10 @@ class FluteEntryDetail(APIView):
 
         flute_entry = self.get_object(pk)
 
-        lines = parse_lines(request.data.get('lines'), required=False)
+        lines = parse_lines(
+            request.data.get('lines'),
+            required=False,
+        )
 
         header_data = {
             key: request.data[key]
@@ -253,10 +378,23 @@ class FluteEntryDetail(APIView):
             partial=partial,
             context={'request': request},
         )
-        header.is_valid(raise_exception=True)
+
+        header.is_valid(
+            raise_exception=True
+        )
+
         header.save()
 
         if lines is not None:
-            create_lines(flute_entry, lines, request)
+            create_lines(
+                flute_entry,
+                lines,
+                request,
+            )
 
-        return Response(serialize_entry(flute_entry.pk, request))
+        return Response(
+            serialize_entry(
+                flute_entry.pk,
+                request,
+            )
+        )
