@@ -147,6 +147,44 @@ class FluteEntryList(APIView):
         return Response(serialize_entry(flute_entry.pk, request), status=201)
 
 
+class FluteEntryLineDetail(APIView):
+    """Retrieve, update, or delete a particular Flute Entry line."""
+
+    permission_classes = [RequisitionPermission]
+
+    def get_object(self, flute_entry_id, line_id):
+        try:
+            return FluteEntryLine.objects.get(
+                pk=line_id,
+                flute_entry_id=flute_entry_id,
+                active=True,
+            )
+        except FluteEntryLine.DoesNotExist:
+            raise NotFound('Flute entry line not found.')
+
+    def patch(self, request, flute_entry_id, line_id, *args, **kwargs):
+        """Update a particular Flute Entry line."""
+
+        line = self.get_object(flute_entry_id, line_id)
+
+        serializer = FluteEntryLineCreateSerializer(
+            line,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            FluteEntrySerializer(
+                flute_entry_queryset().get(pk=flute_entry_id),
+                context={'request': request},
+            ).data
+        )
+
+
 class FluteEntryDetail(APIView):
     """Retrieve, update, or delete a Flute Entry."""
 

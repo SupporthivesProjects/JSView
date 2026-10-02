@@ -236,6 +236,10 @@ class CostCardSerializer(
         required=False,
     )
 
+    diamond_lines_rate = drf_serializers.SerializerMethodField()
+
+    stone_lines_rate = drf_serializers.SerializerMethodField()
+
     NESTED_LINE_FIELDS = (
         'diamond_lines',
         'colorstone_lines',
@@ -313,6 +317,8 @@ class CostCardSerializer(
             'diamond_lines',
             'colorstone_lines',
             'finish_lines',
+            'diamond_lines_rate',
+            'stone_lines_rate',
             'active',
             'created_at',
             'updated_at',
@@ -327,6 +333,21 @@ class CostCardSerializer(
             'created_at',
             'updated_at',
         ]
+
+    @staticmethod
+    def _lines_rate(lines):
+        rates = {line.rate for line in lines}
+
+        if len(rates) == 1:
+            return rates.pop()
+
+        return Decimal('0.00')
+
+    def get_diamond_lines_rate(self, obj):
+        return self._lines_rate(obj.diamond_lines.all())
+
+    def get_stone_lines_rate(self, obj):
+        return self._lines_rate(obj.colorstone_lines.all())
 
     def _current_user(self):
         request = self.context.get('request')
