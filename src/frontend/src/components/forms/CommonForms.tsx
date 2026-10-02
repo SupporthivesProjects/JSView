@@ -1391,8 +1391,8 @@ function selectOptions(
 /**
  * A single line item row in the vendor shipment form.
  *
- * The P.O. list is narrowed to the purchase orders of the vendor picked in
- * the header, and the style list to the open styles of the picked P.O.
+ * The P.O. list comes from the purchase orders, and the style list holds the
+ * open or closed styles of the picked P.O. (the header's `is_open` switch).
  */
 function VendorShipmentLineRow({
   props,
@@ -1401,6 +1401,8 @@ function VendorShipmentLineRow({
 
   const api = useApi();
   const vendorId = useWatch({ name: "vendorid" });
+  // Open = styles not yet fully shipped, Closed = styles already fully shipped
+  const isOpen = useWatch({ name: "is_open" }) !== false;
 
   // Changing the header vendor invalidates the P.O. / style picked on this row
   const previousVendor = useRef(vendorId);
@@ -1413,6 +1415,16 @@ function VendorShipmentLineRow({
       changeFn(rowId, "styleno", "");
     }
   }, [vendorId, rowId, changeFn]);
+
+  // Switching between open / closed styles invalidates the style picked
+  const previousIsOpen = useRef(isOpen);
+  useEffect(() => {
+    if (previousIsOpen.current !== isOpen) {
+      previousIsOpen.current = isOpen;
+      changeFn(rowId, "costcardid", null);
+      changeFn(rowId, "styleno", "");
+    }
+  }, [isOpen, rowId, changeFn]);
 
   // Purchase orders placed with the vendor picked in the header
   const poField: ApiFormFieldType = useMemo(() => {
@@ -1442,11 +1454,11 @@ function VendorShipmentLineRow({
   }, [vendorId, item.poid, rowId, changeFn]);
 
   const styleQuery = useQuery({
-    queryKey: ["vendor-shipment-style-list", item.poid],
+    queryKey: ["vendor-shipment-style-list", item.poid, isOpen],
     queryFn: () =>
       api
         .get(apiUrl(ApiEndpoints.vendor_shipment_style_list), {
-          params: { poid: item.poid, is_open: true },
+          params: { poid: item.poid, is_open: isOpen },
         })
         .then((response) => response.data ?? []),
     enabled: !!item.poid,
@@ -1643,6 +1655,17 @@ export function vendorShipmentFields(editing = false): ApiFormFieldSet {
     },
     trackref: {
       label: "Tracking Reference",
+    },
+    // Form-only switch driving the style list - not a shipment field, so
+    // it is never sent to the backend
+    is_open: {
+      label: "Open",
+      description: "Show styles which are not fully shipped yet",
+      field_type: "boolean",
+      default: true,
+      required: false,
+      exclude: true,
+      boxed: true,
     },
     // active: { boxed: true },
     lines: {
