@@ -952,6 +952,50 @@ function FluteEntryLineRow({ props }: Readonly<{ props: TableFieldRowProps }>) {
     });
   }, [poLinesQuery.data, item.cost_card]);
 
+  // The picked style's cost card carries its diamond and color stone rates
+  const costCardQuery = useQuery({
+    queryKey: ["flute-entry-cost-card", item.cost_card],
+    queryFn: () =>
+      api
+        .get(apiUrl(ApiEndpoints.cost_card, item.cost_card))
+        .then((response) => response.data),
+    enabled: !!item.cost_card,
+    staleTime: 30 * 1000,
+  });
+
+  // Cost card rate always follows the style and stone type, never typed by hand
+  useEffect(() => {
+    if (!item.cost_card) {
+      if (item.cost_card_rate !== "") {
+        changeFn(rowId, "cost_card_rate", "");
+      }
+      return;
+    }
+
+    const costCard = costCardQuery.data;
+
+    if (!costCard) {
+      return;
+    }
+
+    const rate = toNumber(
+      item.stone_type === "color_stone"
+        ? costCard.stone_lines_rate
+        : costCard.diamond_lines_rate,
+    );
+
+    if (item.cost_card_rate === "" || toNumber(item.cost_card_rate) !== rate) {
+      changeFn(rowId, "cost_card_rate", rate);
+    }
+  }, [
+    costCardQuery.data,
+    item.cost_card,
+    item.stone_type,
+    item.cost_card_rate,
+    rowId,
+    changeFn,
+  ]);
+
   const changeNumber = (key: string, value: any) => {
     changeFn(rowId, key, value === "" ? "" : toNumber(value));
   };
@@ -1039,13 +1083,13 @@ function FluteEntryLineRow({ props }: Readonly<{ props: TableFieldRowProps }>) {
         />
       </Table.Td>
       <Table.Td>
+        {/* Taken from the style's cost card for the picked stone type */}
         <NumberInput
           aria-label="number-field-cost_card_rate"
-          min={0}
           decimalScale={2}
           hideControls
+          disabled
           value={item.cost_card_rate ?? ""}
-          onChange={(value) => changeNumber("cost_card_rate", value)}
           error={rowErrors?.cost_card_rate?.message}
         />
       </Table.Td>
