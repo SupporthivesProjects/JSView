@@ -61,6 +61,11 @@ class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
         source='courierid.name', read_only=True, default=None,
     )
 
+    is_open = drf_serializers.SerializerMethodField()
+
+    def get_is_open(self, obj):
+        return obj.lines.filter(confrm__isnull=True).exists()
+
     class Meta:
         model = VendorShipment
         fields = [
@@ -70,9 +75,10 @@ class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
             'courierid', 'courier_name',
             'trackref', 'luser',
             'active', 'created_at', 'updated_at',
+            'is_open',
             'lines',
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'is_open']
 
 
 class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
