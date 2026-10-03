@@ -57,6 +57,10 @@ class VendorShipmentList(DataExportViewMixin, ListCreateAPI):
 
     POST accepts the header fields plus a nested ``lines[]`` array; the header
     and all of its lines are saved together in a single transaction.
+
+    ``is_open`` is returned based on the current confirmation status:
+      - True  -> at least one shipment line has ``confrm IS NULL``
+      - False -> all shipment lines are confirmed
     """
 
     queryset = VendorShipment.objects.select_related(
@@ -74,6 +78,47 @@ class VendorShipmentList(DataExportViewMixin, ListCreateAPI):
         if self.request.method == 'POST':
             return shipment_serializers.VendorShipmentCreateSerializer
         return shipment_serializers.VendorShipmentSerializer
+
+    def get(self, request, *args, **kwargs):
+        """Return vendor shipments with the current ``is_open`` status."""
+
+        response = super().get(request, *args, **kwargs)
+
+        data = response.data
+
+        # Paginated response
+        if isinstance(data, dict) and 'results' in data:
+            shipments = data['results']
+
+            for shipment in shipments:
+                shipment_id = shipment.get('id')
+
+                if shipment_id is None:
+                    continue
+
+                is_open = VendorShipmentLine.objects.filter(
+                    vendorshipid_id=shipment_id,
+                    confrm__isnull=True,
+                ).exists()
+
+                shipment['is_open'] = is_open
+
+        # Non-paginated response
+        elif isinstance(data, list):
+            for shipment in data:
+                shipment_id = shipment.get('id')
+
+                if shipment_id is None:
+                    continue
+
+                is_open = VendorShipmentLine.objects.filter(
+                    vendorshipid_id=shipment_id,
+                    confrm__isnull=True,
+                ).exists()
+
+                shipment['is_open'] = is_open
+
+        return response
 
 
 class VendorShipmentDetail(RetrieveUpdateDestroyAPI):
@@ -140,7 +185,10 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
 
             if field is not None:
                 field.required = False
-                field.default = get_object_or_404(VendorShipment, pk=shipment_pk)
+                field.default = get_object_or_404(
+                    VendorShipment,
+                    pk=shipment_pk,
+                )
 
         return serializer
 
@@ -169,7 +217,10 @@ class VendorPOListView(APIView):
 
     def get(self, request, *args, **kwargs):
         vendorid = _query_int(request.query_params.get('vendorid'))
-        is_open = _query_bool(request.query_params.get('is_open'), default=True)
+        is_open = _query_bool(
+            request.query_params.get('is_open'),
+            default=True,
+        )
         return Response(utils.get_vendor_po_list(vendorid, is_open))
 
 
@@ -191,8 +242,14 @@ class VendorStyleListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        is_open = _query_bool(request.query_params.get('is_open'), default=True)
-        return Response(utils.get_vendor_style_list(poid, is_open))
+        is_open = _query_bool(
+            request.query_params.get('is_open'),
+            default=True,
+        )
+
+        return Response(
+            utils.get_vendor_style_list(poid, is_open),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +268,9 @@ class ConfirmPendingInvoiceView(APIView):
 
     def get(self, request, *args, **kwargs):
         vendorid = _query_int(request.query_params.get('vendorid'))
-        return Response(utils.get_confirm_pending_invoices(vendorid))
+        return Response(
+            utils.get_confirm_pending_invoices(vendorid),
+        )
 
 
 class ConfirmPendingDataView(APIView):
@@ -226,7 +285,9 @@ class ConfirmPendingDataView(APIView):
 
     def get(self, request, *args, **kwargs):
         vendorid = _query_int(request.query_params.get('vendorid'))
-        vendorshipid = _query_int(request.query_params.get('vendorshipid'))
+        vendorshipid = _query_int(
+            request.query_params.get('vendorshipid'),
+        )
 
         if not vendorshipid:
             return Response(
@@ -234,7 +295,12 @@ class ConfirmPendingDataView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return Response(utils.get_confirm_pending_data(vendorid, vendorshipid))
+        return Response(
+            utils.get_confirm_pending_data(
+                vendorid,
+                vendorshipid,
+            ),
+        )
 
 
 class ConfirmUpdateView(APIView):
