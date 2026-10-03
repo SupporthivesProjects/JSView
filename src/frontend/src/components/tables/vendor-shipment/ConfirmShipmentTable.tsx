@@ -1,6 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Button, Checkbox } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useMutation } from "@tanstack/react-query";
 import { Fragment, useEffect, useMemo, useState } from "react";
+
+import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
+import { apiUrl } from "@lib/functions/Api";
+import { useApi } from "@context/ApiContext";
 
 import "./confirmShipment.css";
 
@@ -91,7 +97,9 @@ function isMismatch(upper: Value, lower: Value) {
 
 export default function ConfirmShipmentTable({
   lines,
-}: Readonly<{ lines: ConfirmShipmentLine[] }>) {
+  onUpdated,
+}: Readonly<{ lines: ConfirmShipmentLine[]; onUpdated?: () => void }>) {
+  const api = useApi();
   const columns = useMemo(() => splitColumns(), []);
 
   // Line ids ticked for confirmation, seeded from the saved state
@@ -124,9 +132,33 @@ export default function ConfirmShipmentTable({
     });
   };
 
-  const handleUpdate = () => {
-    // TODO: send the confirmation for the checked lines
-  };
+  // Every line is sent with its state, so unticking a line unconfirms it
+  const updateConfirmation = useMutation({
+    mutationFn: () =>
+      api.post(
+        apiUrl(ApiEndpoints.vendor_shipment_confirm_update),
+        lines.map((line) => ({
+          tableid: line.tableid,
+          confrm: checked.has(line.tableid),
+        })),
+      ),
+    onSuccess: () => {
+      notifications.show({
+        title: t`Confirmation updated`,
+        message: t`The shipment lines were saved`,
+        color: "green",
+      });
+      onUpdated?.();
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: t`Update failed`,
+        message:
+          error?.response?.data?.detail ?? t`Unable to update confirmation`,
+        color: "red",
+      });
+    },
+  });
 
   return (
     <div className="cs-sheet">
@@ -195,7 +227,10 @@ export default function ConfirmShipmentTable({
         <tfoot>
           <tr>
             <td colSpan={5 + columns.length}>
-              <Button onClick={handleUpdate} disabled={checked.size === 0}>
+              <Button
+                onClick={() => updateConfirmation.mutate()}
+                loading={updateConfirmation.isPending}
+              >
                 {t`Update Confirmation`}
               </Button>
             </td>

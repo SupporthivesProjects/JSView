@@ -123,6 +123,15 @@ export default function ConfirmShipmentPanel() {
         .then((response) => response.data ?? []),
   });
 
+  // Once a confirmation is saved the panel starts over for the next invoice
+  const handleReset = () => {
+    setVendor(null);
+    setInvoice(null);
+    setTrackingNo("");
+    setVendorSearch("");
+    setFetched(null);
+  };
+
   const handleGetData = () => {
     if (vendor && invoice) {
       setFetched({ vendorid: vendor.value, vendorshipid: invoice.value });
@@ -199,7 +208,10 @@ export default function ConfirmShipmentPanel() {
 
       {dataQuery.data &&
         (dataQuery.data.length ? (
-          <ConfirmShipmentTable lines={dataQuery.data} />
+          <ConfirmShipmentTable
+            lines={dataQuery.data}
+            onUpdated={handleReset}
+          />
         ) : (
           <Text c="dimmed">{t`No lines found for the selected invoice`}</Text>
         ))}

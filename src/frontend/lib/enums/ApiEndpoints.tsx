@@ -200,6 +200,7 @@ export enum ApiEndpoints {
   vendor_shipment_style_list = "vendor-shipment/style-list/",
   vendor_shipment_confirm_invoices = "vendor-shipment/confirm/invoices/",
   vendor_shipment_confirm_data = "vendor-shipment/confirm/data/",
+  vendor_shipment_confirm_update = "vendor-shipment/confirm/update/",
 
   // Stock location endpoints
   stock_location_list = "stock/location/",
