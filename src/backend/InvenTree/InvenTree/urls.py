@@ -28,6 +28,7 @@ import purchase_order.urls
 import vendor_shipment.urls
 import revision.api
 import requisition.api
+import jsreport.api
 import order.api
 import part.api
 import plugin.api
@@ -73,6 +74,7 @@ apipatterns = [
     path('vendor-shipment/', include(vendor_shipment.urls.vendor_shipment_api_urls)),
     path('revision/', include(revision.api.history_api_urls)),
     path('requisition/',include(requisition.api.requisition_api_urls)),
+    path('jsreport/',include(jsreport.api.jsreport_api_urls)),
     path('order/', include(order.api.order_api_urls)),
     path('part/', include(part.api.part_api_urls)),
     path('properties/', include('properties.urls')),
