@@ -8,9 +8,9 @@ from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
 
-from ..permissions import JSReportPermission
-from ..serializers import OpenOrderSerializer
-from ..utils import get_open_order_queryset
+from jsreport.permissions import JSReportPermission
+from jsreport.serializers import OpenOrderSerializer
+from jsreport.utils import get_open_order_queryset
 
 
 class JSReportPagination(LimitOffsetPagination):
