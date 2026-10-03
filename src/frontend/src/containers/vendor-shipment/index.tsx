@@ -10,11 +10,8 @@ import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
-import JewelleryCategoryTable from "@components/tables/metal/JewelleryCategoryTable";
-import StoneRequisitionPanel from "@components/tables/requisition/StoneRequisitionPanel";
 import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipmentTable";
-import MetalRequisitionPanel from "@components/tables/requisition/MetalRequisitionPanel";
-import MetalRequisitionSentTable from "@components/tables/requisition/MetalRequisitionSentTable";
+import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShipmentPanel";
 
 export default function VendorShipmentIndex() {
   const user = useUserState();
@@ -31,7 +28,7 @@ export default function VendorShipmentIndex() {
         name: "confirm-shipment",
         label: t`Confirm Shipment`,
         icon: <IconScale />,
-        content: <MetalRequisitionPanel />,
+        content: <ConfirmShipmentPanel />,
       },
     ];
   }, []);

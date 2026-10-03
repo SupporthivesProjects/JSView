@@ -198,6 +198,8 @@ export enum ApiEndpoints {
   vendor_shipment = "vendor-shipment/",
   vendor_shipment_line = "vendor-shipment/lines/",
   vendor_shipment_style_list = "vendor-shipment/style-list/",
+  vendor_shipment_confirm_invoices = "vendor-shipment/confirm/invoices/",
+  vendor_shipment_confirm_data = "vendor-shipment/confirm/data/",
 
   // Stock location endpoints
   stock_location_list = "stock/location/",

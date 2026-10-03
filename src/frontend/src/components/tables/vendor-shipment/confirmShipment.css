@@ -1,0 +1,75 @@
+/*
+ * Styling for the confirm shipment sheet.
+ *
+ * A plain ruled HTML table where each shipment line spans two rows: the
+ * upper row holds the shipped figure, the lower row the cost card figure.
+ * Colours come from the Mantine theme, so the sheet follows the light / dark
+ * colour scheme.
+ */
+
+.cs-sheet {
+	color: var(--mantine-color-text);
+	overflow-x: auto;
+}
+
+.cs-table {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 900px;
+	font-size: var(--mantine-font-size-sm);
+}
+
+.cs-table th,
+.cs-table td {
+	border: 1px solid var(--mantine-color-default-border);
+	padding: 4px 8px;
+	text-align: center;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.cs-table thead th,
+.cs-table tfoot td {
+	background-color: light-dark(
+		var(--mantine-color-gray-1),
+		var(--mantine-color-dark-6)
+	);
+}
+
+.cs-table thead th {
+	font-weight: 500;
+	height: 48px;
+}
+
+.cs-table tbody td {
+	height: 28px;
+}
+
+/* The upper and lower figure of a line read as one cell */
+.cs-table .cs-upper {
+	border-bottom-color: transparent;
+}
+
+.cs-table .cs-lower {
+	border-top: 1px solid var(--mantine-color-default-border);
+}
+
+/* Shipped figure that differs from the cost card */
+.cs-table .cs-mismatch {
+	background-color: light-dark(
+		var(--mantine-color-pink-3),
+		var(--mantine-color-pink-9)
+	);
+}
+
+.cs-table .cs-style {
+	min-width: 160px;
+}
+
+.cs-table .cs-check {
+	width: 56px;
+}
+
+.cs-table tfoot td {
+	padding: 8px;
+}
