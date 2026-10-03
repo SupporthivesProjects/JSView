@@ -323,6 +323,7 @@ INSTALLED_APPS = [
     'properties.apps.PropertiesConfig',
     'revision.apps.RevisionConfig',
     'requisition.apps.RequisitionConfig',
+    'jsreport.apps.JsreportConfig',
 
     'order.apps.OrderConfig',
     'part.apps.PartConfig',
