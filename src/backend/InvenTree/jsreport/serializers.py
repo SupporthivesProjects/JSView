@@ -49,3 +49,19 @@ class OpenOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
             'podate', 'customer_code', 'vendor_code', 'pono', 'customer_pono',
             'styleno', 'qty', 'balqty', 'ddate', 'vcsdate', 'acexecutive',
         ]
+
+
+class CloseOrderSerializer(OpenOrderSerializer):
+    """One row per closed (fully shipped) P.O. line.
+
+    Same columns as Open Order, but Bal. Qty. (always 0) is replaced by Shipped Qty.
+    """
+
+    balqty = None  # drop inherited column
+    shipqty = drf_serializers.IntegerField(read_only=True, label='Shipped Qty.')
+
+    class Meta(OpenOrderSerializer.Meta):
+        fields = [
+            'podate', 'customer_code', 'vendor_code', 'pono', 'customer_pono',
+            'styleno', 'qty', 'shipqty', 'ddate', 'vcsdate', 'acexecutive',
+        ]
