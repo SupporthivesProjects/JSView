@@ -12,6 +12,7 @@ import { PanelGroup } from "@components/shared/panels/PanelGroup";
 import { useUserState } from "@store/UserState";
 import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipmentTable";
 import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShipmentPanel";
+import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -22,55 +23,55 @@ export default function ReportsIndex() {
         name: "open-order",
         label: t`Open Order`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: <OpenOrderReport />,
       },
       {
         name: "close-order",
         label: t`Close Order`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "invoice-value",
         label: t`Invoice Value P/C`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "picture-presentation",
         label: t`Picture Presentation`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "po-stone-valuation",
         label: t`P.O. Stone Valuation`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "po-stone-status",
         label: t`P.O. Stone Status`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "po-status",
         label: t`P.O. Status`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "balance-vendor",
         label: t`Balance Dia. With Vendor`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
       {
         name: "cost-card-export",
         label: t`Cost Card Export`,
         icon: <IconCoin />,
-        content: <VendorShipmentTable />,
+        content: "",
       },
     ];
   }, []);
