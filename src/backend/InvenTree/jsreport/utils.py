@@ -2,10 +2,14 @@
 
 from decimal import Decimal
 
-from django.db.models import F, IntegerField, OuterRef, Subquery, Sum, Value
+from django.db.models import (
+    DateField, DecimalField, ExpressionWrapper, F, IntegerField, Max, OuterRef, Q, Subquery,
+    Sum, Value,
+)
 from django.db.models.functions import Coalesce, Greatest
 
 from purchase_order.models import PurchaseOrderLine
+from requisition.models import FluteEntryLine
 from vendor_shipment.models import VendorShipmentLine
 
 TROY_OZ_GRAMS = Decimal('31.1035')
@@ -26,6 +30,53 @@ def _get_order_line_queryset(vendorid=None, customerid=None):
         .values('total')
     )
 
+    side = Q(stone_type='diamond', stone_place__name__iregex=r'^(left|right|side)$')
+    center = Q(stone_type='diamond', stone_place__name__iexact='center')
+    color = Q(stone_type='color_stone')  # TODO: confirm color stones are not split by place
+
+    def flute_sets(cond):
+        return Subquery(
+            FluteEntryLine.objects
+            .filter(
+                cond,
+                purchase_order_id=OuterRef('poid_id'),
+                cost_card_id=OuterRef('costcardid_id'),
+                active=True,
+                flute_entry__active=True,
+            )
+            .order_by()
+            .values('purchase_order_id', 'cost_card_id')
+            .annotate(total=Sum('sets'))
+            .values('total'),
+            output_field=DecimalField(max_digits=15, decimal_places=2),
+        )
+
+    def flute_date(cond):
+        return Subquery(
+            FluteEntryLine.objects
+            .filter(
+                cond,
+                purchase_order_id=OuterRef('poid_id'),
+                cost_card_id=OuterRef('costcardid_id'),
+                active=True,
+                flute_entry__active=True,
+            )
+            .order_by()
+            .values('purchase_order_id', 'cost_card_id')
+            # TODO: confirm latest flute date is the one the client shows
+            .annotate(last=Max('flute_entry__flute_date'))
+            .values('last'),
+            output_field=DateField(),
+        )
+
+    zero = Value(0, output_field=DecimalField(max_digits=15, decimal_places=2))
+
+    def set_left(key):
+        return ExpressionWrapper(
+            Coalesce(F(key), zero) - F('shipqty'),
+            output_field=DecimalField(max_digits=15, decimal_places=2),
+        )
+
     qs = (
         PurchaseOrderLine.objects
         .filter(poid__potype='ORDER', poid__active=True)
@@ -33,13 +84,23 @@ def _get_order_line_queryset(vendorid=None, customerid=None):
         .select_related('poid', 'poid__customerid', 'poid__vendorid', 'poid__acexeid')
         .annotate(
             shipqty=Coalesce(Subquery(received, output_field=IntegerField()), Value(0)),
+            side_flute=flute_sets(side),
+            center_flute=flute_sets(center),
+            color_flute=flute_sets(color),
+            side_date=flute_date(side),
+            center_date=flute_date(center),
+            color_date=flute_date(color),
         )
         .annotate(
             balqty=Greatest(
                 F('qty') - F('shipqty'),
                 Value(0),
                 output_field=IntegerField(),
-            )
+            ),
+            # stone sets sent on flute entries, less pieces already shipped (matches client sheet)
+            side_set=set_left('side_flute'),
+            center_set=set_left('center_flute'),
+            color_set=set_left('color_flute'),
         )
     )
 

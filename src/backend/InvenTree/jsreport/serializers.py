@@ -13,6 +13,30 @@ from jsreport.utils import get_invoice_figures
 DATE_FMT = '%d %b %Y'  # 15 Jul 2026, same as the client's sheet
 
 
+def _stone_set(key):
+    """Method field returning a stone set count (whole numbers shown without decimals)."""
+
+    def method(self, obj):
+        value = getattr(obj, key, None)
+        if value is None:
+            return 0
+        return int(value) if value == value.to_integral_value() else float(value)
+
+    return method
+
+
+def _stone_date(date_key, set_key):
+    """Method field returning the stone date, shown only while the set count is above 0."""
+
+    def method(self, obj):
+        date = getattr(obj, date_key, None)
+        if date is None or (getattr(obj, set_key, None) or 0) <= 0:
+            return None
+        return date.strftime(DATE_FMT)
+
+    return method
+
+
 class OpenOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """One row per open P.O. line. Labels match the Open Order export headers."""
 
@@ -41,7 +65,12 @@ class OpenOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
         source='poid.vcsdate', read_only=True, format=DATE_FMT, default=None,
         label='Vendor Confirmed Ship Date',
     )
-    # TODO (step 5): Side / Center / Color Stone Date and Set columns go here
+    side_stone_date = drf_serializers.SerializerMethodField(label='Side Stone Date')
+    side_stone_set = drf_serializers.SerializerMethodField(label='Side Stone Set')
+    center_stone_date = drf_serializers.SerializerMethodField(label='Center Stone Date')
+    center_stone_set = drf_serializers.SerializerMethodField(label='Center Stone Set')
+    color_stone_date = drf_serializers.SerializerMethodField(label='Color Stone Date')
+    color_stone_set = drf_serializers.SerializerMethodField(label='Color Stone Set')
     acexecutive = drf_serializers.CharField(
         source='poid.acexeid.name', read_only=True, default=None, label='A/C Executive',
     )
@@ -50,8 +79,17 @@ class OpenOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
         model = PurchaseOrderLine
         fields = [
             'podate', 'customer_code', 'vendor_code', 'pono', 'customer_pono',
-            'styleno', 'qty', 'balqty', 'ddate', 'vcsdate', 'acexecutive',
+            'styleno', 'qty', 'balqty', 'ddate', 'vcsdate',
+            'side_stone_date', 'side_stone_set', 'center_stone_date', 'center_stone_set',
+            'color_stone_date', 'color_stone_set', 'acexecutive',
         ]
+
+    get_side_stone_set = _stone_set('side_set')
+    get_center_stone_set = _stone_set('center_set')
+    get_color_stone_set = _stone_set('color_set')
+    get_side_stone_date = _stone_date('side_date', 'side_set')
+    get_center_stone_date = _stone_date('center_date', 'center_set')
+    get_color_stone_date = _stone_date('color_date', 'color_set')
 
 
 class CloseOrderSerializer(OpenOrderSerializer):
@@ -66,7 +104,9 @@ class CloseOrderSerializer(OpenOrderSerializer):
     class Meta(OpenOrderSerializer.Meta):
         fields = [
             'podate', 'customer_code', 'vendor_code', 'pono', 'customer_pono',
-            'styleno', 'qty', 'shipqty', 'ddate', 'vcsdate', 'acexecutive',
+            'styleno', 'qty', 'shipqty', 'ddate', 'vcsdate',
+            'side_stone_date', 'side_stone_set', 'center_stone_date', 'center_stone_set',
+            'color_stone_date', 'color_stone_set', 'acexecutive',
         ]
 
 
