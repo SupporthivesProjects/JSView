@@ -21,6 +21,16 @@ class RuleSetEnum(StringEnum):
     RETURN_ORDER = 'return_order'
     TRANSFER_ORDER = 'transfer_order'
 
+    COMPANY = 'company'
+    MASTER = 'master'
+    PROPERTIES = 'properties'
+    COST_CARD = 'cost_card'
+    JS_PURCHASE_ORDER = 'js_purchase_order'
+    REQUISITION = 'requisition'
+    VENDOR_SHIPMENT = 'vendor_shipment'
+    REVISION = 'revision'
+    REPORT = 'report'
+
 
 # This is a list of all the ruleset choices available in the system.
 # These are used to determine the permissions available to a group of users.
@@ -36,6 +46,15 @@ RULESET_CHOICES = [
     (RuleSetEnum.SALES_ORDER, _('Sales Orders')),
     (RuleSetEnum.RETURN_ORDER, _('Return Orders')),
     (RuleSetEnum.TRANSFER_ORDER, _('Transfer Orders')),
+    (RuleSetEnum.COMPANY, _('Companies')),
+    (RuleSetEnum.MASTER, _('Master Data')),
+    (RuleSetEnum.PROPERTIES, _('Properties')),
+    (RuleSetEnum.COST_CARD, _('Cost Cards')),
+    (RuleSetEnum.JS_PURCHASE_ORDER, _('JS Purchase Orders')),
+    (RuleSetEnum.REQUISITION, _('Requisition')),
+    (RuleSetEnum.VENDOR_SHIPMENT, _('Vendor Shipment')),
+    (RuleSetEnum.REVISION, _('Revision')),
+    (RuleSetEnum.REPORT, _('Reports')),
 ]
 
 # Ruleset names available in the system.
@@ -98,7 +117,12 @@ def get_ruleset_models() -> dict:
             'django_mailbox_messageattachment',
             'django_mailbox_message',
         ],
-        RuleSetEnum.BOM: ['part_bomitem', 'part_bomitemsubstitute'],
+
+        RuleSetEnum.BOM: [
+            'part_bomitem',
+            'part_bomitemsubstitute',
+        ],
+
         RuleSetEnum.BUILD: [
             'part_part',
             'part_partcategory',
@@ -110,11 +134,13 @@ def get_ruleset_models() -> dict:
             'stock_stockitem',
             'stock_stocklocation',
         ],
+
         RuleSetEnum.PART_CATEGORY: [
             'part_partcategory',
             'part_partcategoryparametertemplate',
             'part_partcategorystar',
         ],
+
         RuleSetEnum.PART: [
             'part_part',
             'part_partpricing',
@@ -128,12 +154,18 @@ def get_ruleset_models() -> dict:
             'company_supplierpart',
             'company_manufacturerpart',
         ],
-        RuleSetEnum.STOCK_LOCATION: ['stock_stocklocation', 'stock_stocklocationtype'],
+
+        RuleSetEnum.STOCK_LOCATION: [
+            'stock_stocklocation',
+            'stock_stocklocationtype',
+        ],
+
         RuleSetEnum.STOCK: [
             'stock_stockitem',
             'stock_stockitemtracking',
             'stock_stockitemtestresult',
         ],
+
         RuleSetEnum.PURCHASE_ORDER: [
             'company_company',
             'company_contact',
@@ -145,6 +177,7 @@ def get_ruleset_models() -> dict:
             'order_purchaseorderlineitem',
             'order_purchaseorderextraline',
         ],
+
         RuleSetEnum.SALES_ORDER: [
             'company_company',
             'company_contact',
@@ -155,6 +188,7 @@ def get_ruleset_models() -> dict:
             'order_salesorderextraline',
             'order_salesordershipment',
         ],
+
         RuleSetEnum.RETURN_ORDER: [
             'company_company',
             'company_contact',
@@ -163,11 +197,97 @@ def get_ruleset_models() -> dict:
             'order_returnorderlineitem',
             'order_returnorderextraline',
         ],
+
         RuleSetEnum.TRANSFER_ORDER: [
             'order_transferorder',
             'order_transferorderallocation',
             'order_transferorderlineitem',
         ],
+
+        # JSView - Companies
+        RuleSetEnum.COMPANY: [
+            'company_company',
+            'company_contact',
+            'company_address',
+        ],
+
+        # JSView - Master Data
+        RuleSetEnum.MASTER: [
+            'master_metaltype',
+            'master_metalpurity',
+            'master_metalrate',
+            'master_jewelrycategory',
+            'master_jewelrysubcategory',
+            'master_findingtype',
+            'master_findingitem',
+            'master_setting',
+            'master_laboursetting',
+            'master_finishtype',
+            'master_duty',
+            'master_stamp',
+            'master_acexecutive',
+            'master_terms',
+            'master_courierservice',
+            'master_pomail',
+            'master_templates',
+        ],
+
+        # JSView - Properties
+        RuleSetEnum.PROPERTIES: [
+            'properties_diamondstone',
+            'properties_diamondcut',
+            'properties_diamondshape',
+            'properties_diamondcolor',
+            'properties_diamondsize',
+            'properties_diamondquality',
+            'properties_diamondstonerate',
+            'properties_colorstone',
+            'properties_colorstonecut',
+            'properties_colorstoneshape',
+            'properties_colorstonecolor',
+            'properties_colorstonesize',
+            'properties_colorstonequality',
+            'properties_colorstonerate',
+        ],
+
+        # JSView - Cost Cards
+        RuleSetEnum.COST_CARD: [
+            'costcard_stoneplace',
+            'costcard_costcard',
+            'costcard_costcarddiamondline',
+            'costcard_costcardcolorstoneline',
+            'costcard_costcardfinishline',
+            'revision_costcardversion',
+        ],
+
+        # JSView - Purchase Orders
+        RuleSetEnum.JS_PURCHASE_ORDER: [
+            'purchase_order_purchaseorder',
+            'purchase_order_purchaseorderline',
+            'purchase_order_pocostcard',
+            'purchase_order_pocostcardline',
+        ],
+
+        # JSView - Requisition
+        RuleSetEnum.REQUISITION: [
+            'requisition_fluteentry',
+            'requisition_fluteentryline',
+            'requisition_metalsent',
+        ],
+
+        # JSView - Vendor Shipment
+        RuleSetEnum.VENDOR_SHIPMENT: [
+            'vendor_shipment_vendorshipment',
+            'vendor_shipment_vendorshipmentline',
+        ],
+
+        # JSView - Revision
+        RuleSetEnum.REVISION: [
+            'revision_costcardversion',
+        ],
+
+        # JSView - Reports
+        RuleSetEnum.REPORT: [],
     }
 
     if settings.SITE_MULTI:

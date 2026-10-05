@@ -5,6 +5,7 @@ from django.urls import path
 from jsreport.views.close_order import CloseOrderReportView
 from jsreport.views.invoice_value import InvoiceValueReportView
 from jsreport.views.open_order import OpenOrderReportView
+from jsreport.views.po_stone_valuation import POStoneValuationReportView
 
 jsreport_api_urls = [
     path(
@@ -21,5 +22,10 @@ jsreport_api_urls = [
         'invoice-value/',
         InvoiceValueReportView.as_view(),
         name='api-jsreport-invoice-value',
+    ),
+    path(
+        'po-stone-valuation/',
+        POStoneValuationReportView.as_view(),
+        name='api-jsreport-po-stone-valuation',
     ),
 ]

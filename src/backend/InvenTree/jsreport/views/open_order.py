@@ -2,15 +2,15 @@
 
 from rest_framework.pagination import LimitOffsetPagination
 
-from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
 
+from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
 from jsreport.serializers import OpenOrderSerializer
-from jsreport.utils import get_open_order_queryset
+from jsreport.filters import get_open_order_queryset
 
 
 class JSReportPagination(LimitOffsetPagination):
@@ -20,13 +20,16 @@ class JSReportPagination(LimitOffsetPagination):
     max_limit = 500
 
 
-class OpenOrderReportView(DataExportViewMixin, ListAPI):
+class OpenOrderReportView(JSReportExportMixin, ListAPI):
     """Open Order report.
 
     ?report_type=all                      -> all vendors
     ?report_type=vendor&vendorid=<id>     -> vendorwise
     ?report_type=customer&customerid=<id> -> customerwise
     """
+
+    export_name = 'Open_Order'
+    export_plugin = 'jsreport-open-order'
 
     queryset = PurchaseOrderLine.objects.all()
     serializer_class = OpenOrderSerializer

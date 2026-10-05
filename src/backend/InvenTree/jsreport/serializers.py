@@ -8,7 +8,7 @@ from InvenTree.serializers import InvenTreeModelSerializer
 from purchase_order.models import PurchaseOrderLine
 from vendor_shipment.models import VendorShipmentLine
 
-from jsreport.utils import get_invoice_figures
+from jsreport.filters import get_invoice_figures, get_stone_valuation_figures
 
 DATE_FMT = '%d %b %Y'  # 15 Jul 2026, same as the client's sheet
 
@@ -104,9 +104,7 @@ class CloseOrderSerializer(OpenOrderSerializer):
     class Meta(OpenOrderSerializer.Meta):
         fields = [
             'podate', 'customer_code', 'vendor_code', 'pono', 'customer_pono',
-            'styleno', 'qty', 'shipqty', 'ddate', 'vcsdate',
-            'side_stone_date', 'side_stone_set', 'center_stone_date', 'center_stone_set',
-            'color_stone_date', 'color_stone_set', 'acexecutive',
+            'styleno', 'qty', 'shipqty', 'ddate', 'vcsdate', 'acexecutive',
         ]
 
 
@@ -176,4 +174,62 @@ class InvoiceValueSerializer(DataExportSerializerMixin, InvenTreeModelSerializer
             'invoice_labor', 'avg_netwt', 'avg_cts', 'avg_labor', 'avg_cts_value',
             'tr_oz', 'kt', 'gold_loss', 'avg_metal_amt', 'duty', 'other_exp',
             'avg_per_pc_value',
+        ]
+
+
+def _stone(kind, key):
+    """Method field returning one P.O. Stone Valuation figure ('dia' / 'col')."""
+
+    def method(self, obj):
+        return float(get_stone_valuation_figures(obj)[kind][key])
+
+    return method
+
+
+class POStoneValuationSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """One row per P.O. line. Labels match the P.O. Stone Valuation export headers."""
+
+    pono = drf_serializers.CharField(source='poid.pono', read_only=True, label='P.O. No.')
+    styleno = drf_serializers.CharField(read_only=True, label='Style No.')
+    issue_dia_cts = drf_serializers.SerializerMethodField(label='Issue Dia. Cts.')
+    issue_dia_rate = drf_serializers.SerializerMethodField(label='Issue Dia. Rate')
+    issue_dia_amount = drf_serializers.SerializerMethodField(label='Issue Dia. Amount')
+    rec_dia_cts = drf_serializers.SerializerMethodField(label='Rec. Dia. Cts.')
+    issue_bal_dia_cts = drf_serializers.SerializerMethodField(label='Issue Bal. Dia. Cts.')
+    dia_rate = drf_serializers.SerializerMethodField(label='Dia. Rate')
+    dia_amount = drf_serializers.SerializerMethodField(label='Dia. Amount')
+    issue_col_cts = drf_serializers.SerializerMethodField(label='Issue Col. Cts.')
+    issue_col_rate = drf_serializers.SerializerMethodField(label='Issue Col. Rate')
+    issue_col_amount = drf_serializers.SerializerMethodField(label='Issue Col. Amount')
+    rec_col_cts = drf_serializers.SerializerMethodField(label='Rec. Col. Cts.')
+    bal_col_cts = drf_serializers.SerializerMethodField(label='Bal. Col. Cts.')
+    col_rate = drf_serializers.SerializerMethodField(label='Col. Rate')
+    col_amount = drf_serializers.SerializerMethodField(label='Col. Amount')
+    bal_pcs = drf_serializers.SerializerMethodField(label='Bal. Pcs')
+
+    get_issue_dia_cts = _stone('dia', 'issue_cts')
+    get_issue_dia_rate = _stone('dia', 'issue_rate')
+    get_issue_dia_amount = _stone('dia', 'issue_amount')
+    get_rec_dia_cts = _stone('dia', 'rec_cts')
+    get_issue_bal_dia_cts = _stone('dia', 'bal_cts')
+    get_dia_rate = _stone('dia', 'issue_rate')
+    get_dia_amount = _stone('dia', 'bal_amount')
+    get_issue_col_cts = _stone('col', 'issue_cts')
+    get_issue_col_rate = _stone('col', 'issue_rate')
+    get_issue_col_amount = _stone('col', 'issue_amount')
+    get_rec_col_cts = _stone('col', 'rec_cts')
+    get_bal_col_cts = _stone('col', 'bal_cts')
+    get_col_rate = _stone('col', 'issue_rate')
+    get_col_amount = _stone('col', 'bal_amount')
+
+    def get_bal_pcs(self, obj):
+        return get_stone_valuation_figures(obj)['bal_pcs']
+
+    class Meta:
+        model = PurchaseOrderLine
+        fields = [
+            'pono', 'styleno', 'issue_dia_cts', 'issue_dia_rate', 'issue_dia_amount',
+            'rec_dia_cts', 'issue_bal_dia_cts', 'dia_rate', 'dia_amount',
+            'issue_col_cts', 'issue_col_rate', 'issue_col_amount', 'rec_col_cts',
+            'bal_col_cts', 'col_rate', 'col_amount', 'bal_pcs',
         ]
