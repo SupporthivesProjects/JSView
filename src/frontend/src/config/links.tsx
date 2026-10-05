@@ -75,7 +75,13 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
     },
     {
       name: "vendor-shipment",
-      title: t`Vendor Shipment`,
+      title: t`Shipment`,
+      icon: <IconAtom2 />,
+      visible: user.hasViewRole(UserRoles.part),
+    },
+    {
+      name: "reports",
+      title: t`Reports`,
       icon: <IconAtom2 />,
       visible: user.hasViewRole(UserRoles.part),
     },
