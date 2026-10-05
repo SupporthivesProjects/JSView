@@ -15,6 +15,7 @@ import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShip
 import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
 import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
+import POStoneValuationReport from "@components/tables/reports/POStoneValuationReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -49,7 +50,7 @@ export default function ReportsIndex() {
         name: "po-stone-valuation",
         label: t`P.O. Stone Valuation`,
         icon: <IconCoin />,
-        content: "",
+        content: <POStoneValuationReport />,
       },
       {
         name: "po-stone-status",
