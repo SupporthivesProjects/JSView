@@ -13,7 +13,12 @@ from jsreport.views.open_order import JSReportPagination
 
 
 class CloseOrderReportView(DataExportViewMixin, ListAPI):
-    """Close Order report."""
+    """Close Order report.
+
+    ?report_type=all                      -> all vendors
+    ?report_type=vendor&vendorid=<id>     -> vendorwise
+    ?report_type=customer&customerid=<id> -> customerwise
+    """
 
     queryset = PurchaseOrderLine.objects.all()
     serializer_class = CloseOrderSerializer
@@ -34,4 +39,10 @@ class CloseOrderReportView(DataExportViewMixin, ListAPI):
     ]
 
     def get_queryset(self):
-        return get_close_order_queryset()
+        params = self.request.query_params
+        report_type = params.get('report_type', 'all')
+
+        vendorid = params.get('vendorid') if report_type == 'vendor' else None
+        customerid = params.get('customerid') if report_type == 'customer' else None
+
+        return get_close_order_queryset(vendorid=vendorid, customerid=customerid)
