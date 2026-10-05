@@ -1,0 +1,88 @@
+import { t } from "@lingui/core/macro";
+import { Stack } from "@mantine/core";
+import { useMemo } from "react";
+
+import { IconCoin, IconDiamond, IconScale, IconTag } from "@tabler/icons-react";
+
+import { UserRoles } from "@lib/enums/Roles";
+import type { PanelType } from "@lib/types/Panel";
+import PermissionDenied from "@components/shared/errors/PermissionDenied";
+import { PageDetail } from "@components/nav/PageDetail";
+import { PanelGroup } from "@components/shared/panels/PanelGroup";
+import { useUserState } from "@store/UserState";
+import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipmentTable";
+import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShipmentPanel";
+
+export default function ReportsIndex() {
+  const user = useUserState();
+
+  const panels: PanelType[] = useMemo(() => {
+    return [
+      {
+        name: "open-order",
+        label: t`Open Order`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "close-order",
+        label: t`Close Order`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "invoice-value",
+        label: t`Invoice Value P/C`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "picture-presentation",
+        label: t`Picture Presentation`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "po-stone-valuation",
+        label: t`P.O. Stone Valuation`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "po-stone-status",
+        label: t`P.O. Stone Status`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "po-status",
+        label: t`P.O. Status`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "balance-vendor",
+        label: t`Balance Dia. With Vendor`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+      {
+        name: "cost-card-export",
+        label: t`Cost Card Export`,
+        icon: <IconCoin />,
+        content: <VendorShipmentTable />,
+      },
+    ];
+  }, []);
+
+  if (!user.hasViewRole(UserRoles.part)) {
+    return <PermissionDenied />;
+  }
+
+  return (
+    <Stack>
+      <PageDetail title={t`Reports`} />
+      <PanelGroup pageKey="reports-index" panels={panels} fillHeight />
+    </Stack>
+  );
+}
