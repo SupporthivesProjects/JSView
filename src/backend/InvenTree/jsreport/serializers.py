@@ -7,7 +7,7 @@ from InvenTree.serializers import InvenTreeModelSerializer
 
 from purchase_order.models import PurchaseOrderLine
 
-DATE_FMT = '%d %b %Y'  # 15 Jul 2026, same as the client's sheet
+DATE_FMT = '%d %b %Y'  
 
 
 class OpenOrderSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
