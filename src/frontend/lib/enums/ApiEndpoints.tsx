@@ -190,6 +190,7 @@ export enum ApiEndpoints {
 
   // Reports API endpoints
   reports_open_order = "jsreport/open-order/",
+  reports_close_order = "jsreport/close-order/",
 
   // Requisition API endpoints
   requisition_stone = "requisition/stone/",
