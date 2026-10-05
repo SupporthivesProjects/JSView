@@ -1,22 +1,26 @@
 """Invoice Value P/C report view for the 'jsreport' app."""
 
-from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from vendor_shipment.models import VendorShipmentLine
 
+from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
-from jsreport.serializers import InvoiceValueSerializer
-from jsreport.utils import get_invoice_value_queryset
+from jsreport.serializers import DATE_FMT, InvoiceValueSerializer
+from jsreport.filters import get_invoice_value_queryset
 from jsreport.views.open_order import JSReportPagination
 
 
-class InvoiceValueReportView(DataExportViewMixin, ListAPI):
+class InvoiceValueReportView(JSReportExportMixin, ListAPI):
     """Invoice Value P/C report.
 
     ?vendorid=<id>&vsno=<invoice no>
     """
+
+    export_name = 'Inv_Wise_Value_PC'
+    export_plugin = 'jsreport-invoice-value'
+    export_serial = True
 
     queryset = VendorShipmentLine.objects.all()
     serializer_class = InvoiceValueSerializer
@@ -40,3 +44,18 @@ class InvoiceValueReportView(DataExportViewMixin, ListAPI):
             vendorid=params.get('vendorid'),
             vsno=params.get('vsno'),
         )
+
+    def get_export_meta(self, queryset):
+        line = queryset.first()
+
+        if line is None:
+            return []
+
+        shipment = line.vendorshipid
+        vendor = shipment.vendorid
+
+        return [
+            ('Invoice No.', shipment.vsno),
+            ('Vendor', vendor.name if vendor else ''),
+            ('Invoice Date', shipment.vsdate.strftime(DATE_FMT) if shipment.vsdate else ''),
+        ]

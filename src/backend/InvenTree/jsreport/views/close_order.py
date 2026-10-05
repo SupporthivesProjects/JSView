@@ -1,24 +1,27 @@
 """Close Order report view for the 'jsreport' app."""
 
-from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
 
+from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
 from jsreport.serializers import CloseOrderSerializer
-from jsreport.utils import get_close_order_queryset
+from jsreport.filters import get_close_order_queryset
 from jsreport.views.open_order import JSReportPagination
 
 
-class CloseOrderReportView(DataExportViewMixin, ListAPI):
+class CloseOrderReportView(JSReportExportMixin, ListAPI):
     """Close Order report.
 
     ?report_type=all                      -> all vendors
     ?report_type=vendor&vendorid=<id>     -> vendorwise
     ?report_type=customer&customerid=<id> -> customerwise
     """
+
+    export_name = 'Close_Order'
+    export_plugin = 'jsreport-close-order'
 
     queryset = PurchaseOrderLine.objects.all()
     serializer_class = CloseOrderSerializer
