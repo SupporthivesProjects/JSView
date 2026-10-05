@@ -13,6 +13,7 @@ import { useUserState } from "@store/UserState";
 import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipmentTable";
 import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShipmentPanel";
 import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
+import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -29,7 +30,7 @@ export default function ReportsIndex() {
         name: "close-order",
         label: t`Close Order`,
         icon: <IconCoin />,
-        content: "",
+        content: <CloseOrderReport />,
       },
       {
         name: "invoice-value",
