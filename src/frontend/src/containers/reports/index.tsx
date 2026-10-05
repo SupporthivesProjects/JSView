@@ -15,7 +15,10 @@ import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShip
 import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
 import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
+<<<<<<< HEAD
 import POStoneValuationReport from "@components/tables/reports/POStoneValuationReport";
+=======
+>>>>>>> origin/feature/jsreport
 
 export default function ReportsIndex() {
   const user = useUserState();
