@@ -1,0 +1,49 @@
+/*
+ * Styling for the Invoice Value P/C sheet.
+ *
+ * A plain ruled HTML table, laid out like the confirm shipment sheet. The
+ * first header row carries the invoice details, the second the column titles.
+ * Colours come from the Mantine theme, so the sheet follows the light / dark
+ * colour scheme.
+ */
+
+.iv-sheet {
+	color: var(--mantine-color-text);
+	overflow-x: auto;
+}
+
+.iv-table {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 1400px;
+	font-size: var(--mantine-font-size-sm);
+}
+
+.iv-table th,
+.iv-table td {
+	border: 1px solid var(--mantine-color-default-border);
+	padding: 4px 8px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.iv-table thead th {
+	background-color: light-dark(
+		var(--mantine-color-gray-1),
+		var(--mantine-color-dark-6)
+	);
+	font-weight: 500;
+	height: 48px;
+}
+
+/* Invoice details read as label / value pairs */
+.iv-table thead .iv-value {
+	background-color: var(--mantine-color-body);
+	text-align: left;
+	white-space: nowrap;
+}
+
+.iv-table tbody td {
+	height: 28px;
+	white-space: nowrap;
+}

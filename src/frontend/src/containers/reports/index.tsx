@@ -14,6 +14,7 @@ import VendorShipmentTable from "@components/tables/vendor-shipment/VendorShipme
 import ConfirmShipmentPanel from "@components/tables/vendor-shipment/ConfirmShipmentPanel";
 import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
+import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -36,7 +37,7 @@ export default function ReportsIndex() {
         name: "invoice-value",
         label: t`Invoice Value P/C`,
         icon: <IconCoin />,
-        content: "",
+        content: <InvoiceValueReport />,
       },
       {
         name: "picture-presentation",
