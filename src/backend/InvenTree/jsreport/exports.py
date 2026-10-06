@@ -1,12 +1,17 @@
 import re
 from io import BytesIO
+from pathlib import Path
+from urllib.parse import urlparse
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
 from openpyxl import Workbook
-from openpyxl.styles import Border, Font, Side
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
+from PIL import Image as PILImage
 from rest_framework import serializers as drf_serializers
 from rest_framework.response import Response
 
@@ -17,6 +22,9 @@ from InvenTree.helpers import str2bool
 MIN_WIDTH = 8
 MAX_WIDTH = 40
 
+IMAGE_SIZE = (100, 100)  # max picture size in pixels, aspect ratio is kept
+IMAGE_LABEL = "image"  # columns with this label are exported as pictures
+
 THIN_SIDE = Side(style="thin")
 DATA_BORDER = Border(
     left=THIN_SIDE,
@@ -24,22 +32,45 @@ DATA_BORDER = Border(
     top=THIN_SIDE,
     bottom=THIN_SIDE,
 )
+MIDDLE = Alignment(vertical="center")
+
+
+def image_file(value):
+    """Return the local media file for an image url / path, or None."""
+    if not value:
+        return None
+
+    text = str(value)
+    path = urlparse(text).path if text.startswith(("http://", "https://")) else text
+
+    media_url = settings.MEDIA_URL or "/media/"
+    if path.startswith(media_url):
+        path = path[len(media_url):]
+
+    root = Path(settings.MEDIA_ROOT).resolve()
+    candidate = (root / path.lstrip("/")).resolve()
+
+    if root in candidate.parents and candidate.is_file():
+        return candidate
+
+    return None
 
 
 class SimpleSheetBuilder:
     def __init__(self, title="Report"):
         self.title = title
+        self._buffers = []
 
-    def build(self, headers, rows, meta=None):
-        return self.build_multi(headers, [(self.title, rows)], meta=meta)
+    def build(self, headers, rows, meta=None, image_cols=None):
+        return self.build_multi(headers, [(self.title, rows)], meta=meta, image_cols=image_cols)
 
-    def build_multi(self, headers, sheets, meta=None):
+    def build_multi(self, headers, sheets, meta=None, image_cols=None):
         workbook = Workbook()
         workbook.remove(workbook.active)
 
         for title, rows in sheets or [(self.title, [])]:
             sheet = workbook.create_sheet(self._safe_title(title))
-            self._fill(sheet, headers, rows, meta)
+            self._fill(sheet, headers, rows, meta, image_cols or set())
 
         return workbook
 
@@ -52,7 +83,7 @@ class SimpleSheetBuilder:
     def _safe_title(title):
         return re.sub(r"[\[\]:*?/\\]", "-", str(title)).strip()[:31] or "Sheet"
 
-    def _fill(self, ws, headers, rows, meta):
+    def _fill(self, ws, headers, rows, meta, image_cols):
         row = 1
 
         if meta:
@@ -72,14 +103,51 @@ class SimpleSheetBuilder:
 
         for values in rows:
             row += 1
+            height = 0
+
             for col in range(1, ncols + 1):
                 value = values[col - 1] if col <= len(values) else None
-                ws.cell(row=row, column=col, value=value).border = DATA_BORDER
+                cell = ws.cell(row=row, column=col)
+                cell.border = DATA_BORDER
 
-        self._fit_columns(ws, ncols)
+                if col in image_cols:
+                    height = max(height, self._add_image(ws, value, col, row))
+                else:
+                    cell.value = value
+
+            if height:
+                ws.row_dimensions[row].height = height * 0.75 + 6  # pixels -> points
+                for col in range(1, ncols + 1):
+                    ws.cell(row=row, column=col).alignment = MIDDLE
+
+        self._fit_columns(ws, ncols, image_cols)
+
+    def _add_image(self, ws, value, col, row):
+        """Place the picture in the cell; returns its height in pixels (0 if none)."""
+        path = image_file(value)
+
+        if path is None:
+            return 0
+
+        try:
+            picture = PILImage.open(path)
+            picture.thumbnail(IMAGE_SIZE)
+
+            if picture.mode not in ("RGB", "RGBA"):
+                picture = picture.convert("RGB")
+
+            buffer = BytesIO()
+            picture.save(buffer, format="PNG")
+            buffer.seek(0)
+            self._buffers.append(buffer)
+
+            ws.add_image(XLImage(buffer), f"{get_column_letter(col)}{row}")
+            return picture.size[1]
+        except Exception:
+            return 0
 
     @staticmethod
-    def _fit_columns(ws, ncols):
+    def _fit_columns(ws, ncols, image_cols=()):
         widths = {}
 
         for row in ws.iter_rows(max_col=ncols):
@@ -89,7 +157,10 @@ class SimpleSheetBuilder:
                     widths[cell.column] = max(widths.get(cell.column, 0), length)
 
         for col in range(1, ncols + 1):
-            width = min(max(widths.get(col, 0) + 2, MIN_WIDTH), MAX_WIDTH)
+            if col in image_cols:
+                width = IMAGE_SIZE[0] / 7 + 2  # pixels -> characters
+            else:
+                width = min(max(widths.get(col, 0) + 2, MIN_WIDTH), MAX_WIDTH)
             ws.column_dimensions[get_column_letter(col)].width = width
 
 
@@ -97,6 +168,7 @@ class JSReportExportMixin:
     export_name = "Report"
     export_plugin = "jsreport"
     export_serial = False
+    export_image_fields = None  # field names to export as pictures; None = label "Image"
 
     def get_export_meta(self, queryset):
         return []
@@ -131,10 +203,12 @@ class JSReportExportMixin:
             for item in items
         ]
 
+        image_cols = self._image_cols(names, headers)
         sheets = self._split_sheets(instances, rows)
 
         if self.export_serial:
             headers.insert(0, "#")
+            image_cols = {col + 1 for col in image_cols}
             sheets = [
                 (title, [[number] + row for number, row in enumerate(sheet_rows, start=1)])
                 for title, sheet_rows in sheets
@@ -142,7 +216,12 @@ class JSReportExportMixin:
 
         builder = SimpleSheetBuilder(self.export_name.replace("_", " "))
         content = builder.to_bytes(
-            builder.build_multi(headers, sheets, meta=self.get_export_meta(queryset))
+            builder.build_multi(
+                headers,
+                sheets,
+                meta=self.get_export_meta(queryset),
+                image_cols=image_cols,
+            )
         )
 
         output = DataOutput.objects.create(
@@ -162,6 +241,17 @@ class JSReportExportMixin:
         )
 
         return Response(DataOutputSerializer(output).data, status=200)
+
+    def _image_cols(self, names, headers):
+        """1-based column numbers that hold pictures."""
+        if self.export_image_fields is not None:
+            return {names.index(n) + 1 for n in self.export_image_fields if n in names}
+
+        return {
+            col
+            for col, head in enumerate(headers, start=1)
+            if str(head).strip().lower() == IMAGE_LABEL
+        }
 
     def _split_sheets(self, instances, rows):
         titles = [self.get_export_sheet_title(instance) for instance in instances]
