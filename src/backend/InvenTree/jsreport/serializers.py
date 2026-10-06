@@ -330,6 +330,9 @@ def _po_text(key):
 class POStatusSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """One row per style of the selected P.O. Labels match the P.O. Status export headers."""
 
+    image = drf_serializers.ImageField(
+        source='costcardid.front_view', read_only=True, default=None, label='Image',
+    )
     styleno = drf_serializers.CharField(read_only=True, label='Style')
     sets = drf_serializers.IntegerField(source='qty', read_only=True, label='# Of Sets')
     dia_sent_date = drf_serializers.SerializerMethodField(label='Diamond Sent Date')
@@ -369,7 +372,7 @@ class POStatusSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     class Meta:
         model = PurchaseOrderLine
         fields = [
-            'styleno', 'sets',
+            'image', 'styleno', 'sets',
             'dia_sent_date', 'dia_sent_sets', 'dia_sent_cts', 'dia_sent_inv',
             'col_sent_date', 'col_sent_sets', 'col_sent_cts', 'col_sent_inv',
             'rec_date', 'rec_sets', 'rec_dia_cts', 'rec_col_cts', 'rec_inv',
