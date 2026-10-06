@@ -156,7 +156,7 @@ RULESET_CHOICES = [
     # Report
     (RuleSetEnum.REPORT, _('Report -> Reports')),
     # InvenTree built-in
-    (RuleSetEnum.ADMIN, _('Admin')),
+    #(RuleSetEnum.ADMIN, _('Admin')),
     #(RuleSetEnum.PURCHASE_ORDER, _('Purchase Orders')),
     # (RuleSetEnum.BOM, _('Bills of Material')),
     # (RuleSetEnum.BUILD, _('Build Orders')),
