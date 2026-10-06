@@ -222,8 +222,13 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
   return (
     <Flex direction="column" mih="100vh" p={16}>
       <Group wrap="nowrap">
-        <InvenTreeLogo />
-        <StylishText size="xl">{title}</StylishText>
+        {/* <InvenTreeLogo /> */}
+        <img
+          src="https://jsiview.com/assets/logo-CfMhCKIT.png"
+          alt="jsiviewlogo"
+          height={40}
+        />
+        {/* <StylishText size="xl">{title}</StylishText> */}
       </Group>
       <Space h="xs" />
       <Container className={classes.layoutContent} p={0}>
