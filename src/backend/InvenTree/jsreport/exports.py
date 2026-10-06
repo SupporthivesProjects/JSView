@@ -9,8 +9,11 @@ from django.utils import timezone
 
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image as XLImage
+from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, OneCellAnchor
+from openpyxl.drawing.xdr import XDRPositiveSize2D
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.utils.units import pixels_to_EMU
 from PIL import Image as PILImage
 from rest_framework import serializers as drf_serializers
 from rest_framework.response import Response
@@ -24,6 +27,7 @@ MAX_WIDTH = 40
 
 IMAGE_SIZE = (100, 100)  # max picture size in pixels, aspect ratio is kept
 IMAGE_LABEL = "image"  # columns with this label are exported as pictures
+IMAGE_PAD = 8  # extra pixels added to the row height around the picture
 
 THIN_SIDE = Side(style="thin")
 DATA_BORDER = Border(
@@ -101,9 +105,11 @@ class SimpleSheetBuilder:
             cell.font = Font(bold=True)
             cell.border = DATA_BORDER
 
+        cell_width = self._image_col_width() * 7 + 5  # characters -> pixels
+
         for values in rows:
             row += 1
-            height = 0
+            pictures = []
 
             for col in range(1, ncols + 1):
                 value = values[col - 1] if col <= len(values) else None
@@ -111,23 +117,35 @@ class SimpleSheetBuilder:
                 cell.border = DATA_BORDER
 
                 if col in image_cols:
-                    height = max(height, self._add_image(ws, value, col, row))
+                    picture = self._load_image(value)
+                    if picture:
+                        pictures.append((col, picture))
                 else:
                     cell.value = value
 
-            if height:
-                ws.row_dimensions[row].height = height * 0.75 + 6  # pixels -> points
+            if pictures:
+                height = max(picture[1].size[1] for _, picture in pictures)
+                row_height = height + IMAGE_PAD
+                ws.row_dimensions[row].height = row_height * 0.75  # pixels -> points
+
                 for col in range(1, ncols + 1):
                     ws.cell(row=row, column=col).alignment = MIDDLE
 
+                for col, (image, picture) in pictures:
+                    self._place_image(ws, image, picture, col, row, cell_width, row_height)
+
         self._fit_columns(ws, ncols, image_cols)
 
-    def _add_image(self, ws, value, col, row):
-        """Place the picture in the cell; returns its height in pixels (0 if none)."""
+    @staticmethod
+    def _image_col_width():
+        return IMAGE_SIZE[0] / 7 + 2  # pixels -> characters
+
+    def _load_image(self, value):
+        """Return (excel image, resized picture) for a url / path, or None."""
         path = image_file(value)
 
         if path is None:
-            return 0
+            return None
 
         try:
             picture = PILImage.open(path)
@@ -141,10 +159,25 @@ class SimpleSheetBuilder:
             buffer.seek(0)
             self._buffers.append(buffer)
 
-            ws.add_image(XLImage(buffer), f"{get_column_letter(col)}{row}")
-            return picture.size[1]
+            return XLImage(buffer), picture
         except Exception:
-            return 0
+            return None
+
+    @staticmethod
+    def _place_image(ws, image, picture, col, row, cell_width, row_height):
+        """Anchor the picture in the middle of the cell, both ways."""
+        width, height = picture.size
+        marker = AnchorMarker(
+            col=col - 1,
+            row=row - 1,
+            colOff=pixels_to_EMU(max(0, (cell_width - width) / 2)),
+            rowOff=pixels_to_EMU(max(0, (row_height - height) / 2)),
+        )
+        image.anchor = OneCellAnchor(
+            _from=marker,
+            ext=XDRPositiveSize2D(pixels_to_EMU(width), pixels_to_EMU(height)),
+        )
+        ws.add_image(image)
 
     @staticmethod
     def _fit_columns(ws, ncols, image_cols=()):
@@ -158,7 +191,7 @@ class SimpleSheetBuilder:
 
         for col in range(1, ncols + 1):
             if col in image_cols:
-                width = IMAGE_SIZE[0] / 7 + 2  # pixels -> characters
+                width = SimpleSheetBuilder._image_col_width()
             else:
                 width = min(max(widths.get(col, 0) + 2, MIN_WIDTH), MAX_WIDTH)
             ws.column_dimensions[get_column_letter(col)].width = width
