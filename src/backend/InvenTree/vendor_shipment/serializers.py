@@ -14,10 +14,15 @@ class VendorShipmentLineSerializer(DataExportSerializerMixin, InvenTreeModelSeri
     """Serializer for the VendorShipmentLine model."""
 
     pono = drf_serializers.CharField(
-        source='poid.pono', read_only=True, default=None,
+        source='poid.pono',
+        read_only=True,
+        default=None,
     )
+
     styleno = drf_serializers.CharField(
-        source='costcardid.our_style_no', read_only=True, default=None,
+        source='costcardid.our_style_no',
+        read_only=True,
+        default=None,
     )
 
     class Meta:
@@ -25,13 +30,29 @@ class VendorShipmentLineSerializer(DataExportSerializerMixin, InvenTreeModelSeri
         fields = [
             'pk',
             'vendorshipid',
-            'poid', 'pono',
-            'costcardid', 'styleno',
-            'pcs', 'metalwt', 'diawt', 'stplace', 'colwt',
-            'labour', 'finding', 'triounce', 'confrm',
-            'active', 'created_at', 'updated_at',
+            'poid',
+            'pono',
+            'costcardid',
+            'styleno',
+            'pcs',
+            'metalwt',
+            'diawt',
+            'stplace',
+            'colwt',
+            'labour',
+            'finding',
+            'triounce',
+            'confrm',
+            'active',
+            'created_at',
+            'updated_at',
+            'permissions',
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = [
+            'created_at',
+            'updated_at',
+            'permissions',
+        ]
 
 
 class VendorShipmentLineItemSerializer(drf_serializers.ModelSerializer):
@@ -44,21 +65,39 @@ class VendorShipmentLineItemSerializer(drf_serializers.ModelSerializer):
     class Meta:
         model = VendorShipmentLine
         fields = [
-            'poid', 'costcardid', 'pcs', 'metalwt', 'diawt', 'stplace',
-            'colwt', 'labour', 'finding', 'triounce', 'confrm', 'active',
+            'poid',
+            'costcardid',
+            'pcs',
+            'metalwt',
+            'diawt',
+            'stplace',
+            'colwt',
+            'labour',
+            'finding',
+            'triounce',
+            'confrm',
+            'active',
         ]
 
 
 class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
     """Serializer for the VendorShipment model (read + header-only update)."""
 
-    lines = VendorShipmentLineSerializer(many=True, read_only=True)
+    lines = VendorShipmentLineSerializer(
+        many=True,
+        read_only=True,
+    )
 
     vendor_name = drf_serializers.CharField(
-        source='vendorid.name', read_only=True, default=None,
+        source='vendorid.name',
+        read_only=True,
+        default=None,
     )
+
     courier_name = drf_serializers.CharField(
-        source='courierid.name', read_only=True, default=None,
+        source='courierid.name',
+        read_only=True,
+        default=None,
     )
 
     is_open = drf_serializers.SerializerMethodField()
@@ -70,15 +109,27 @@ class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
         model = VendorShipment
         fields = [
             'pk',
-            'vsno', 'vsdate',
-            'vendorid', 'vendor_name',
-            'courierid', 'courier_name',
-            'trackref', 'luser',
-            'active', 'created_at', 'updated_at',
+            'vsno',
+            'vsdate',
+            'vendorid',
+            'vendor_name',
+            'courierid',
+            'courier_name',
+            'trackref',
+            'luser',
+            'active',
+            'created_at',
+            'updated_at',
             'is_open',
             'lines',
+            'permissions',
         ]
-        read_only_fields = ['created_at', 'updated_at', 'is_open']
+        read_only_fields = [
+            'created_at',
+            'updated_at',
+            'is_open',
+            'permissions',
+        ]
 
 
 class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
@@ -88,32 +139,53 @@ class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
     ``vendorshipid`` — both inside a single ``transaction.atomic()`` block.
     """
 
-    lines = VendorShipmentLineItemSerializer(many=True, required=False)
+    lines = VendorShipmentLineItemSerializer(
+        many=True,
+        required=False,
+    )
 
     vendor_name = drf_serializers.CharField(
-        source='vendorid.name', read_only=True, default=None,
+        source='vendorid.name',
+        read_only=True,
+        default=None,
     )
+
     courier_name = drf_serializers.CharField(
-        source='courierid.name', read_only=True, default=None,
+        source='courierid.name',
+        read_only=True,
+        default=None,
     )
 
     class Meta:
         model = VendorShipment
         fields = [
             'pk',
-            'vsno', 'vsdate',
-            'vendorid', 'vendor_name',
-            'courierid', 'courier_name',
-            'trackref', 'luser',
-            'active', 'created_at', 'updated_at',
+            'vsno',
+            'vsdate',
+            'vendorid',
+            'vendor_name',
+            'courierid',
+            'courier_name',
+            'trackref',
+            'luser',
+            'active',
+            'created_at',
+            'updated_at',
             'lines',
+            'permissions',
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = [
+            'created_at',
+            'updated_at',
+            'permissions',
+        ]
 
     def skip_create_fields(self):
         fields = list(super().skip_create_fields())
+
         if 'lines' not in fields:
             fields.append('lines')
+
         return fields
 
     def create(self, validated_data):
@@ -121,6 +193,7 @@ class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
 
         request = self.context.get('request')
         user = getattr(request, 'user', None)
+
         if (
             user is not None
             and getattr(user, 'is_authenticated', False)
@@ -130,7 +203,11 @@ class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
 
         with transaction.atomic():
             shipment = VendorShipment.objects.create(**validated_data)
+
             for line in lines:
-                VendorShipmentLine.objects.create(vendorshipid=shipment, **line)
+                VendorShipmentLine.objects.create(
+                    vendorshipid=shipment,
+                    **line,
+                )
 
         return shipment

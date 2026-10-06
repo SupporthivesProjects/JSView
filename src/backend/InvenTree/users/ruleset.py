@@ -10,6 +10,7 @@ class RuleSetEnum(StringEnum):
     """Enumeration of ruleset names."""
 
     ADMIN = 'admin'
+    PERMISSION_MANAGER = 'permission_manager'
     PART_CATEGORY = 'part_category'
     PART = 'part'
     BOM = 'bom'
@@ -21,9 +22,9 @@ class RuleSetEnum(StringEnum):
     RETURN_ORDER = 'return_order'
     TRANSFER_ORDER = 'transfer_order'
 
-    COMPANY = 'company'  # kept for backward compatibility (no longer listed in RULESET_CHOICES)
-    CUSTOMER = 'customer'  # Company model, labelled as Customers
-    VENDOR = 'vendor'  # Company model, labelled as Vendors
+    COMPANY = 'company'
+    CUSTOMER = 'customer'
+    VENDOR = 'vendor'
     COMPANY_CONTACT = 'company_contact'
     COMPANY_ADDRESS = 'company_address'
 
@@ -67,10 +68,10 @@ class RuleSetEnum(StringEnum):
     COST_CARD_FINISH_LINE = 'cost_card_finish_line'
     COST_CARD_VERSION = 'cost_card_version'
 
-    JS_PURCHASE_ORDER = 'js_purchase_order'  # PurchaseOrder model, potype=ORDER
+    JS_PURCHASE_ORDER = 'js_purchase_order'
     JS_PURCHASE_ORDER_LINE = 'js_purchase_order_line'
-    JS_PURCHASE_REQUEST = 'js_purchase_request'  # PurchaseOrder model, potype=REQUEST
-    JS_PURCHASE_REQUEST_LINE = 'js_purchase_request_line'  # PurchaseOrderLine model
+    JS_PURCHASE_REQUEST = 'js_purchase_request'
+    JS_PURCHASE_REQUEST_LINE = 'js_purchase_request_line'
     JS_PO_COST_CARD = 'js_po_cost_card'
     JS_PO_COST_CARD_LINE = 'js_po_cost_card_line'
 
@@ -88,7 +89,7 @@ class RuleSetEnum(StringEnum):
 # These are used to determine the permissions available to a group of users.
 # Custom apps come first (label format "App -> Model"), InvenTree built-ins last.
 RULESET_CHOICES = [
-     # Master
+    # Master
     # (RuleSetEnum.COMPANY, _('Master -> Companies')),
     (RuleSetEnum.CUSTOMER, _('Master -> Customers')),
     (RuleSetEnum.VENDOR, _('Master -> Vendors')),
@@ -110,6 +111,7 @@ RULESET_CHOICES = [
     (RuleSetEnum.MASTER_COURIER_SERVICE, _('Master -> Courier Services')),
     (RuleSetEnum.MASTER_PO_MAIL, _('Master -> P.O. Mails')),
     (RuleSetEnum.MASTER_TEMPLATES, _('Master -> Templates')),
+
     # Properties
     (RuleSetEnum.PROPERTIES_DIAMOND_STONE, _('Properties -> Diamond Stones')),
     (RuleSetEnum.PROPERTIES_DIAMOND_CUT, _('Properties -> Diamond Cuts')),
@@ -125,13 +127,15 @@ RULESET_CHOICES = [
     (RuleSetEnum.PROPERTIES_COLOR_STONE_SIZE, _('Properties -> Color Stone Sizes')),
     (RuleSetEnum.PROPERTIES_COLOR_STONE_QUALITY, _('Properties -> Color Stone Qualities')),
     (RuleSetEnum.PROPERTIES_COLOR_STONE_RATE, _('Properties -> Color Stone Rates')),
+
     # Cost Card
     (RuleSetEnum.COST_CARD_STONE_PLACE, _('Cost Card -> Stone Places')),
     (RuleSetEnum.COST_CARD, _('Cost Card -> Cost Cards')),
     (RuleSetEnum.COST_CARD_DIAMOND_LINE, _('Cost Card -> Diamond Lines')),
     (RuleSetEnum.COST_CARD_COLOR_STONE_LINE, _('Cost Card -> Color Stone Lines')),
     (RuleSetEnum.COST_CARD_FINISH_LINE, _('Cost Card -> Finish Lines')),
-    # Purchase (same PurchaseOrder model, split into Requests and Orders)
+
+    # Purchase
     # (RuleSetEnum.JS_PURCHASE_ORDER, _('JS Purchase Order -> Purchase Orders')),
     # (RuleSetEnum.JS_PURCHASE_ORDER_LINE, _('JS Purchase Order -> Order Lines')),
     # (RuleSetEnum.JS_PURCHASE_REQUEST, _('JS Purchase Order -> Purchase Requests')),
@@ -144,19 +148,26 @@ RULESET_CHOICES = [
     (RuleSetEnum.JS_PURCHASE_ORDER_LINE, _('Purchase -> Order Lines')),
     (RuleSetEnum.JS_PO_COST_CARD, _('Purchase -> Cost Card')),
     (RuleSetEnum.JS_PO_COST_CARD_LINE, _('Purchase -> Cost Card Lines')),
+
     # Requisition
     (RuleSetEnum.REQUISITION_FLUTE_ENTRY, _('Requisition -> Flute Entries')),
     (RuleSetEnum.REQUISITION_FLUTE_ENTRY_LINE, _('Requisition -> Flute Entry Lines')),
     (RuleSetEnum.REQUISITION_METAL_SENT, _('Requisition -> Metal Sent')),
+
     # Vendor Shipment
     (RuleSetEnum.VENDOR_SHIPMENT, _('Vendor Shipment -> Shipments')),
     (RuleSetEnum.VENDOR_SHIPMENT_LINE, _('Vendor Shipment -> Shipment Lines')),
+
     # Revision
     (RuleSetEnum.COST_CARD_VERSION, _('Revision -> Cost Card Versions')),
+
     # Report
     (RuleSetEnum.REPORT, _('Report -> Reports')),
+
     # InvenTree built-in
+    (RuleSetEnum.PERMISSION_MANAGER, _('Permission Manager')),
     (RuleSetEnum.ADMIN, _('Admin')),
+
     #(RuleSetEnum.PURCHASE_ORDER, _('Purchase Orders')),
     # (RuleSetEnum.BOM, _('Bills of Material')),
     # (RuleSetEnum.BUILD, _('Build Orders')),
@@ -169,10 +180,8 @@ RULESET_CHOICES = [
     # (RuleSetEnum.TRANSFER_ORDER, _('Transfer Orders')),
 ]
 
-# Ruleset names available in the system.
 RULESET_NAMES = [choice[0] for choice in RULESET_CHOICES]
 
-# Permission types available for each ruleset.
 RULESET_PERMISSIONS = ['view', 'add', 'change', 'delete']
 
 RULESET_CHANGE_INHERIT = [('part', 'bomitem')]
@@ -203,18 +212,15 @@ def get_ruleset_models() -> dict:
             'otp_static_statictoken',
             'otp_static_staticdevice',
             'mfa_authenticator',
-            # Oauth
             'oauth2_provider_application',
             'oauth2_provider_grant',
             'oauth2_provider_idtoken',
             'oauth2_provider_accesstoken',
             'oauth2_provider_refreshtoken',
             'oauth2_provider_devicegrant',
-            # Plugins
             'plugin_pluginconfig',
             'plugin_pluginsetting',
             'plugin_pluginusersetting',
-            # Misc
             'common_barcodescanresult',
             'common_newsfeedentry',
             'taggit_tag',
@@ -222,12 +228,17 @@ def get_ruleset_models() -> dict:
             'flags_flagstate',
             'machine_machineconfig',
             'machine_machinesetting',
-            # common / comms
             'common_emailmessage',
             'common_emailthread',
             'django_mailbox_mailbox',
             'django_mailbox_messageattachment',
             'django_mailbox_message',
+        ],
+
+        RuleSetEnum.PERMISSION_MANAGER: [
+            'auth_group',
+            'auth_user',
+            'users_ruleset',
         ],
 
         RuleSetEnum.BOM: [
@@ -316,73 +327,182 @@ def get_ruleset_models() -> dict:
             'order_transferorderlineitem',
         ],
 
-        # JSView - Company (same Company model, exposed as Customers and Vendors)
-        # RuleSetEnum.COMPANY: ['company_company'],
-        RuleSetEnum.COMPANY: ['company_company'],  # legacy, not shown in choices
-        RuleSetEnum.CUSTOMER: ['company_company'],
-        RuleSetEnum.VENDOR: ['company_company'],
-        RuleSetEnum.COMPANY_CONTACT: ['company_contact'],
-        RuleSetEnum.COMPANY_ADDRESS: ['company_address'],
+        # JSView - Company
+        RuleSetEnum.COMPANY: [
+            'company_company',
+        ],
+
+        RuleSetEnum.CUSTOMER: [
+            'company_company',
+        ],
+
+        RuleSetEnum.VENDOR: [
+            'company_company',
+        ],
+
+        RuleSetEnum.COMPANY_CONTACT: [
+            'company_contact',
+        ],
+
+        RuleSetEnum.COMPANY_ADDRESS: [
+            'company_address',
+        ],
 
         # JSView - Master
-        RuleSetEnum.MASTER_METAL_TYPE: ['master_metaltype'],
-        RuleSetEnum.MASTER_METAL_PURITY: ['master_metalpurity'],
-        RuleSetEnum.MASTER_METAL_RATE: ['master_metalrate'],
-        RuleSetEnum.MASTER_JEWELRY_CATEGORY: ['master_jewelrycategory'],
-        RuleSetEnum.MASTER_JEWELRY_SUB_CATEGORY: ['master_jewelrysubcategory'],
-        RuleSetEnum.MASTER_FINDING_TYPE: ['master_findingtype'],
-        RuleSetEnum.MASTER_FINDING_ITEM: ['master_findingitem'],
-        RuleSetEnum.MASTER_SETTING: ['master_setting'],
-        RuleSetEnum.MASTER_LABOUR_SETTING: ['master_laboursetting'],
-        RuleSetEnum.MASTER_FINISH_TYPE: ['master_finishtype'],
-        RuleSetEnum.MASTER_DUTY: ['master_duty'],
-        RuleSetEnum.MASTER_STAMP: ['master_stamp'],
-        RuleSetEnum.MASTER_AC_EXECUTIVE: ['master_acexecutive'],
-        RuleSetEnum.MASTER_TERMS: ['master_terms'],
-        RuleSetEnum.MASTER_COURIER_SERVICE: ['master_courierservice'],
-        RuleSetEnum.MASTER_PO_MAIL: ['master_pomail'],
-        RuleSetEnum.MASTER_TEMPLATES: ['master_templates'],
+        RuleSetEnum.MASTER_METAL_TYPE: [
+            'master_metaltype',
+        ],
+        RuleSetEnum.MASTER_METAL_PURITY: [
+            'master_metalpurity',
+        ],
+        RuleSetEnum.MASTER_METAL_RATE: [
+            'master_metalrate',
+        ],
+        RuleSetEnum.MASTER_JEWELRY_CATEGORY: [
+            'master_jewelrycategory',
+        ],
+        RuleSetEnum.MASTER_JEWELRY_SUB_CATEGORY: [
+            'master_jewelrysubcategory',
+        ],
+        RuleSetEnum.MASTER_FINDING_TYPE: [
+            'master_findingtype',
+        ],
+        RuleSetEnum.MASTER_FINDING_ITEM: [
+            'master_findingitem',
+        ],
+        RuleSetEnum.MASTER_SETTING: [
+            'master_setting',
+        ],
+        RuleSetEnum.MASTER_LABOUR_SETTING: [
+            'master_laboursetting',
+        ],
+        RuleSetEnum.MASTER_FINISH_TYPE: [
+            'master_finishtype',
+        ],
+        RuleSetEnum.MASTER_DUTY: [
+            'master_duty',
+        ],
+        RuleSetEnum.MASTER_STAMP: [
+            'master_stamp',
+        ],
+        RuleSetEnum.MASTER_AC_EXECUTIVE: [
+            'master_acexecutive',
+        ],
+        RuleSetEnum.MASTER_TERMS: [
+            'master_terms',
+        ],
+        RuleSetEnum.MASTER_COURIER_SERVICE: [
+            'master_courierservice',
+        ],
+        RuleSetEnum.MASTER_PO_MAIL: [
+            'master_pomail',
+        ],
+        RuleSetEnum.MASTER_TEMPLATES: [
+            'master_templates',
+        ],
 
         # JSView - Properties
-        RuleSetEnum.PROPERTIES_DIAMOND_STONE: ['properties_diamondstone'],
-        RuleSetEnum.PROPERTIES_DIAMOND_CUT: ['properties_diamondcut'],
-        RuleSetEnum.PROPERTIES_DIAMOND_SHAPE: ['properties_diamondshape'],
-        RuleSetEnum.PROPERTIES_DIAMOND_COLOR: ['properties_diamondcolor'],
-        RuleSetEnum.PROPERTIES_DIAMOND_SIZE: ['properties_diamondsize'],
-        RuleSetEnum.PROPERTIES_DIAMOND_QUALITY: ['properties_diamondquality'],
-        RuleSetEnum.PROPERTIES_DIAMOND_STONE_RATE: ['properties_diamondstonerate'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE: ['properties_colorstone'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_CUT: ['properties_colorstonecut'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_SHAPE: ['properties_colorstoneshape'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_COLOR: ['properties_colorstonecolor'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_SIZE: ['properties_colorstonesize'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_QUALITY: ['properties_colorstonequality'],
-        RuleSetEnum.PROPERTIES_COLOR_STONE_RATE: ['properties_colorstonerate'],
+        RuleSetEnum.PROPERTIES_DIAMOND_STONE: [
+            'properties_diamondstone',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_CUT: [
+            'properties_diamondcut',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_SHAPE: [
+            'properties_diamondshape',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_COLOR: [
+            'properties_diamondcolor',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_SIZE: [
+            'properties_diamondsize',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_QUALITY: [
+            'properties_diamondquality',
+        ],
+        RuleSetEnum.PROPERTIES_DIAMOND_STONE_RATE: [
+            'properties_diamondstonerate',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE: [
+            'properties_colorstone',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_CUT: [
+            'properties_colorstonecut',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_SHAPE: [
+            'properties_colorstoneshape',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_COLOR: [
+            'properties_colorstonecolor',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_SIZE: [
+            'properties_colorstonesize',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_QUALITY: [
+            'properties_colorstonequality',
+        ],
+        RuleSetEnum.PROPERTIES_COLOR_STONE_RATE: [
+            'properties_colorstonerate',
+        ],
 
         # JSView - Cost Card
-        RuleSetEnum.COST_CARD_STONE_PLACE: ['costcard_stoneplace'],
-        RuleSetEnum.COST_CARD: ['costcard_costcard'],
-        RuleSetEnum.COST_CARD_DIAMOND_LINE: ['costcard_costcarddiamondline'],
-        RuleSetEnum.COST_CARD_COLOR_STONE_LINE: ['costcard_costcardcolorstoneline'],
-        RuleSetEnum.COST_CARD_FINISH_LINE: ['costcard_costcardfinishline'],
-        RuleSetEnum.COST_CARD_VERSION: ['revision_costcardversion'],
+        RuleSetEnum.COST_CARD_STONE_PLACE: [
+            'costcard_stoneplace',
+        ],
+        RuleSetEnum.COST_CARD: [
+            'costcard_costcard',
+        ],
+        RuleSetEnum.COST_CARD_DIAMOND_LINE: [
+            'costcard_costcarddiamondline',
+        ],
+        RuleSetEnum.COST_CARD_COLOR_STONE_LINE: [
+            'costcard_costcardcolorstoneline',
+        ],
+        RuleSetEnum.COST_CARD_FINISH_LINE: [
+            'costcard_costcardfinishline',
+        ],
+        RuleSetEnum.COST_CARD_VERSION: [
+            'revision_costcardversion',
+        ],
 
-        # JSView - Purchase (same PurchaseOrder model, exposed as Requests and Orders)
-        RuleSetEnum.JS_PURCHASE_ORDER: ['purchase_order_purchaseorder'],
-        RuleSetEnum.JS_PURCHASE_ORDER_LINE: ['purchase_order_purchaseorderline'],
-        RuleSetEnum.JS_PURCHASE_REQUEST: ['purchase_order_purchaseorder'],
-        RuleSetEnum.JS_PURCHASE_REQUEST_LINE: ['purchase_order_purchaseorderline'],
-        RuleSetEnum.JS_PO_COST_CARD: ['purchase_order_pocostcard'],
-        RuleSetEnum.JS_PO_COST_CARD_LINE: ['purchase_order_pocostcardline'],
+        # JSView - Purchase
+        RuleSetEnum.JS_PURCHASE_ORDER: [
+            'purchase_order_purchaseorder',
+        ],
+        RuleSetEnum.JS_PURCHASE_ORDER_LINE: [
+            'purchase_order_purchaseorderline',
+        ],
+        RuleSetEnum.JS_PURCHASE_REQUEST: [
+            'purchase_order_purchaseorder',
+        ],
+        RuleSetEnum.JS_PURCHASE_REQUEST_LINE: [
+            'purchase_order_purchaseorderline',
+        ],
+        RuleSetEnum.JS_PO_COST_CARD: [
+            'purchase_order_pocostcard',
+        ],
+        RuleSetEnum.JS_PO_COST_CARD_LINE: [
+            'purchase_order_pocostcardline',
+        ],
 
         # JSView - Requisition
-        RuleSetEnum.REQUISITION_FLUTE_ENTRY: ['requisition_fluteentry'],
-        RuleSetEnum.REQUISITION_FLUTE_ENTRY_LINE: ['requisition_fluteentryline'],
-        RuleSetEnum.REQUISITION_METAL_SENT: ['requisition_metalsent'],
+        RuleSetEnum.REQUISITION_FLUTE_ENTRY: [
+            'requisition_fluteentry',
+        ],
+        RuleSetEnum.REQUISITION_FLUTE_ENTRY_LINE: [
+            'requisition_fluteentryline',
+        ],
+        RuleSetEnum.REQUISITION_METAL_SENT: [
+            'requisition_metalsent',
+        ],
 
         # JSView - Vendor Shipment
-        RuleSetEnum.VENDOR_SHIPMENT: ['vendor_shipment_vendorshipment'],
-        RuleSetEnum.VENDOR_SHIPMENT_LINE: ['vendor_shipment_vendorshipmentline'],
+        RuleSetEnum.VENDOR_SHIPMENT: [
+            'vendor_shipment_vendorshipment',
+        ],
+        RuleSetEnum.VENDOR_SHIPMENT_LINE: [
+            'vendor_shipment_vendorshipmentline',
+        ],
 
         # JSView - Reports
         RuleSetEnum.REPORT: [],
@@ -400,6 +520,7 @@ def get_ruleset_ignore() -> list[str]:
         # Core django models (not user configurable)
         'admin_logentry',
         'contenttypes_contenttype',
+
         # Models which currently do not require permissions
         'common_attachment',
         'common_parametertemplate',
@@ -414,23 +535,23 @@ def get_ruleset_ignore() -> list[str]:
         'common_projectcode',
         'common_webhookendpoint',
         'common_webhookmessage',
-        'common_inventreecustomuserstatemodel',
-        'common_selectionlistentry',
-        'common_selectionlist',
         'users_owner',
-        'users_userprofile',  # User profile is handled in the serializer - only own user can change
+        'users_userprofile',
+
         # Third-party tables
         'error_report_error',
         'exchange_rate',
         'exchange_exchangebackend',
         'usersessions_usersession',
         'sessions_session',
+
         # Django-q
         'django_q_ormq',
         'django_q_failure',
         'django_q_task',
         'django_q_schedule',
         'django_q_success',
+
         # Importing
         'importer_dataimportsession',
         'importer_dataimportcolumnmap',
