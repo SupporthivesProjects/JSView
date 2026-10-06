@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 import django_filters.rest_framework.filters as rest_filters
 from django_filters.rest_framework.filterset import FilterSet
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.settings import api_settings
 
 import common.filters
 import part.models
@@ -29,6 +30,7 @@ from .models import (
     SupplierPart,
     SupplierPriceBreak,
 )
+from .permissions import CompanyPermission, filter_company_queryset
 from .serializers import (
     AddressSerializer,
     CompanySerializer,
@@ -79,12 +81,27 @@ class CompanyMixin(OutputOptionsMixin):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
 
+    # Keep the default InvenTree permission classes and add the Customer/Vendor check
+    permission_classes = [*api_settings.DEFAULT_PERMISSION_CLASSES, CompanyPermission]
+
     def get_queryset(self):
         """Return annotated queryset for the company endpoints."""
         queryset = super().get_queryset()
         queryset = CompanySerializer.annotate_queryset(queryset)
 
+        # Limit to Customers / Vendors according to the user's rulesets
+        if getattr(self, 'request', None):
+            queryset = filter_company_queryset(self.request.user, queryset)
+
         return queryset
+
+    # --- old code ---
+    # def get_queryset(self):
+    #     """Return annotated queryset for the company endpoints."""
+    #     queryset = super().get_queryset()
+    #     queryset = CompanySerializer.annotate_queryset(queryset)
+    #
+    #     return queryset
 
 
 class CompanyList(

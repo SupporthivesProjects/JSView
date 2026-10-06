@@ -78,6 +78,7 @@ def check_user_role(
     permission: str,
     allow_inactive: bool = False,
     groups: Optional[QuerySet] = None,
+    enforce_superuser: bool = False,
 ) -> bool:
     """Check if a user has a particular role:permission combination.
 
@@ -87,6 +88,8 @@ def check_user_role(
         permission: The permission to check (e.g. 'view' / 'delete')
         allow_inactive: If False, disallow inactive users from having permissions
         groups: Optional cached queryset of groups to check (defaults to user's groups)
+        enforce_superuser: If True, superusers are NOT given automatic access
+            and must be granted the role via their groups' rulesets
 
     Returns:
         bool: True if the user has the specified role:permission combination
@@ -99,7 +102,7 @@ def check_user_role(
     if not user.is_active and not allow_inactive:
         return False
 
-    if user.is_superuser:
+    if user.is_superuser and not enforce_superuser:
         return True
 
     # First, check the session cache
@@ -135,6 +138,7 @@ def check_user_permission(
     permission: str,
     allow_inactive: bool = False,
     groups: Optional[QuerySet] = None,
+    enforce_superuser: bool = False,
 ) -> bool:
     """Check if the user has a particular permission against a given model type.
 
@@ -144,6 +148,8 @@ def check_user_permission(
         permission: The permission to check (e.g. 'view' / 'delete')
         allow_inactive: If False, disallow inactive users from having permissions
         groups: Optional cached queryset of groups to check (defaults to user's groups)
+        enforce_superuser: If True, superusers are NOT given automatic access
+            and must satisfy the ruleset like any other user
 
     Returns:
         bool: True if the user has the specified permission
@@ -156,7 +162,7 @@ def check_user_permission(
     if not user.is_active and not allow_inactive:
         return False
 
-    if user.is_superuser:
+    if user.is_superuser and not enforce_superuser:
         return True
 
     table_name = f'{model._meta.app_label}_{model._meta.model_name}'
@@ -169,7 +175,13 @@ def check_user_permission(
 
     for role, table_names in get_ruleset_models().items():
         if table_name in table_names:
-            if check_user_role(user, role, permission, groups=groups):
+            if check_user_role(
+                user,
+                role,
+                permission,
+                groups=groups,
+                enforce_superuser=enforce_superuser,
+            ):
                 return True
 
     # Check for children models which inherits from parent role
@@ -179,8 +191,19 @@ def check_user_permission(
 
         if parent_child_string == table_name:
             # Check if parent role has change permission
-            if check_user_role(user, parent, 'change', groups=groups):
+            if check_user_role(
+                user,
+                parent,
+                'change',
+                groups=groups,
+                enforce_superuser=enforce_superuser,
+            ):
                 return True
+
+    # user.has_perm() always returns True for superusers,
+    # so when enforcing rulesets for superusers we stop here
+    if enforce_superuser and user.is_superuser:
+        return False
 
     # Generate the permission name based on the model and permission
     # e.g. 'part.view_part'

@@ -2,43 +2,72 @@
 
 from rest_framework.permissions import BasePermission
 
+from users.permissions import check_user_permission
+
+# HTTP method -> ruleset permission
+METHOD_PERMISSION_MAP = {
+    'GET': 'view',
+    'HEAD': 'view',
+    'POST': 'add',
+    'PUT': 'change',
+    'PATCH': 'change',
+    'DELETE': 'delete',
+}
+
+
+def _check_ruleset_permission(request, view):
+    """Check the request against the ruleset of the view's model.
+
+    The model is taken from the view queryset, so each model is checked against
+    its own ruleset (e.g. costcard_stoneplace -> 'Cost Card -> Stone Places').
+
+    Applies to all users, including superusers.
+    """
+    user = request.user
+
+    if not user or not user.is_authenticated:
+        return False
+
+    # OPTIONS only returns metadata
+    if request.method == 'OPTIONS':
+        return True
+
+    permission = METHOD_PERMISSION_MAP.get(request.method)
+    if permission is None:
+        return False
+
+    queryset = getattr(view, 'queryset', None)
+    if queryset is None and hasattr(view, 'get_queryset'):
+        queryset = view.get_queryset()
+
+    # No model found -> can't evaluate the ruleset, so deny for everyone
+    if queryset is None:
+        return False
+
+    return check_user_permission(
+        user, queryset.model, permission, enforce_superuser=True
+    )
+
 
 class CardsDataPermission(BasePermission):
     """
     Permission for cards *master-like* reference data (e.g. StonePlace).
 
-    Superusers can view and modify.
-    Staff and normal authenticated users can only view.
+    Controlled by the group rulesets (Cost Card -> Stone Places, etc.).
+    Applies to all users, including superusers.
     """
 
     def has_permission(self, request, view):
-        # Must be authenticated
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        # GET / HEAD / OPTIONS -> all authenticated users can view
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-
-        # POST / PUT / PATCH / DELETE -> only superuser
-        return request.user.is_superuser
+        return _check_ruleset_permission(request, view)
 
 
 class CostCardPermission(BasePermission):
     """
     Permission for CostCard and its line records (Diamond/Color Stone/Finish).
 
-    Unlike master data, cost cards are day-to-day working records, so any
-    authenticated user may view and create/update them. Deleting a cost
-    card (or one of its lines) is restricted to staff/superusers to avoid
-    accidental loss of costing history.
+    Controlled by the group rulesets (Cost Card -> Cost Cards, Diamond Lines,
+    Color Stone Lines, Finish Lines). Applies to all users, including superusers.
     """
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        if request.method == 'DELETE':
-            return request.user.is_staff or request.user.is_superuser
-
-        return True
+        return _check_ruleset_permission(request, view)

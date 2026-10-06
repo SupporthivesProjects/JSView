@@ -21,7 +21,9 @@ class RuleSetEnum(StringEnum):
     RETURN_ORDER = 'return_order'
     TRANSFER_ORDER = 'transfer_order'
 
-    COMPANY = 'company'
+    COMPANY = 'company'  # kept for backward compatibility (no longer listed in RULESET_CHOICES)
+    CUSTOMER = 'customer'  # Company model, labelled as Customers
+    VENDOR = 'vendor'  # Company model, labelled as Vendors
     COMPANY_CONTACT = 'company_contact'
     COMPANY_ADDRESS = 'company_address'
 
@@ -65,8 +67,10 @@ class RuleSetEnum(StringEnum):
     COST_CARD_FINISH_LINE = 'cost_card_finish_line'
     COST_CARD_VERSION = 'cost_card_version'
 
-    JS_PURCHASE_ORDER = 'js_purchase_order'
+    JS_PURCHASE_ORDER = 'js_purchase_order'  # PurchaseOrder model, potype=ORDER
     JS_PURCHASE_ORDER_LINE = 'js_purchase_order_line'
+    JS_PURCHASE_REQUEST = 'js_purchase_request'  # PurchaseOrder model, potype=REQUEST
+    JS_PURCHASE_REQUEST_LINE = 'js_purchase_request_line'  # PurchaseOrderLine model
     JS_PO_COST_CARD = 'js_po_cost_card'
     JS_PO_COST_CARD_LINE = 'js_po_cost_card_line'
 
@@ -84,11 +88,11 @@ class RuleSetEnum(StringEnum):
 # These are used to determine the permissions available to a group of users.
 # Custom apps come first (label format "App -> Model"), InvenTree built-ins last.
 RULESET_CHOICES = [
-    # Company
-    (RuleSetEnum.COMPANY, _('Company -> Companies')),
-    (RuleSetEnum.COMPANY_CONTACT, _('Company -> Contacts')),
-    (RuleSetEnum.COMPANY_ADDRESS, _('Company -> Addresses')),
-    # Master
+     # Master
+    # (RuleSetEnum.COMPANY, _('Master -> Companies')),
+    (RuleSetEnum.CUSTOMER, _('Master -> Customers')),
+    (RuleSetEnum.VENDOR, _('Master -> Vendors')),
+    (RuleSetEnum.COMPANY_CONTACT, _('Master -> Contacts')),
     (RuleSetEnum.MASTER_METAL_TYPE, _('Master -> Metal Types')),
     (RuleSetEnum.MASTER_METAL_PURITY, _('Master -> Metal Purities')),
     (RuleSetEnum.MASTER_METAL_RATE, _('Master -> Metal Rates')),
@@ -127,11 +131,19 @@ RULESET_CHOICES = [
     (RuleSetEnum.COST_CARD_DIAMOND_LINE, _('Cost Card -> Diamond Lines')),
     (RuleSetEnum.COST_CARD_COLOR_STONE_LINE, _('Cost Card -> Color Stone Lines')),
     (RuleSetEnum.COST_CARD_FINISH_LINE, _('Cost Card -> Finish Lines')),
-    # Purchase Order (custom)
-    (RuleSetEnum.JS_PURCHASE_ORDER, _('JS Purchase Order -> Purchase Orders')),
-    (RuleSetEnum.JS_PURCHASE_ORDER_LINE, _('JS Purchase Order -> Order Lines')),
-    (RuleSetEnum.JS_PO_COST_CARD, _('JS Purchase Order -> PO Cost Cards')),
-    (RuleSetEnum.JS_PO_COST_CARD_LINE, _('JS Purchase Order -> PO Cost Card Lines')),
+    # Purchase (same PurchaseOrder model, split into Requests and Orders)
+    # (RuleSetEnum.JS_PURCHASE_ORDER, _('JS Purchase Order -> Purchase Orders')),
+    # (RuleSetEnum.JS_PURCHASE_ORDER_LINE, _('JS Purchase Order -> Order Lines')),
+    # (RuleSetEnum.JS_PURCHASE_REQUEST, _('JS Purchase Order -> Purchase Requests')),
+    # (RuleSetEnum.JS_PURCHASE_REQUEST_LINE, _('JS Purchase Order -> Request Lines')),
+    # (RuleSetEnum.JS_PO_COST_CARD, _('JS Purchase Order -> PO Cost Cards')),
+    # (RuleSetEnum.JS_PO_COST_CARD_LINE, _('JS Purchase Order -> PO Cost Card Lines')),
+    (RuleSetEnum.JS_PURCHASE_REQUEST, _('Purchase -> Request')),
+    (RuleSetEnum.JS_PURCHASE_REQUEST_LINE, _('Purchase -> Request Lines')),
+    (RuleSetEnum.JS_PURCHASE_ORDER, _('Purchase -> Order')),
+    (RuleSetEnum.JS_PURCHASE_ORDER_LINE, _('Purchase -> Order Lines')),
+    (RuleSetEnum.JS_PO_COST_CARD, _('Purchase -> Cost Card')),
+    (RuleSetEnum.JS_PO_COST_CARD_LINE, _('Purchase -> Cost Card Lines')),
     # Requisition
     (RuleSetEnum.REQUISITION_FLUTE_ENTRY, _('Requisition -> Flute Entries')),
     (RuleSetEnum.REQUISITION_FLUTE_ENTRY_LINE, _('Requisition -> Flute Entry Lines')),
@@ -144,8 +156,8 @@ RULESET_CHOICES = [
     # Report
     (RuleSetEnum.REPORT, _('Report -> Reports')),
     # InvenTree built-in
-    (RuleSetEnum.ADMIN, _('Admin')),
-    (RuleSetEnum.PURCHASE_ORDER, _('Purchase Orders')),
+    #(RuleSetEnum.ADMIN, _('Admin')),
+    #(RuleSetEnum.PURCHASE_ORDER, _('Purchase Orders')),
     # (RuleSetEnum.BOM, _('Bills of Material')),
     # (RuleSetEnum.BUILD, _('Build Orders')),
     # (RuleSetEnum.PART_CATEGORY, _('Part Categories')),
@@ -304,8 +316,11 @@ def get_ruleset_models() -> dict:
             'order_transferorderlineitem',
         ],
 
-        # JSView - Company
-        RuleSetEnum.COMPANY: ['company_company'],
+        # JSView - Company (same Company model, exposed as Customers and Vendors)
+        # RuleSetEnum.COMPANY: ['company_company'],
+        RuleSetEnum.COMPANY: ['company_company'],  # legacy, not shown in choices
+        RuleSetEnum.CUSTOMER: ['company_company'],
+        RuleSetEnum.VENDOR: ['company_company'],
         RuleSetEnum.COMPANY_CONTACT: ['company_contact'],
         RuleSetEnum.COMPANY_ADDRESS: ['company_address'],
 
@@ -352,9 +367,11 @@ def get_ruleset_models() -> dict:
         RuleSetEnum.COST_CARD_FINISH_LINE: ['costcard_costcardfinishline'],
         RuleSetEnum.COST_CARD_VERSION: ['revision_costcardversion'],
 
-        # JSView - Purchase Order
+        # JSView - Purchase (same PurchaseOrder model, exposed as Requests and Orders)
         RuleSetEnum.JS_PURCHASE_ORDER: ['purchase_order_purchaseorder'],
         RuleSetEnum.JS_PURCHASE_ORDER_LINE: ['purchase_order_purchaseorderline'],
+        RuleSetEnum.JS_PURCHASE_REQUEST: ['purchase_order_purchaseorder'],
+        RuleSetEnum.JS_PURCHASE_REQUEST_LINE: ['purchase_order_purchaseorderline'],
         RuleSetEnum.JS_PO_COST_CARD: ['purchase_order_pocostcard'],
         RuleSetEnum.JS_PO_COST_CARD_LINE: ['purchase_order_pocostcardline'],
 

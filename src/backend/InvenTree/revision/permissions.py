@@ -1,20 +1,46 @@
 from rest_framework.permissions import BasePermission
 
+from users.permissions import check_user_permission
 
-class MasterDataPermission(BasePermission):
-    """
-    Superusers can view and modify master data.
-    Staff and normal authenticated users can only view.
-    """
+METHOD_PERMISSION_MAP = {
+    'GET': 'view',
+    'HEAD': 'view',
+    'POST': 'add',
+    'PUT': 'change',
+    'PATCH': 'change',
+    'DELETE': 'delete',
+}
+
+
+class RevisionPermission(BasePermission):
+    """Controlled by the 'Revision -> Cost Card Versions' ruleset. Superusers have full access."""
 
     def has_permission(self, request, view):
-        # Must be authenticated
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+
+        if not user or not user.is_authenticated:
             return False
 
-        # GET / HEAD / OPTIONS -> all authenticated users can view
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+        if request.method == 'OPTIONS':
             return True
 
-        # POST / PUT / PATCH / DELETE -> only superuser
-        return request.user.is_superuser
+        permission = METHOD_PERMISSION_MAP.get(request.method)
+        if permission is None:
+            return False
+
+        queryset = getattr(view, 'queryset', None)
+        if queryset is None and hasattr(view, 'get_queryset'):
+            queryset = view.get_queryset()
+
+        # No model found -> superuser only
+        if queryset is None:
+            return user.is_superuser
+
+        return check_user_permission(user, queryset.model, permission)
+
+        # --- old code ---
+        # (class was named MasterDataPermission)
+        # if request.method in ['GET', 'HEAD', 'OPTIONS']:
+        #     return True
+        #
+        # return request.user.is_superuser
