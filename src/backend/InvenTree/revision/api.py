@@ -9,9 +9,14 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI, RetrieveAPI
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
 from . import serializers as history_serializers
 from .models import CostCardVersion
+from .permissions import RevisionPermission
+
+# Keep the default InvenTree permission classes and add the ruleset check
+REVISION_PERMISSIONS = [*api_settings.DEFAULT_PERMISSION_CLASSES, RevisionPermission]
 
 
 class HistoryPagination(LimitOffsetPagination):
@@ -25,6 +30,8 @@ class CostCardHistoryList(DataExportViewMixin, ListAPI):
 
     Cost cards are listed by their latest version.
     """
+
+    permission_classes = REVISION_PERMISSIONS
 
     latest_version = (
         CostCardVersion.objects
@@ -73,6 +80,8 @@ class CostCardHistoryDetail(RetrieveAPI):
     """
     Return complete version history for a specific cost card.
     """
+
+    permission_classes = REVISION_PERMISSIONS
 
     serializer_class = history_serializers.CostCardVersionSerializer
 

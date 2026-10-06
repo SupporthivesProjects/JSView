@@ -22,6 +22,10 @@ from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from . import serializers as shipment_serializers
 from . import utils
 from .models import VendorShipment, VendorShipmentLine
+from .permissions import (
+    VendorShipmentLinePermission,
+    VendorShipmentPermission,
+)
 
 
 class VendorShipmentPagination(LimitOffsetPagination):
@@ -62,6 +66,8 @@ class VendorShipmentList(DataExportViewMixin, ListCreateAPI):
       - True  -> at least one shipment line has ``confrm IS NULL``
       - False -> all shipment lines are confirmed
     """
+
+    permission_classes = [VendorShipmentPermission]
 
     queryset = VendorShipment.objects.select_related(
         'vendorid', 'courierid',
@@ -124,6 +130,8 @@ class VendorShipmentList(DataExportViewMixin, ListCreateAPI):
 class VendorShipmentDetail(RetrieveUpdateDestroyAPI):
     """Detail view of a single vendor shipment (header + nested lines)."""
 
+    permission_classes = [VendorShipmentPermission]
+
     queryset = VendorShipment.objects.select_related(
         'vendorid', 'courierid',
     ).prefetch_related('lines').all()
@@ -135,6 +143,8 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
 
     When mounted under ``<pk>/lines/`` the results are scoped to that shipment.
     """
+
+    permission_classes = [VendorShipmentLinePermission]
 
     queryset = VendorShipmentLine.objects.select_related(
         'vendorshipid', 'poid', 'costcardid',
@@ -150,8 +160,10 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
     def get_queryset(self):
         queryset = super().get_queryset()
         shipment_pk = self.kwargs.get('pk')
+
         if shipment_pk is not None:
             queryset = queryset.filter(vendorshipid_id=shipment_pk)
+
         return queryset
 
     def get_serializer(self, *args, **kwargs):
@@ -181,7 +193,11 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
         serializer = super().get_serializer(*args, **kwargs)
 
         if shipment_pk is not None and is_write:
-            field = getattr(serializer, 'fields', {}).get('vendorshipid')
+            field = getattr(
+                serializer,
+                'fields',
+                {},
+            ).get('vendorshipid')
 
             if field is not None:
                 field.required = False
@@ -195,6 +211,8 @@ class VendorShipmentLineList(DataExportViewMixin, ListCreateAPI):
 
 class VendorShipmentLineDetail(RetrieveUpdateDestroyAPI):
     """Detail view of a single vendor shipment line."""
+
+    permission_classes = [VendorShipmentLinePermission]
 
     queryset = VendorShipmentLine.objects.select_related(
         'vendorshipid', 'poid', 'costcardid',
@@ -221,7 +239,10 @@ class VendorPOListView(APIView):
             request.query_params.get('is_open'),
             default=True,
         )
-        return Response(utils.get_vendor_po_list(vendorid, is_open))
+
+        return Response(
+            utils.get_vendor_po_list(vendorid, is_open),
+        )
 
 
 class VendorStyleListView(APIView):
@@ -268,6 +289,7 @@ class ConfirmPendingInvoiceView(APIView):
 
     def get(self, request, *args, **kwargs):
         vendorid = _query_int(request.query_params.get('vendorid'))
+
         return Response(
             utils.get_confirm_pending_invoices(vendorid),
         )
@@ -308,13 +330,12 @@ class ConfirmUpdateView(APIView):
 
     Body: a bare list ``[{"tableid": 1, "confrm": true}, ...]``. For ease of
     porting the legacy client, an object wrapper is also accepted:
-    ``{"data": [{"tableid": 1, "confrm": true}]}`` (the legacy Go client
-    posted ``{ data: [...] }`` to ``/shipment/confirm-upd``).
+    ``{"data": [{"tableid": 1, "confrm": true}]}``.
 
     Bulk updates the ``confrm`` flag of the referenced shipment lines.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [VendorShipmentLinePermission]
     http_method_names = ['post']
 
     def post(self, request, *args, **kwargs):

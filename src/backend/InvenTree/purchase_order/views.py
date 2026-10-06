@@ -8,6 +8,7 @@ from django_filters.rest_framework.filterset import FilterSet
 from rest_framework import status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
 from data_exporter.mixins import DataExportViewMixin
 from InvenTree.filters import SEARCH_ORDER_FILTER
@@ -15,6 +16,18 @@ from InvenTree.mixins import ListCreateAPI, RetrieveAPI, RetrieveUpdateDestroyAP
 
 from . import serializers as po_serializers
 from .models import PurchaseOrder, PurchaseOrderLine
+from .permissions import (
+    PurchaseOrderLinePermission,
+    PurchaseOrderPermission,
+    filter_po_queryset,
+)
+
+# Keep the default InvenTree permission classes and add the Request/Order check
+PO_PERMISSIONS = [*api_settings.DEFAULT_PERMISSION_CLASSES, PurchaseOrderPermission]
+PO_LINE_PERMISSIONS = [
+    *api_settings.DEFAULT_PERMISSION_CLASSES,
+    PurchaseOrderLinePermission,
+]
 
 
 class PurchaseOrderPagination(LimitOffsetPagination):
@@ -80,12 +93,17 @@ class PurchaseOrderList(DataExportViewMixin, ListCreateAPI):
         'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
     ).prefetch_related('lines').all()
     serializer_class = po_serializers.PurchaseOrderSerializer
+    permission_classes = PO_PERMISSIONS
     pagination_class = PurchaseOrderPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_class = PurchaseOrderFilter
     search_fields = ['pono', 'customer_pono', 'rem', 'note', 'prepby__username']
     ordering_fields = ['podate', 'npono', 'createdat', 'tqty']
     ordering = ['-podate', '-npono']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_po_queryset(self.request.user, queryset)
 
 
 class PurchaseOrderDetail(RetrieveUpdateDestroyAPI):
@@ -95,6 +113,11 @@ class PurchaseOrderDetail(RetrieveUpdateDestroyAPI):
         'linkid', 'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
     ).prefetch_related('lines').all()
     serializer_class = po_serializers.PurchaseOrderSerializer
+    permission_classes = PO_PERMISSIONS
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_po_queryset(self.request.user, queryset)
 
     def destroy(self, request, *args, **kwargs):
         """Delete a PO, or return 409 explaining which records are using it."""
@@ -138,6 +161,7 @@ class PurchaseOrderLineList(DataExportViewMixin, ListCreateAPI):
         'poid', 'costcardid', 'vendorid',
     ).all()
     serializer_class = po_serializers.PurchaseOrderLineSerializer
+    permission_classes = PO_LINE_PERMISSIONS
     pagination_class = PurchaseOrderPagination
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['poid', 'costcardid', 'vendorid', 'active']
@@ -150,7 +174,15 @@ class PurchaseOrderLineList(DataExportViewMixin, ListCreateAPI):
         po_pk = self.kwargs.get('pk')
         if po_pk is not None:
             queryset = queryset.filter(poid_id=po_pk)
-        return queryset
+        return filter_po_queryset(self.request.user, queryset, prefix='poid__')
+
+    # --- old code ---
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     po_pk = self.kwargs.get('pk')
+    #     if po_pk is not None:
+    #         queryset = queryset.filter(poid_id=po_pk)
+    #     return queryset
 
 
 class PurchaseOrderLineDetail(RetrieveUpdateDestroyAPI):
@@ -160,6 +192,11 @@ class PurchaseOrderLineDetail(RetrieveUpdateDestroyAPI):
         'poid', 'costcardid', 'vendorid',
     ).all()
     serializer_class = po_serializers.PurchaseOrderLineSerializer
+    permission_classes = PO_LINE_PERMISSIONS
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_po_queryset(self.request.user, queryset, prefix='poid__')
 
 
 # ---------------------------------------------------------------------------
@@ -649,6 +686,7 @@ class POPrintView(RetrieveAPI):
 
     queryset = PurchaseOrder.objects.all()
     serializer_class = po_serializers.PurchaseOrderSerializer
+    permission_classes = PO_PERMISSIONS
 
     def get(self, request, pk):
         """Build the requested print payload (no write operations)."""
@@ -660,12 +698,24 @@ class POPrintView(RetrieveAPI):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Limited to the Request / Order types the user may view
         po = get_object_or_404(
-            PurchaseOrder.objects.select_related(
-                'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
+            filter_po_queryset(
+                request.user,
+                PurchaseOrder.objects.select_related(
+                    'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
+                ),
             ),
             pk=pk,
         )
+
+        # --- old code ---
+        # po = get_object_or_404(
+        #     PurchaseOrder.objects.select_related(
+        #         'customerid', 'vendorid', 'stampid', 'acexeid', 'termsid', 'prepby',
+        #     ),
+        #     pk=pk,
+        # )
 
         data = {'type': print_type, 'po': build_po_header(po, request)}
 

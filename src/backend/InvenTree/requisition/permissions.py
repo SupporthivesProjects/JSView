@@ -1,44 +1,84 @@
-"""Permission classes for the 'requisition' app.""""""Permission classes for the 'requisition' app."""
+"""Permission classes for the 'requisition' app."""
 
 from rest_framework.permissions import BasePermission
+
+from users.permissions import check_user_permission
+
+
+# HTTP method -> ruleset permission
+METHOD_PERMISSION_MAP = {
+    'GET': 'view',
+    'HEAD': 'view',
+    'POST': 'add',
+    'PUT': 'change',
+    'PATCH': 'change',
+    'DELETE': 'delete',
+}
+
+
+def _check_ruleset_permission(request, view):
+    """Check the request against the ruleset of the view's model.
+
+    Superusers have all permissions by default.
+    Other users are checked against the rulesets.
+    """
+
+    user = request.user
+
+    if not user or not user.is_authenticated:
+        return False
+
+    # Superuser bypasses ruleset checks.
+    if user.is_superuser:
+        return True
+
+    # OPTIONS only returns API metadata.
+    if request.method == 'OPTIONS':
+        return True
+
+    permission = METHOD_PERMISSION_MAP.get(request.method)
+
+    if permission is None:
+        return False
+
+    # Get the queryset from the view.
+    queryset = getattr(view, 'queryset', None)
+
+    if queryset is None and hasattr(view, 'get_queryset'):
+        queryset = view.get_queryset()
+
+    # No model found -> cannot evaluate the ruleset.
+    # Deny access for non-superusers.
+    if queryset is None:
+        return False
+
+    return check_user_permission(
+        user,
+        queryset.model,
+        permission,
+        enforce_superuser=True,
+    )
 
 
 class RequisitionPermission(BasePermission):
     """
-    Permission for cards *master-like* reference data (e.g. StonePlace).
+    Permission for Requisition endpoints.
 
-    Superusers can view and modify.
-    Staff and normal authenticated users can only view.
+    The ruleset is determined from the model used by the view queryset.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
-        # Must be authenticated
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        # GET / HEAD / OPTIONS -> all authenticated users can view
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-
-        # POST / PUT / PATCH / DELETE -> only superuser
-        return request.user.is_superuser
+        return _check_ruleset_permission(request, view)
 
 
 class CostCardPermission(BasePermission):
     """
-    Permission for CostCard and its line records (Diamond/Color Stone/Finish).
+    Same ruleset check as RequisitionPermission.
 
-    Unlike master data, cost cards are day-to-day working records, so any
-    authenticated user may view and create/update them. Deleting a cost
-    card (or one of its lines) is restricted to staff/superusers to avoid
-    accidental loss of costing history.
+    Kept for existing imports and backwards compatibility.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        if request.method == 'DELETE':
-            return request.user.is_staff or request.user.is_superuser
-
-        return True
+        return _check_ruleset_permission(request, view)
