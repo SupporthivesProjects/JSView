@@ -2,7 +2,16 @@ import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
 import { useMemo } from "react";
 
-import { IconCoin, IconDiamond, IconScale, IconTag } from "@tabler/icons-react";
+import {
+  IconFileInvoice,
+  IconFileInvoiceFilled,
+  IconPhoto,
+  IconDiamond,
+  IconClipboardCheck,
+  IconClipboardList,
+  IconScale,
+  IconReceipt,
+} from "@tabler/icons-react";
 
 import { UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
@@ -25,55 +34,55 @@ export default function ReportsIndex() {
       {
         name: "open-order",
         label: t`Open Order`,
-        icon: <IconCoin />,
+        icon: <IconClipboardList />,
         content: <OpenOrderReport />,
       },
       {
         name: "close-order",
         label: t`Close Order`,
-        icon: <IconCoin />,
+        icon: <IconClipboardCheck />,
         content: <CloseOrderReport />,
       },
       {
         name: "invoice-value",
         label: t`Invoice Value P/C`,
-        icon: <IconCoin />,
+        icon: <IconFileInvoice />,
         content: <InvoiceValueReport />,
       },
       {
         name: "picture-presentation",
         label: t`Picture Presentation`,
-        icon: <IconCoin />,
+        icon: <IconPhoto />,
         content: "",
       },
       {
         name: "po-stone-valuation",
         label: t`P.O. Stone Valuation`,
-        icon: <IconCoin />,
+        icon: <IconDiamond />,
         content: <POStoneValuationReport />,
       },
       {
         name: "po-stone-status",
         label: t`P.O. Stone Status`,
-        icon: <IconCoin />,
+        icon: <IconDiamond />,
         content: "",
       },
       {
         name: "po-status",
         label: t`P.O. Status`,
-        icon: <IconCoin />,
+        icon: <IconClipboardList />,
         content: "",
       },
       {
         name: "balance-vendor",
         label: t`Balance Dia. With Vendor`,
-        icon: <IconCoin />,
+        icon: <IconScale />,
         content: "",
       },
       {
         name: "cost-card-export",
         label: t`Cost Card Export`,
-        icon: <IconCoin />,
+        icon: <IconReceipt />,
         content: "",
       },
     ];
