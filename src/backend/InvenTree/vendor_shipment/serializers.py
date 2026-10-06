@@ -10,7 +10,10 @@ from data_exporter.mixins import DataExportSerializerMixin
 from .models import VendorShipment, VendorShipmentLine
 
 
-class VendorShipmentLineSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+class VendorShipmentLineSerializer(
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     """Serializer for the VendorShipmentLine model."""
 
     pono = drf_serializers.CharField(
@@ -46,12 +49,10 @@ class VendorShipmentLineSerializer(DataExportSerializerMixin, InvenTreeModelSeri
             'active',
             'created_at',
             'updated_at',
-            'permissions',
         ]
         read_only_fields = [
             'created_at',
             'updated_at',
-            'permissions',
         ]
 
 
@@ -80,7 +81,10 @@ class VendorShipmentLineItemSerializer(drf_serializers.ModelSerializer):
         ]
 
 
-class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+class VendorShipmentSerializer(
+    DataExportSerializerMixin,
+    InvenTreeModelSerializer,
+):
     """Serializer for the VendorShipment model (read + header-only update)."""
 
     lines = VendorShipmentLineSerializer(
@@ -122,13 +126,11 @@ class VendorShipmentSerializer(DataExportSerializerMixin, InvenTreeModelSerializ
             'updated_at',
             'is_open',
             'lines',
-            'permissions',
         ]
         read_only_fields = [
             'created_at',
             'updated_at',
             'is_open',
-            'permissions',
         ]
 
 
@@ -172,12 +174,10 @@ class VendorShipmentCreateSerializer(InvenTreeModelSerializer):
             'created_at',
             'updated_at',
             'lines',
-            'permissions',
         ]
         read_only_fields = [
             'created_at',
             'updated_at',
-            'permissions',
         ]
 
     def skip_create_fields(self):
