@@ -3,6 +3,8 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
+from users.models import RuleSet
+
 
 @receiver(pre_save, sender=User)
 def remember_old_username(sender, instance, **kwargs):
@@ -31,7 +33,11 @@ def sync_personal_group(sender, instance, created, update_fields=None, **kwargs)
         relation = User.profile.related
         relation.related_model.objects.get_or_create(**{relation.field.name: instance})
 
-        group, _ = Group.objects.get_or_create(name=instance.username)
+        group, group_created = Group.objects.get_or_create(name=instance.username)
+
+        if group_created:
+            RuleSet.objects.filter(group=group).update(can_view=True)
+
         if not instance.groups.filter(pk=group.pk).exists():
             instance.groups.add(group)
 

@@ -8,7 +8,11 @@ from InvenTree.serializers import InvenTreeModelSerializer
 from purchase_order.models import PurchaseOrderLine
 from vendor_shipment.models import VendorShipmentLine
 
-from jsreport.filters import get_invoice_figures, get_stone_valuation_figures
+from jsreport.filters import (
+    get_invoice_figures,
+    get_po_stone_figures,
+    get_stone_valuation_figures,
+)
 
 DATE_FMT = '%d %b %Y'  # 15 Jul 2026, same as the client's sheet
 
@@ -232,4 +236,145 @@ class POStoneValuationSerializer(DataExportSerializerMixin, InvenTreeModelSerial
             'rec_dia_cts', 'issue_bal_dia_cts', 'dia_rate', 'dia_amount',
             'issue_col_cts', 'issue_col_rate', 'issue_col_amount', 'rec_col_cts',
             'bal_col_cts', 'col_rate', 'col_amount', 'bal_pcs',
+        ]
+
+
+def _status(kind, key):
+    def method(self, obj):
+        return float(get_stone_valuation_figures(obj)[kind][key])
+
+    return method
+
+
+def _po_figure(kind, key):
+    def method(self, obj):
+        return float(get_po_stone_figures(obj)[kind][key])
+
+    return method
+
+
+class POStoneStatusSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    pono = drf_serializers.CharField(source='poid.pono', read_only=True, label='P.O.')
+    podate = drf_serializers.DateField(
+        source='poid.podate', read_only=True, format=DATE_FMT, label='P.O. Date',
+    )
+    customer_code = drf_serializers.CharField(
+        source='poid.customerid.code', read_only=True, default=None, label='Customer',
+    )
+    vendor_code = drf_serializers.CharField(
+        source='poid.vendorid.name', read_only=True, default=None, label='Vendor',
+    )
+    po_dia_cts = drf_serializers.SerializerMethodField(label='P.O. Dia. Cts.')
+    po_dia_amount = drf_serializers.SerializerMethodField(label='P.O. Dia. Amount.')
+    issue_dia_cts = drf_serializers.SerializerMethodField(label='Issue Dia. Cts.')
+    issue_dia_amount = drf_serializers.SerializerMethodField(label='Issue Dia. Amount')
+    rec_dia_cts = drf_serializers.SerializerMethodField(label='Rec. Dia. Cts.')
+    issue_bal_dia_cts = drf_serializers.SerializerMethodField(label='Issue Bal. Dia. Cts.')
+    po_col_cts = drf_serializers.SerializerMethodField(label='P.O. Col. Cts.')
+    po_col_amount = drf_serializers.SerializerMethodField(label='P.O. Col. Amount.')
+    issue_col_cts = drf_serializers.SerializerMethodField(label='Issue Col. Cts.')
+    issue_col_amount = drf_serializers.SerializerMethodField(label='Issue Col. Amount')
+    rec_col_cts = drf_serializers.SerializerMethodField(label='Rec. Col. Cts.')
+    issue_bal_col_cts = drf_serializers.SerializerMethodField(label='Issue Bal. Col. Cts.')
+
+    get_po_dia_cts = _po_figure('dia', 'cts')
+    get_po_dia_amount = _po_figure('dia', 'amount')
+    get_issue_dia_cts = _status('dia', 'issue_cts')
+    get_issue_dia_amount = _status('dia', 'issue_amount')
+    get_rec_dia_cts = _status('dia', 'rec_cts')
+    get_issue_bal_dia_cts = _status('dia', 'bal_cts')
+    get_po_col_cts = _po_figure('col', 'cts')
+    get_po_col_amount = _po_figure('col', 'amount')
+    get_issue_col_cts = _status('col', 'issue_cts')
+    get_issue_col_amount = _status('col', 'issue_amount')
+    get_rec_col_cts = _status('col', 'rec_cts')
+    get_issue_bal_col_cts = _status('col', 'bal_cts')
+
+    class Meta:
+        model = PurchaseOrderLine
+        fields = [
+            'pono', 'podate', 'customer_code', 'vendor_code',
+            'po_dia_cts', 'po_dia_amount', 'issue_dia_cts', 'issue_dia_amount',
+            'rec_dia_cts', 'issue_bal_dia_cts',
+            'po_col_cts', 'po_col_amount', 'issue_col_cts', 'issue_col_amount',
+            'rec_col_cts', 'issue_bal_col_cts',
+        ]
+
+
+def _po_num(key):
+    def method(self, obj):
+        value = getattr(obj, key, None)
+        if value is None:
+            return 0
+        value = float(value)
+        return int(value) if value == int(value) else round(value, 3)
+
+    return method
+
+
+def _po_date(key):
+    def method(self, obj):
+        date = getattr(obj, key, None)
+        return date.strftime(DATE_FMT) if date else None
+
+    return method
+
+
+def _po_text(key):
+    def method(self, obj):
+        return getattr(obj, key, None) or None
+
+    return method
+
+
+class POStatusSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """One row per style of the selected P.O. Labels match the P.O. Status export headers."""
+
+    image = drf_serializers.ImageField(
+        source='costcardid.front_view', read_only=True, default=None, label='Image',
+    )
+    styleno = drf_serializers.CharField(read_only=True, label='Style')
+    sets = drf_serializers.IntegerField(source='qty', read_only=True, label='# Of Sets')
+    dia_sent_date = drf_serializers.SerializerMethodField(label='Diamond Sent Date')
+    dia_sent_sets = drf_serializers.SerializerMethodField(label='Diamond Sent # Of Sets')
+    dia_sent_cts = drf_serializers.SerializerMethodField(label='Diamond Sent Cts.')
+    dia_sent_inv = drf_serializers.SerializerMethodField(label='Diamond Sent Inv.#')
+    col_sent_date = drf_serializers.SerializerMethodField(label='Color Stone Sent Date')
+    col_sent_sets = drf_serializers.SerializerMethodField(label='Color Stone Sent # Of Sets')
+    col_sent_cts = drf_serializers.SerializerMethodField(label='Color Stone Sent Cts.')
+    col_sent_inv = drf_serializers.SerializerMethodField(label='Color Stone Sent Inv.#')
+    rec_date = drf_serializers.SerializerMethodField(label='Received Date')
+    rec_sets = drf_serializers.SerializerMethodField(label='Received # Of Sets')
+    rec_dia_cts = drf_serializers.SerializerMethodField(label='Received Diamond Cts.')
+    rec_col_cts = drf_serializers.SerializerMethodField(label='Received Color Stone Cts.')
+    rec_inv = drf_serializers.SerializerMethodField(label='Received Inv.#')
+    bal_sets = drf_serializers.SerializerMethodField(label='Balance # Of Sets')
+    bal_dia_cts = drf_serializers.SerializerMethodField(label='Balance Diamond Cts.')
+    bal_col_cts = drf_serializers.SerializerMethodField(label='Balance Color Stone Cts.')
+
+    get_dia_sent_date = _po_date('dia_sent_date')
+    get_dia_sent_sets = _po_num('dia_sent_sets')
+    get_dia_sent_cts = _po_num('dia_sent_cts')
+    get_dia_sent_inv = _po_text('dia_sent_inv')
+    get_col_sent_date = _po_date('col_sent_date')
+    get_col_sent_sets = _po_num('col_sent_sets')
+    get_col_sent_cts = _po_num('col_sent_cts')
+    get_col_sent_inv = _po_text('col_sent_inv')
+    get_rec_date = _po_date('rec_date')
+    get_rec_sets = _po_num('rec_sets')
+    get_rec_dia_cts = _po_num('rec_dia_cts')
+    get_rec_col_cts = _po_num('rec_col_cts')
+    get_rec_inv = _po_text('rec_inv')
+    get_bal_sets = _po_num('bal_sets')
+    get_bal_dia_cts = _po_num('bal_dia_cts')
+    get_bal_col_cts = _po_num('bal_col_cts')
+
+    class Meta:
+        model = PurchaseOrderLine
+        fields = [
+            'image', 'styleno', 'sets',
+            'dia_sent_date', 'dia_sent_sets', 'dia_sent_cts', 'dia_sent_inv',
+            'col_sent_date', 'col_sent_sets', 'col_sent_cts', 'col_sent_inv',
+            'rec_date', 'rec_sets', 'rec_dia_cts', 'rec_col_cts', 'rec_inv',
+            'bal_sets', 'bal_dia_cts', 'bal_col_cts',
         ]
