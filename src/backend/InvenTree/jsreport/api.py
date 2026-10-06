@@ -3,6 +3,7 @@
 from django.urls import path
 
 from jsreport.views.close_order import CloseOrderReportView
+from jsreport.views.costcard import CostCardExportReportView
 from jsreport.views.invoice_value import InvoiceValueReportView
 from jsreport.views.open_order import OpenOrderReportView
 from jsreport.views.po_status import POStatusReportView
@@ -39,5 +40,10 @@ jsreport_api_urls = [
         'po-status/',
         POStatusReportView.as_view(),
         name='api-jsreport-po-status',
+    ),
+    path(
+        'costcard/',
+        CostCardExportReportView.as_view(),
+        name='api-jsreport-costcard',
     ),
 ]
