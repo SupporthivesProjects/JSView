@@ -15,6 +15,7 @@ from vendor_shipment.models import VendorShipmentLine
 
 TROY_OZ_GRAMS = Decimal('31.1035')
 OTHER_EXP_PCT = Decimal('1')  # TODO: confirm, inferred from the sample (0.84 = 1% of 83.85)
+FLUTE_INV_FIELD = 'flute_entry__invoice_no'
 
 
 def _get_order_line_queryset(vendorid=None, customerid=None):
@@ -288,3 +289,129 @@ def get_stone_valuation_figures(line):
     }
     line._stone_figures = figures
     return figures
+
+
+def get_po_stone_status_queryset(date_from=None, date_to=None, vendorid=None, customerid=None):
+    """P.O. Stone Status rows: P.O. Stone Valuation rows, also filtered on customer."""
+    qs = get_po_stone_valuation_queryset(date_from, date_to, vendorid).select_related(
+        'poid__customerid'
+    )
+
+    if customerid:
+        qs = qs.filter(poid__customerid_id=customerid)
+
+    return qs
+
+
+def get_po_stone_figures(line):
+    """Ordered stone carats and amount for one P.O. line (cached on the instance).
+
+    Taken from the cost card stone totals multiplied by the P.O. line qty.
+    """
+    cached = getattr(line, '_po_stone_figures', None)
+    if cached is not None:
+        return cached
+
+    card = line.costcardid
+    qty = Decimal(line.qty or 0)
+
+    def two(value):
+        return Decimal(value).quantize(TWO_DP, rounding=ROUND_HALF_UP)
+
+    def kind(cts_field, amount_field):
+        cts = Decimal(getattr(card, cts_field, 0) or 0) if card else Decimal('0')
+        amount = Decimal(getattr(card, amount_field, 0) or 0) if card else Decimal('0')
+        return {'cts': two(cts * qty), 'amount': two(amount * qty)}
+
+    figures = {
+        'dia': kind('dia_cts', 'dia_amount'),
+        'col': kind('col_cts', 'col_amount'),
+    }
+    line._po_stone_figures = figures
+    return figures
+
+
+def _line_total(queryset, po_field, card_field, value_field, func):
+    """Aggregate (Sum / Max) of value_field for the outer P.O. line's (poid, costcardid)."""
+    return Coalesce(
+        Subquery(
+            queryset
+            .filter(**{po_field: OuterRef('poid_id'), card_field: OuterRef('costcardid_id')})
+            .order_by()
+            .values(po_field, card_field)
+            .annotate(total=func(value_field))
+            .values('total'),
+            output_field=STONE_DEC,
+        ),
+        Value(0, output_field=STONE_DEC),
+    )
+
+
+def _line_latest(queryset, po_field, card_field, value_field, order_field):
+    """value_field of the most recent row for the outer P.O. line's (poid, costcardid)."""
+    return Subquery(
+        queryset
+        .filter(**{po_field: OuterRef('poid_id'), card_field: OuterRef('costcardid_id')})
+        .order_by(f'-{order_field}', '-pk')
+        .values(value_field)[:1]
+    )
+
+
+def get_po_status_queryset(poid=None, pono=None):
+    """P.O. Status rows: one row per style (P.O. line) of the selected P.O.
+
+    Stones sent come from flute entries, received from vendor shipments.
+    """
+    if not poid and not pono:
+        return PurchaseOrderLine.objects.none()
+
+    flute = FluteEntryLine.objects.filter(active=True, flute_entry__active=True)
+    diamond = flute.filter(stone_type='diamond')
+    color = flute.filter(stone_type='color_stone')
+    shipments = VendorShipmentLine.objects.all()
+
+    po_f, card_f = 'purchase_order_id', 'cost_card_id'
+    po_s, card_s = 'poid_id', 'costcardid_id'
+    flute_date_f = 'flute_entry__flute_date'
+
+    qs = (
+        PurchaseOrderLine.objects
+        .filter(poid__potype='ORDER', poid__active=True)
+        .select_related('poid', 'poid__vendorid', 'costcardid')
+        .annotate(
+            dia_sent_sets=_line_total(diamond, po_f, card_f, 'sets', Max),
+            dia_sent_cts=_line_total(diamond, po_f, card_f, 'cts', Sum),
+            dia_sent_date=_line_latest(diamond, po_f, card_f, flute_date_f, flute_date_f),
+            dia_sent_inv=_line_latest(diamond, po_f, card_f, FLUTE_INV_FIELD, flute_date_f),
+            col_sent_sets=_line_total(color, po_f, card_f, 'sets', Max),
+            col_sent_cts=_line_total(color, po_f, card_f, 'cts', Sum),
+            col_sent_date=_line_latest(color, po_f, card_f, flute_date_f, flute_date_f),
+            col_sent_inv=_line_latest(color, po_f, card_f, FLUTE_INV_FIELD, flute_date_f),
+            rec_sets=_line_total(shipments, po_s, card_s, 'pcs', Sum),
+            rec_dia_cts=_line_total(shipments, po_s, card_s, 'diawt', Sum),
+            rec_col_cts=_line_total(shipments, po_s, card_s, 'colwt', Sum),
+            rec_date=_line_latest(
+                shipments, po_s, card_s, 'vendorshipid__vsdate', 'vendorshipid__vsdate'
+            ),
+            rec_inv=_line_latest(
+                shipments, po_s, card_s, 'vendorshipid__vsno', 'vendorshipid__vsdate'
+            ),
+        )
+        .annotate(
+            bal_sets=ExpressionWrapper(F('qty') - F('rec_sets'), output_field=STONE_DEC),
+            bal_dia_cts=ExpressionWrapper(
+                F('dia_sent_cts') - F('rec_dia_cts'), output_field=STONE_DEC
+            ),
+            bal_col_cts=ExpressionWrapper(
+                F('col_sent_cts') - F('rec_col_cts'), output_field=STONE_DEC
+            ),
+        )
+    )
+
+    if poid:
+        qs = qs.filter(poid_id=poid)
+
+    if pono:
+        qs = qs.filter(poid__pono=pono)
+
+    return qs.order_by('styleno', 'pk')
