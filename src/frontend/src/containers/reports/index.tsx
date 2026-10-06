@@ -27,6 +27,7 @@ import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
 import POStoneValuationReport from "@components/tables/reports/POStoneValuationReport";
 import POStoneStatusReport from "@components/tables/reports/POStoneStatusReport";
 import POStatusReport from "@components/tables/reports/POStatusReport";
+import CostCardExportReport from "@components/tables/reports/CostCardExportReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -85,7 +86,7 @@ export default function ReportsIndex() {
         name: "cost-card-export",
         label: t`Cost Card Export`,
         icon: <IconReceipt />,
-        content: "",
+        content: <CostCardExportReport />,
       },
     ];
   }, []);

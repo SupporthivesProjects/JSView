@@ -195,6 +195,7 @@ export enum ApiEndpoints {
   reports_po_stone_valuation = "jsreport/po-stone-valuation/",
   reports_po_stone_status = "jsreport/po-stone-status/",
   reports_po_status = "jsreport/po-status/",
+  reports_cost_card_export = "jsreport/costcard/",
 
   // Requisition API endpoints
   requisition_stone = "requisition/stone/",
