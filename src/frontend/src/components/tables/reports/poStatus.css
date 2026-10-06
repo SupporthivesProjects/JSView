@@ -1,0 +1,72 @@
+
+
+.ps-sheet {
+	color: var(--mantine-color-text);
+	overflow-x: auto;
+}
+
+.ps-table {
+	border-collapse: collapse;
+	width: 100%;
+	min-width: 1400px;
+	font-size: var(--mantine-font-size-sm);
+}
+
+.ps-table th,
+.ps-table td {
+	border: 1px solid var(--mantine-color-default-border);
+	padding: 4px 8px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.ps-table thead th {
+	background-color: light-dark(
+		var(--mantine-color-gray-1),
+		var(--mantine-color-dark-6)
+	);
+	font-weight: 500;
+}
+
+/* P.O. details row */
+.ps-table thead .ps-details {
+	background-color: light-dark(
+		var(--mantine-color-blue-0),
+		var(--mantine-color-dark-5)
+	);
+	font-size: var(--mantine-font-size-md);
+	font-weight: 400;
+	padding: 8px;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.ps-details .ps-detail {
+	margin-right: 48px;
+}
+
+.ps-details .ps-detail b {
+	margin-right: 6px;
+}
+
+/* Tinted column groups */
+.ps-table thead th.ps-tint,
+.ps-table tbody td.ps-tint {
+	background-color: light-dark(
+		var(--mantine-color-yellow-0),
+		rgba(250, 176, 5, 0.12)
+	);
+}
+
+.ps-table tbody td {
+	height: 32px;
+	white-space: nowrap;
+}
+
+.ps-table tbody .ps-image {
+	display: block;
+	margin: 0 auto;
+	max-height: 56px;
+	max-width: 80px;
+	object-fit: contain;
+}

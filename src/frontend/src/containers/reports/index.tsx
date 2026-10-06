@@ -25,6 +25,7 @@ import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
 import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
 import POStoneValuationReport from "@components/tables/reports/POStoneValuationReport";
+import POStatusReport from "@components/tables/reports/POStatusReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -71,7 +72,7 @@ export default function ReportsIndex() {
         name: "po-status",
         label: t`P.O. Status`,
         icon: <IconClipboardList />,
-        content: "",
+        content: <POStatusReport />,
       },
       {
         name: "balance-vendor",

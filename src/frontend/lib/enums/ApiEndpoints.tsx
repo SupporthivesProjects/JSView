@@ -192,6 +192,8 @@ export enum ApiEndpoints {
   reports_open_order = "jsreport/open-order/",
   reports_close_order = "jsreport/close-order/",
   reports_invoice_value = "jsreport/invoice-value/",
+  reports_po_stone_valuation = "jsreport/po-stone-valuation/",
+  reports_po_status = "jsreport/po-status/",
 
   // Requisition API endpoints
   requisition_stone = "requisition/stone/",
@@ -236,7 +238,7 @@ export enum ApiEndpoints {
   generate_serial_number = "generate/serial-number/",
 
   // Order API endpoints
-  open_purchase_order= "order/po/",
+  open_purchase_order = "order/po/",
   purchase_order_list = "order/po/",
   purchase_order_issue = "order/po/:id/issue/",
   purchase_order_hold = "order/po/:id/hold/",
