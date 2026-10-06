@@ -193,6 +193,7 @@ export enum ApiEndpoints {
   reports_close_order = "jsreport/close-order/",
   reports_invoice_value = "jsreport/invoice-value/",
   reports_po_stone_valuation = "jsreport/po-stone-valuation/",
+  reports_po_stone_status = "jsreport/po-stone-status/",
   reports_po_status = "jsreport/po-status/",
 
   // Requisition API endpoints

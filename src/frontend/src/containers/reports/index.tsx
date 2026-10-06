@@ -25,6 +25,7 @@ import OpenOrderReport from "@components/tables/reports/OpenOrderReport";
 import CloseOrderReport from "@components/tables/reports/CloseOrderReport";
 import InvoiceValueReport from "@components/tables/reports/InvoiceValueReport";
 import POStoneValuationReport from "@components/tables/reports/POStoneValuationReport";
+import POStoneStatusReport from "@components/tables/reports/POStoneStatusReport";
 import POStatusReport from "@components/tables/reports/POStatusReport";
 
 export default function ReportsIndex() {
@@ -66,7 +67,7 @@ export default function ReportsIndex() {
         name: "po-stone-status",
         label: t`P.O. Stone Status`,
         icon: <IconDiamond />,
-        content: "",
+        content: <POStoneStatusReport />,
       },
       {
         name: "po-status",
