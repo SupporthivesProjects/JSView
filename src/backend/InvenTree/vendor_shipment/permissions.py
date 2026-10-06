@@ -1,4 +1,4 @@
-"""Permission classes for the 'requisition' app."""
+"""Permission classes for the 'vendor_shipment' app."""
 
 from rest_framework.permissions import BasePermission
 
@@ -52,9 +52,9 @@ def _check_ruleset_permission(request, view):
     )
 
 
-class RequisitionPermission(BasePermission):
+class VendorShipmentPermission(BasePermission):
     """
-    Permission for Requisition endpoints.
+    Permission for Vendor Shipment endpoints.
 
     The ruleset is determined from the model used by the view queryset.
     Applies to all users, including superusers.
@@ -64,11 +64,11 @@ class RequisitionPermission(BasePermission):
         return _check_ruleset_permission(request, view)
 
 
-class CostCardPermission(BasePermission):
+class VendorShipmentLinePermission(BasePermission):
     """
-    Same ruleset check as RequisitionPermission.
+    Permission for Vendor Shipment Line endpoints.
 
-    Kept for existing imports and backwards compatibility.
+    The ruleset is determined from the model used by the view queryset.
     Applies to all users, including superusers.
     """
 

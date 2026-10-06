@@ -1,8 +1,12 @@
+"""Permission class for the JS Report API."""
+
 from rest_framework.permissions import BasePermission
 
 from users.permissions import check_user_role
 from users.ruleset import RuleSetEnum
 
+
+# HTTP method -> ruleset permission
 METHOD_PERMISSION_MAP = {
     'GET': 'view',
     'HEAD': 'view',
@@ -14,7 +18,12 @@ METHOD_PERMISSION_MAP = {
 
 
 class JSReportPermission(BasePermission):
-    """Controlled by the 'Report -> Reports' ruleset. Superusers have full access."""
+    """
+    Permission for JS Report endpoints.
+
+    Controlled by the 'Report -> Reports' ruleset.
+    Applies to all users, including superusers.
+    """
 
     def has_permission(self, request, view):
         user = request.user
@@ -22,17 +31,18 @@ class JSReportPermission(BasePermission):
         if not user or not user.is_authenticated:
             return False
 
-        if user.is_superuser or request.method == 'OPTIONS':
+        # OPTIONS only returns API metadata.
+        if request.method == 'OPTIONS':
             return True
 
         permission = METHOD_PERMISSION_MAP.get(request.method)
+
         if permission is None:
             return False
 
-        return check_user_role(user, RuleSetEnum.REPORT, permission)
-
-        # --- old code ---
-        # if request.method in ['GET', 'HEAD', 'OPTIONS']:
-        #     return True
-        #
-        # return request.user.is_superuser
+        return check_user_role(
+            user,
+            RuleSetEnum.REPORT,
+            permission,
+            enforce_superuser=True,
+        )
