@@ -26,10 +26,10 @@ from InvenTree.helpers import str2bool
 MIN_WIDTH = 8
 MAX_WIDTH = 40
 
-IMAGE_SIZE = (100, 100)  # max picture size in pixels, aspect ratio is kept
-IMAGE_LABEL = "image"  # columns with this label are exported as pictures
-IMAGE_PAD = 8  # extra pixels added to the row height around the picture
-DEFAULT_ROW_PX = 20  # default Excel row height (15pt) in pixels
+IMAGE_SIZE = (100, 100)
+IMAGE_LABEL = "image"
+IMAGE_PAD = 8
+DEFAULT_ROW_PX = 20
 
 THIN_SIDE = Side(style="thin")
 DATA_BORDER = Border(
@@ -41,13 +41,11 @@ DATA_BORDER = Border(
 MIDDLE = Alignment(vertical="center")
 CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-# Same pale yellow as the on-screen table; header is the same colour at 85% opacity.
 DATA_FILL = PatternFill("solid", start_color="FEF9C2", end_color="FEF9C2")
 HEAD_FILL = PatternFill("solid", start_color="FEFACB", end_color="FEFACB")
 
 
 def _resolve(root, relative):
-    """Return the file under root, or None (never leaves root)."""
     root = Path(root).resolve()
     candidate = (root / str(relative).lstrip("/")).resolve()
 
@@ -71,7 +69,9 @@ def image_file(value):
     text = str(value)
     path = urlparse(text).path if text.startswith(("http://", "https://")) else text
 
-    for prefix, folder in (getattr(settings, "JSREPORT_IMAGE_ROOTS", None) or {}).items():
+    image_roots = getattr(settings, "JSREPORT_IMAGE_ROOTS", None) or {}
+
+    for prefix, folder in image_roots.items():
         if path.startswith(prefix):
             found = _resolve(folder, path[len(prefix):])
             if found:
@@ -85,27 +85,15 @@ def image_file(value):
 
 
 class RowBlock:
-    """One record that spans several stacked lines in a grouped sheet.
-
-    Columns that are merged (see GroupedLayout) take their value from the
-    first line only.
-    """
-
     def __init__(self, lines):
         self.lines = [list(line) for line in lines] or [[]]
 
 
 class GroupedLayout:
-    """Two-level header layout.
+    """Two-level header layout for (group, label) headers.
 
-    The headers passed with it are (group, label) tuples:
-      * group None  -> the label spans both header rows and the cells of that
-        column are merged over all lines of a RowBlock.
-      * group "X"   -> the label sits under a merged group heading "X".
-
-    merged_groups  extra groups whose cells are merged over a RowBlock
-    filled_groups  groups drawn with the yellow fill
-    freeze_cols    number of left columns to keep visible when scrolling
+    A group of None spans both header rows and its column is merged over all
+    lines of a RowBlock, taking its value from the first line only.
     """
 
     def __init__(self, merged_groups=(), filled_groups=(), freeze_cols=0):
@@ -117,11 +105,14 @@ class GroupedLayout:
 class SimpleSheetBuilder:
     def __init__(self, title="Report"):
         self.title = title
-        self._buffers = []  # keeps image buffers alive until the workbook is saved
+        self._buffers = []
 
     def build(self, headers, rows, image_cols=None, layout=None):
         return self.build_multi(
-            headers, [(self.title, rows)], image_cols=image_cols, layout=layout
+            headers,
+            [(self.title, rows)],
+            image_cols=image_cols,
+            layout=layout,
         )
 
     def build_multi(self, headers, sheets, image_cols=None, layout=None):
@@ -147,9 +138,6 @@ class SimpleSheetBuilder:
     def _safe_title(title):
         return re.sub(r"[\[\]:*?/\\]", "-", str(title)).strip()[:31] or "Sheet"
 
-    # ------------------------------------------------------------------
-    # flat sheets
-    # ------------------------------------------------------------------
     def _fill(self, ws, headers, rows, image_cols):
         row = 1
         ncols = len(headers)
@@ -159,7 +147,7 @@ class SimpleSheetBuilder:
             cell.font = Font(bold=True)
             cell.border = DATA_BORDER
 
-        cell_width = self._image_col_width() * 7 + 5  # characters -> pixels
+        cell_width = self._image_col_width() * 7 + 5
 
         for values in rows:
             row += 1
@@ -180,19 +168,24 @@ class SimpleSheetBuilder:
             if pictures:
                 height = max(picture[1].size[1] for _, picture in pictures)
                 row_height = height + IMAGE_PAD
-                ws.row_dimensions[row].height = row_height * 0.75  # pixels -> points
+                ws.row_dimensions[row].height = row_height * 0.75
 
                 for col in range(1, ncols + 1):
                     ws.cell(row=row, column=col).alignment = MIDDLE
 
                 for col, (image, picture) in pictures:
-                    self._place_image(ws, image, picture, col, row, cell_width, row_height)
+                    self._place_image(
+                        ws,
+                        image,
+                        picture,
+                        col,
+                        row,
+                        cell_width,
+                        row_height,
+                    )
 
         self._fit_columns(ws, ncols, image_cols)
 
-    # ------------------------------------------------------------------
-    # grouped sheets (two-level header, merged blocks, colours)
-    # ------------------------------------------------------------------
     def _fill_grouped(self, ws, headers, rows, image_cols, layout):
         head1, head2 = 1, 2
         ncols = len(headers)
@@ -208,7 +201,6 @@ class SimpleSheetBuilder:
             if group is None or group in layout.merged_groups
         }
 
-        # ---- two-row header -------------------------------------------
         header_merges = []
         col = 1
         while col <= ncols:
@@ -244,8 +236,7 @@ class SimpleSheetBuilder:
         for r1, c1, r2, c2 in header_merges:
             ws.merge_cells(start_row=r1, start_column=c1, end_row=r2, end_column=c2)
 
-        # ---- data blocks ----------------------------------------------
-        cell_width = self._image_col_width() * 7 + 5  # characters -> pixels
+        cell_width = self._image_col_width() * 7 + 5
         row = head2
 
         for block in rows:
@@ -272,19 +263,21 @@ class SimpleSheetBuilder:
                             if picture:
                                 pictures.append((col, picture))
                     elif col in merged and index > 0:
-                        continue  # covered by the merge, value comes from line 1
+                        continue
                     else:
                         cell.value = value
 
             last = row
 
-            # make the block tall enough for the tallest picture
             line_px = DEFAULT_ROW_PX
             if pictures:
                 tallest = max(picture[1].size[1] for _, picture in pictures)
-                line_px = max(DEFAULT_ROW_PX, math.ceil((tallest + IMAGE_PAD) / count))
+                line_px = max(
+                    DEFAULT_ROW_PX,
+                    math.ceil((tallest + IMAGE_PAD) / count),
+                )
                 for r in range(first, last + 1):
-                    ws.row_dimensions[r].height = line_px * 0.75  # pixels -> points
+                    ws.row_dimensions[r].height = line_px * 0.75
 
             block_px = line_px * count
 
@@ -305,7 +298,10 @@ class SimpleSheetBuilder:
             if count > 1:
                 for col in sorted(merged):
                     ws.merge_cells(
-                        start_row=first, start_column=col, end_row=last, end_column=col
+                        start_row=first,
+                        start_column=col,
+                        end_row=last,
+                        end_column=col,
                     )
 
         self._fit_grouped_columns(ws, headers, head2, image_cols)
@@ -313,15 +309,11 @@ class SimpleSheetBuilder:
         if layout.freeze_cols:
             ws.freeze_panes = ws.cell(row=head2 + 1, column=layout.freeze_cols + 1)
 
-    # ------------------------------------------------------------------
-    # images
-    # ------------------------------------------------------------------
     @staticmethod
     def _image_col_width():
-        return IMAGE_SIZE[0] / 7 + 2  # pixels -> characters
+        return IMAGE_SIZE[0] / 7 + 2
 
     def _load_image(self, value):
-        """Return (excel image, resized picture) for a url / path, or None."""
         path = image_file(value)
 
         if path is None:
@@ -345,7 +337,6 @@ class SimpleSheetBuilder:
 
     @staticmethod
     def _place_image(ws, image, picture, col, row, cell_width, row_height):
-        """Anchor the picture in the middle of the cell, both ways."""
         width, height = picture.size
         SimpleSheetBuilder._place_image_at(
             ws,
@@ -359,7 +350,6 @@ class SimpleSheetBuilder:
 
     @staticmethod
     def _place_image_at(ws, image, picture, col, row, col_off=0, row_off=0):
-        """Anchor the picture at a pixel offset inside the given cell."""
         width, height = picture.size
         marker = AnchorMarker(
             col=col - 1,
@@ -373,9 +363,6 @@ class SimpleSheetBuilder:
         )
         ws.add_image(image)
 
-    # ------------------------------------------------------------------
-    # column widths
-    # ------------------------------------------------------------------
     @staticmethod
     def _fit_columns(ws, ncols, image_cols=()):
         widths = {}
@@ -395,11 +382,6 @@ class SimpleSheetBuilder:
 
     @staticmethod
     def _fit_grouped_columns(ws, headers, head2, image_cols):
-        """Widths from the sub-headers and data only.
-
-        The merged group headings are left out so they do not stretch the
-        first column underneath them.
-        """
         ncols = len(headers)
         widths = {}
 
@@ -425,7 +407,7 @@ class JSReportExportMixin:
     export_name = "Report"
     export_plugin = "jsreport"
     export_serial = False
-    export_image_fields = None  # field names to export as pictures; None = label "Image"
+    export_image_fields = None
 
     def get_export_sheet_title(self, instance):
         return None
@@ -493,7 +475,13 @@ class JSReportExportMixin:
                 headers.insert(0, "#")
                 image_cols = {col + 1 for col in image_cols}
                 sheets = [
-                    (title, [[number] + row for number, row in enumerate(sheet_rows, start=1)])
+                    (
+                        title,
+                        [
+                            [number] + row
+                            for number, row in enumerate(sheet_rows, start=1)
+                        ],
+                    )
                     for title, sheet_rows in sheets
                 ]
 
@@ -526,9 +514,12 @@ class JSReportExportMixin:
         return Response(DataOutputSerializer(output).data, status=200)
 
     def _image_cols(self, names, headers):
-        """1-based column numbers that hold pictures."""
         if self.export_image_fields is not None:
-            return {names.index(n) + 1 for n in self.export_image_fields if n in names}
+            return {
+                names.index(name) + 1
+                for name in self.export_image_fields
+                if name in names
+            }
 
         return {
             col
