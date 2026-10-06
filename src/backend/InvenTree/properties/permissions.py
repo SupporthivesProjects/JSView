@@ -21,7 +21,7 @@ class PropertiesDataPermission(BasePermission):
     Permission for Properties Data endpoints.
 
     The ruleset is determined from the model used by the view queryset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
@@ -29,6 +29,10 @@ class PropertiesDataPermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':
@@ -46,7 +50,7 @@ class PropertiesDataPermission(BasePermission):
             queryset = view.get_queryset()
 
         # No model found -> cannot evaluate the ruleset.
-        # Deny access for everyone.
+        # Deny access for non-superusers.
         if queryset is None:
             return False
 

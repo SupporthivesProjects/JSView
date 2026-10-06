@@ -22,10 +22,15 @@ METHOD_PERMISSION_MAP = {
 def filter_po_queryset(user, queryset, prefix=''):
     """Limit a queryset to the potype(s) the user may view.
 
+    Superusers can view everything.
     Use prefix='poid__' for PurchaseOrderLine querysets.
     """
     if not user or not user.is_authenticated:
         return queryset.none()
+
+    # Superuser can view everything.
+    if user.is_superuser:
+        return queryset
 
     # Header and lines use different rulesets.
     request_role, order_role = (
@@ -74,8 +79,8 @@ class _PotypePermission(BasePermission):
     """
     Base permission for Purchase Request / Purchase Order.
 
-    Permission is determined by the potype-specific ruleset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
+    Other users are checked against the potype-specific ruleset.
     """
 
     request_role = None
@@ -108,6 +113,10 @@ class _PotypePermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':
@@ -143,6 +152,10 @@ class _PotypePermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':
@@ -218,7 +231,7 @@ class POCostCardPermission(BasePermission):
     Purchase -> Cost Card / Cost Card Lines rulesets.
 
     The ruleset is determined from the model used by the view queryset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
@@ -226,6 +239,10 @@ class POCostCardPermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':

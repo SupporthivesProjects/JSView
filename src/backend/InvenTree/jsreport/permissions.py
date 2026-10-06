@@ -22,7 +22,7 @@ class JSReportPermission(BasePermission):
     Permission for JS Report endpoints.
 
     Controlled by the 'Report -> Reports' ruleset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
@@ -30,6 +30,10 @@ class JSReportPermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':

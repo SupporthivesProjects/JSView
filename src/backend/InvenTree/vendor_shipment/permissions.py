@@ -17,12 +17,20 @@ METHOD_PERMISSION_MAP = {
 
 
 def _check_ruleset_permission(request, view):
-    """Check the request against the ruleset of the view's model."""
+    """Check the request against the ruleset of the view's model.
+
+    Superusers have all permissions by default.
+    Other users are checked against the rulesets.
+    """
 
     user = request.user
 
     if not user or not user.is_authenticated:
         return False
+
+    # Superuser bypasses ruleset checks.
+    if user.is_superuser:
+        return True
 
     # OPTIONS only returns API metadata.
     if request.method == 'OPTIONS':
@@ -40,7 +48,7 @@ def _check_ruleset_permission(request, view):
         queryset = view.get_queryset()
 
     # No model found -> cannot evaluate the ruleset.
-    # Deny access for everyone.
+    # Deny access for non-superusers.
     if queryset is None:
         return False
 
@@ -57,7 +65,7 @@ class VendorShipmentPermission(BasePermission):
     Permission for Vendor Shipment endpoints.
 
     The ruleset is determined from the model used by the view queryset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):
@@ -69,7 +77,7 @@ class VendorShipmentLinePermission(BasePermission):
     Permission for Vendor Shipment Line endpoints.
 
     The ruleset is determined from the model used by the view queryset.
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
     """
 
     def has_permission(self, request, view):

@@ -25,8 +25,12 @@ def _truthy(value) -> bool:
 def _roles(user, permission: str) -> tuple[bool, bool]:
     """Return (can_customer, can_vendor) for the permission type.
 
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
+    Other users are checked against the rulesets.
     """
+    if user.is_superuser:
+        return True, True
+
     return (
         check_user_role(
             user,
@@ -48,6 +52,10 @@ def filter_company_queryset(user, queryset):
 
     if not user or not user.is_authenticated:
         return queryset.none()
+
+    # Superuser can view everything.
+    if user.is_superuser:
+        return queryset
 
     can_customer, can_vendor = _roles(user, 'view')
 
@@ -71,10 +79,9 @@ class CompanyPermission(BasePermission):
     """
     Permission for Company endpoints.
 
-    Customer and Vendor permissions are controlled independently
-    through the Customer and Vendor rulesets.
-
-    Applies to all users, including superusers.
+    Superusers have all permissions by default.
+    Other users are controlled independently through the
+    Customer and Vendor rulesets.
     """
 
     def has_permission(self, request, view):
@@ -82,6 +89,10 @@ class CompanyPermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         # OPTIONS only returns API metadata.
         if request.method == 'OPTIONS':
@@ -128,6 +139,10 @@ class CompanyPermission(BasePermission):
 
         if not user or not user.is_authenticated:
             return False
+
+        # Superuser bypasses ruleset checks.
+        if user.is_superuser:
+            return True
 
         if request.method == 'OPTIONS':
             return True
