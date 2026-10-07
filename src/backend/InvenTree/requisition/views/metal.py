@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from common.models import DataOutput
 from common.serializers import DataOutputSerializer
 from InvenTree.helpers import str2bool
+from purchase_order.models import PurchaseOrderLine
 from requisition.exports.metal import MetalOrderSheetBuilder
 from requisition.permissions import RequisitionPermission
 
@@ -94,6 +95,7 @@ class MetalOrderRequisitionView(APIView):
     DataOutput record instead of JSON.
     """
 
+    queryset = PurchaseOrderLine.objects.none()
     permission_classes = [RequisitionPermission]
     http_method_names = ['get']
 

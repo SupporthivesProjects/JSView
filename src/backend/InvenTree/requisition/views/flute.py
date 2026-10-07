@@ -105,6 +105,7 @@ def create_lines(flute_entry, raw_lines, request):
 class FluteEntryList(APIView):
     """List and create Flute Entry records."""
 
+    queryset = FluteEntry.objects.none()
     permission_classes = [RequisitionPermission]
 
     def get(self, request, *args, **kwargs):
@@ -180,6 +181,7 @@ class FluteEntryList(APIView):
 class FluteEntryLineDetail(APIView):
     """Retrieve, update, or delete a particular Flute Entry line."""
 
+    queryset = FluteEntryLine.objects.none()
     permission_classes = [RequisitionPermission]
 
     def get_object(self, flute_entry_id, line_id):
@@ -289,6 +291,7 @@ class FluteEntryLineDetail(APIView):
 class FluteEntryDetail(APIView):
     """Retrieve, update, or delete a Flute Entry."""
 
+    queryset = FluteEntry.objects.none()
     permission_classes = [RequisitionPermission]
 
     def get_object(self, pk):

@@ -67,6 +67,7 @@ class StoneOrderListView(APIView):
     following view_type) as a DataOutput record instead of JSON.
     """
 
+    queryset = POCostCardLine.objects.none()
     permission_classes = [RequisitionPermission]
     http_method_names = ['get']
 
