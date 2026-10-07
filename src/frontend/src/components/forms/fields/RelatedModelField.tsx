@@ -359,7 +359,7 @@ function RelatedModelFieldComponent({
       : [];
     setMultiPks(incoming);
 
-    if (!definition.api_url) return;
+    if (!definition.api_url && !definition.singleFetchFunction) return;
     const pk_field = definition.pk_field ?? 'pk';
 
     incoming.forEach((id) => {
@@ -372,11 +372,19 @@ function RelatedModelFieldComponent({
       if (alreadyKnown || requestedMultiIdsRef.current.has(id)) return;
       requestedMultiIdsRef.current.add(id);
 
-      const url = `${definition.api_url}${id}/`;
-      api
-        .get(url, { params: definition?.filters ?? {} })
-        .then((response) => {
-          const instance = response.data;
+      // A field whose options are keyed on something other than the record's
+      // own pk (via `pk_field`) cannot be fetched as `${api_url}${id}/`, so
+      // it may supply its own lookup instead
+      const request = definition.singleFetchFunction
+        ? definition.singleFetchFunction(id)
+        : api
+            .get(`${definition.api_url}${id}/`, {
+              params: definition?.filters ?? {}
+            })
+            .then((response) => response.data);
+
+      request
+        ?.then((instance: any) => {
           if (instance?.[pk_field] === undefined) return;
 
           multiDataRef.current = [
