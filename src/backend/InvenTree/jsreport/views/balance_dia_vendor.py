@@ -4,6 +4,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
+from users.ruleset import RuleSetEnum
 
 from jsreport.exports import JSReportExportMixin
 from jsreport.filters import get_balance_dia_queryset
@@ -27,6 +28,7 @@ class BalanceDiaReportView(JSReportExportMixin, ListAPI):
     serializer_class = BalanceDiaSerializer
     pagination_class = JSReportPagination
     permission_classes = [JSReportPermission]
+    report_role = RuleSetEnum.REPORT_BAL_DIA_VENDOR
 
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = [

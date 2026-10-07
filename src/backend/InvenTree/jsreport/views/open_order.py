@@ -6,6 +6,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
+from users.ruleset import RuleSetEnum
 
 from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
@@ -35,6 +36,7 @@ class OpenOrderReportView(JSReportExportMixin, ListAPI):
     serializer_class = OpenOrderSerializer
     pagination_class = JSReportPagination
     permission_classes = [JSReportPermission]
+    report_role = RuleSetEnum.REPORT_OPEN_ORDER
 
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = [

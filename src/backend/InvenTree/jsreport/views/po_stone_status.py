@@ -8,6 +8,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
+from users.ruleset import RuleSetEnum
 
 from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
@@ -31,6 +32,7 @@ class POStoneStatusReportView(JSReportExportMixin, ListAPI):
     serializer_class = POStoneStatusSerializer
     pagination_class = JSReportPagination
     permission_classes = [JSReportPermission]
+    report_role = RuleSetEnum.REPORT_PO_STONE_STATUS
 
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = [

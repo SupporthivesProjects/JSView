@@ -3,7 +3,8 @@
 from rest_framework.permissions import BasePermission
 
 from users.permissions import check_user_role
-from users.ruleset import RuleSetEnum
+
+# from users.ruleset import RuleSetEnum
 
 
 # HTTP method -> ruleset permission
@@ -21,7 +22,8 @@ class JSReportPermission(BasePermission):
     """
     Permission for JS Report endpoints.
 
-    Controlled by the 'Report -> Reports' ruleset.
+    Controlled by the per-report ruleset set on the view as `report_role`
+    (e.g. RuleSetEnum.REPORT_OPEN_ORDER).
     Superusers have all permissions by default.
     """
 
@@ -44,9 +46,16 @@ class JSReportPermission(BasePermission):
         if permission is None:
             return False
 
+        # Each report view defines its own ruleset; deny if missing.
+        role = getattr(view, 'report_role', None)
+
+        if role is None:
+            return False
+
         return check_user_role(
             user,
-            RuleSetEnum.REPORT,
+            # RuleSetEnum.REPORT,
+            role,
             permission,
             enforce_superuser=True,
         )

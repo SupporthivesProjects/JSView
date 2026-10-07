@@ -4,6 +4,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from purchase_order.models import PurchaseOrderLine
+from users.ruleset import RuleSetEnum
 
 from jsreport.exports import GroupedLayout, JSReportExportMixin, RowBlock
 from jsreport.filters import get_po_status_queryset
@@ -127,6 +128,7 @@ class POStatusReportView(JSReportExportMixin, ListAPI):
     serializer_class = POStatusSerializer
     pagination_class = JSReportPagination
     permission_classes = [JSReportPermission]
+    report_role = RuleSetEnum.REPORT_PO_STATUS
 
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = [

@@ -4,6 +4,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListAPI
 
 from vendor_shipment.models import VendorShipmentLine
+from users.ruleset import RuleSetEnum
 
 from jsreport.exports import JSReportExportMixin
 from jsreport.permissions import JSReportPermission
@@ -26,6 +27,7 @@ class InvoiceValueReportView(JSReportExportMixin, ListAPI):
     serializer_class = InvoiceValueSerializer
     pagination_class = JSReportPagination
     permission_classes = [JSReportPermission]
+    report_role = RuleSetEnum.REPORT_INVOICE_VALUE
 
     filter_backends = SEARCH_ORDER_FILTER
     search_fields = [
