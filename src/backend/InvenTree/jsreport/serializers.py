@@ -378,3 +378,35 @@ class POStatusSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
             'rec_date', 'rec_sets', 'rec_dia_cts', 'rec_col_cts', 'rec_inv',
             'bal_sets', 'bal_dia_cts', 'bal_col_cts',
         ]
+
+
+class BalanceDiaSerializer(DataExportSerializerMixin, InvenTreeModelSerializer):
+    """One row per P.O. line with diamonds issued. Labels match the Balance Dia. export headers."""
+
+    # TODO: confirm columns against the client's Balance Dia. With Vendor sheet
+    vendor = drf_serializers.CharField(
+        source='poid.vendorid.name', read_only=True, default=None, label='Vendor',
+    )
+    pono = drf_serializers.CharField(source='poid.pono', read_only=True, label='P.O. No.')
+    podate = drf_serializers.DateField(
+        source='poid.podate', read_only=True, format=DATE_FMT, label='P.O. Date',
+    )
+    styleno = drf_serializers.CharField(read_only=True, label='Style No.')
+    issue_dia_cts = drf_serializers.SerializerMethodField(label='Issue Dia. Cts.')
+    rec_dia_cts = drf_serializers.SerializerMethodField(label='Rec. Dia. Cts.')
+    bal_dia_cts = drf_serializers.SerializerMethodField(label='Bal. Dia. Cts.')
+    dia_rate = drf_serializers.SerializerMethodField(label='Dia. Rate')
+    bal_dia_amount = drf_serializers.SerializerMethodField(label='Bal. Dia. Amount')
+
+    get_issue_dia_cts = _stone('dia', 'issue_cts')
+    get_rec_dia_cts = _stone('dia', 'rec_cts')
+    get_bal_dia_cts = _stone('dia', 'bal_cts')
+    get_dia_rate = _stone('dia', 'issue_rate')
+    get_bal_dia_amount = _stone('dia', 'bal_amount')
+
+    class Meta:
+        model = PurchaseOrderLine
+        fields = [
+            'vendor', 'pono', 'podate', 'styleno', 'issue_dia_cts', 'rec_dia_cts',
+            'bal_dia_cts', 'dia_rate', 'bal_dia_amount',
+        ]

@@ -18,6 +18,18 @@ OTHER_EXP_PCT = Decimal('1')  # TODO: confirm, inferred from the sample (0.84 = 
 FLUTE_INV_FIELD = 'flute_entry__invoice_no'
 
 
+def _apply_vendor_filter(qs, vendorid):
+    """Filter P.O. line queryset on one vendor id or a list of vendor ids."""
+    if not vendorid:
+        return qs
+
+    if isinstance(vendorid, (list, tuple, set)):
+        ids = [v for v in vendorid if v]
+        return qs.filter(poid__vendorid_id__in=ids) if ids else qs
+
+    return qs.filter(poid__vendorid_id=vendorid)
+
+
 def _get_order_line_queryset(vendorid=None, customerid=None):
     """Base P.O. line queryset annotated with shipqty and balqty.
 
@@ -216,6 +228,7 @@ def get_po_stone_valuation_queryset(date_from=None, date_to=None, vendorid=None)
     """P.O. Stone Valuation rows: one row per P.O. line, filtered on P.O. date.
 
     Issued stones come from flute entries, received stones from vendor shipments.
+    vendorid can be a single id or a list of ids.
     """
     flute = FluteEntryLine.objects.filter(active=True, flute_entry__active=True)
     diamond = flute.filter(stone_type='diamond')
@@ -249,8 +262,9 @@ def get_po_stone_valuation_queryset(date_from=None, date_to=None, vendorid=None)
     if date_to:
         qs = qs.filter(poid__podate__lte=date_to)
 
-    if vendorid:
-        qs = qs.filter(poid__vendorid_id=vendorid)
+    # if vendorid:
+    #     qs = qs.filter(poid__vendorid_id=vendorid)
+    qs = _apply_vendor_filter(qs, vendorid)
 
     return qs.order_by('poid__pono', 'styleno', 'pk')
 
@@ -289,6 +303,21 @@ def get_stone_valuation_figures(line):
     }
     line._stone_figures = figures
     return figures
+
+
+def get_balance_dia_queryset(date_from=None, date_to=None, vendorid=None):
+    """Balance Dia. With Vendor rows: P.O. lines with diamonds issued to the vendor(s).
+
+    Balance = issued diamond cts - received diamond cts (see get_stone_valuation_figures).
+    vendorid can be a single id or a list of ids. Ordered by vendor so the export can
+    write one sheet per vendor.
+    """
+    # TODO: confirm with client whether fully received lines (balance 0) must be hidden
+    qs = get_po_stone_valuation_queryset(date_from, date_to, vendorid).filter(
+        issue_dia_cts__gt=0
+    )
+
+    return qs.order_by('poid__vendorid__name', 'poid__pono', 'styleno', 'pk')
 
 
 def get_po_stone_status_queryset(date_from=None, date_to=None, vendorid=None, customerid=None):
