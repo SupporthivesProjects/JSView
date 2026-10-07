@@ -81,7 +81,7 @@ class RuleSetEnum(StringEnum):
     VENDOR_SHIPMENT = 'vendor_shipment'
     VENDOR_SHIPMENT_LINE = 'vendor_shipment_line'
 
-    REPORT = 'report'  # kept for backward compatibility (hidden from RULESET_CHOICES)
+    REPORT = 'report'  # Reports menu access (per-report rulesets below)
     REPORT_OPEN_ORDER = 'report_open_order'
     REPORT_CLOSE_ORDER = 'report_close_order'
     REPORT_INVOICE_VALUE = 'report_invoice_value'
@@ -165,7 +165,7 @@ RULESET_CHOICES = [
     (RuleSetEnum.VENDOR_SHIPMENT_LINE, _('Vendor Shipment -> Shipment Items')),
 
     # Report (same order as the Reports menu)
-    # (RuleSetEnum.REPORT, _('Report -> Reports')),
+    (RuleSetEnum.REPORT, _('Report -> Reports')),
     (RuleSetEnum.REPORT_OPEN_ORDER, _('Report -> Open Order')),
     (RuleSetEnum.REPORT_CLOSE_ORDER, _('Report -> Close Order')),
     (RuleSetEnum.REPORT_INVOICE_VALUE, _('Report -> Invoice Value P/C')),
@@ -405,7 +405,7 @@ def get_ruleset_models() -> dict:
         RuleSetEnum.VENDOR_SHIPMENT_LINE: ['vendor_shipment_vendorshipmentline'],
 
         # Report (permission-only models in the jsreport app)
-        RuleSetEnum.REPORT: [],  # legacy, hidden from choices
+        RuleSetEnum.REPORT: [],  # Reports menu access, no model
         RuleSetEnum.REPORT_OPEN_ORDER: ['jsreport_openorderreport'],
         RuleSetEnum.REPORT_CLOSE_ORDER: ['jsreport_closeorderreport'],
         RuleSetEnum.REPORT_INVOICE_VALUE: ['jsreport_invoicevaluereport'],

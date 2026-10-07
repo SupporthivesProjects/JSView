@@ -36,10 +36,10 @@ def sync_personal_group(sender, instance, created, update_fields=None, **kwargs)
         group, group_created = Group.objects.get_or_create(name=instance.username)
 
         if group_created:
-            # RuleSet.objects.filter(group=group).update(can_view=True)
-            RuleSet.objects.filter(group=group).exclude(
-                name__startswith='report'
-            ).update(can_view=True)
+            RuleSet.objects.filter(group=group).update(can_view=True)
+            # RuleSet.objects.filter(group=group).exclude(
+            #     name__startswith='report'
+            # ).update(can_view=True)
 
         if not instance.groups.filter(pk=group.pk).exists():
             instance.groups.add(group)
