@@ -50,7 +50,6 @@ def split_permission(app: str, perm: str) -> tuple[str, str]:
     """
     permission_name, *model = perm.split('_')
 
-    # Handle models that have underscores
     if len(model) > 1:  # pragma: no cover
         app += '_' + '_'.join(model[:-1])
         perm = permission_name + '_' + model[-1:][0]
@@ -105,14 +104,12 @@ def check_user_role(
     if user.is_superuser and not enforce_superuser:
         return True
 
-    # First, check the session cache
     cache_key = f'role_{user.pk}_{role}_{permission}'
     result = InvenTree.cache.get_session_cache(cache_key)
 
     if result is not None:
         return result
 
-    # Default for no match
     result = False
 
     groups = groups or prefetch_rule_sets(user)
@@ -120,13 +117,10 @@ def check_user_role(
     for group in groups:
         for rule in group.prefetched_rule_sets:
             if rule.name == role:
-                # Check if the rule has the specified permission
-                # e.g. "view" role maps to "can_view" attribute
                 if getattr(rule, f'can_{permission}', False):
                     result = True
                     break
 
-    # Save result to session-cache
     InvenTree.cache.set_session_cache(cache_key, result)
 
     return result
@@ -167,7 +161,6 @@ def check_user_permission(
 
     table_name = f'{model._meta.app_label}_{model._meta.model_name}'
 
-    # Particular table does not require specific permissions
     if table_name in get_ruleset_ignore():
         return True
 
@@ -184,13 +177,10 @@ def check_user_permission(
             ):
                 return True
 
-    # Check for children models which inherits from parent role
     for parent, child in RULESET_CHANGE_INHERIT:
-        # Get child model name
         parent_child_string = f'{parent}_{child}'
 
         if parent_child_string == table_name:
-            # Check if parent role has change permission
             if check_user_role(
                 user,
                 parent,
@@ -205,11 +195,8 @@ def check_user_permission(
     if enforce_superuser and user.is_superuser:
         return False
 
-    # Generate the permission name based on the model and permission
-    # e.g. 'part.view_part'
     permission_name = f'{model._meta.app_label}.{permission}_{model._meta.model_name}'
 
-    # First, check the session cache
     cache_key = f'permission_{user.pk}_{permission_name}'
     result = InvenTree.cache.get_session_cache(cache_key)
 
@@ -218,12 +205,10 @@ def check_user_permission(
 
     result = user.has_perm(permission_name)
 
-    # If the user does not have permissions (as determined above), check if the model class provides a custom permission check method
-    # This is required for non-standard models (i.e. defined via plugins), which do not have the required ruleset definitions
+    # Plugin models have no ruleset definitions, so allow a custom check on the model
     if not result and hasattr(model, 'check_user_permission'):  # pragma: no cover
         result = model.check_user_permission(user, permission)
 
-    # Save result to session-cache
     InvenTree.cache.set_session_cache(cache_key, result)
 
     return result

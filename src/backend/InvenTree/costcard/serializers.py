@@ -427,7 +427,7 @@ class CostCardSerializer(
                         if char.isdigit()
                     )
                 )
-                return f"{number + 1:05d}"
+                return str(number + 1)
             except (ValueError, TypeError):
                 pass
 
