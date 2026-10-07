@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { openContextModal } from "@mantine/modals";
 
 import { StylishText } from "@lib/components/StylishText";
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles } from "@lib/enums/Roles";
 import type { SettingsStateProps } from "@lib/types/Settings";
 import type { UserStateProps } from "@lib/types/User";
 import {
@@ -47,43 +47,43 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
       name: "properties",
       title: t`Properties`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["properties"]),
     },
     {
       name: "master",
       title: t`Master`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["master"]),
     },
     {
       name: "cards",
       title: t`Cards`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["cards"]),
     },
     {
       name: "purchase",
       title: t`Purchase`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["purchase"]),
     },
     {
       name: "requisition",
       title: t`Requisition`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["requisition"]),
     },
     {
       name: "vendor-shipment",
       title: t`Shipment`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["vendor-shipment"]),
     },
     {
       name: "reports",
       title: t`Reports`,
       icon: <IconAtom2 />,
-      visible: user.isStaff() || user.hasViewRole(UserRoles.part),
+      visible: user.hasViewAnyRole(MenuRoles["reports"]),
     },
     // {
     //   name: "stock",

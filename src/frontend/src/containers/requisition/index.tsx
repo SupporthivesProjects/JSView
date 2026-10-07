@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { IconCoin, IconDiamond, IconScale, IconTag } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -22,32 +22,36 @@ export default function RequisitionTypeIndex() {
     return [
       {
         name: "stone",
+        hidden: !user.hasViewRole(UserRoles.js_purchase_order),
         label: t`Stone`,
         icon: <IconCoin />,
         content: <StoneRequisitionPanel />,
       },
       {
         name: "metal",
+        hidden: !user.hasViewRole(UserRoles.js_purchase_order),
         label: t`Metal`,
         icon: <IconScale />,
         content: <MetalRequisitionPanel />,
       },
       {
         name: "flute-entry",
+        hidden: !user.hasViewRole(UserRoles.requisition_flute_entry),
         label: t`Flute Entry`,
         icon: <IconDiamond />,
         content: <FluteEntryTable />,
       },
       {
         name: "metal-sent",
+        hidden: !user.hasViewRole(UserRoles.requisition_metal_sent),
         label: t`Metal Sent`,
         icon: <IconTag />,
         content: <MetalRequisitionSentTable />,
       },
     ];
-  }, []);
+  }, [user]);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["requisition"])) {
     return <PermissionDenied />;
   }
 

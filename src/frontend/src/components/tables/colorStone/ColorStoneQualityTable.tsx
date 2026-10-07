@@ -99,14 +99,14 @@ export default function ColorStoneQualityTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_color_stone_quality),
           onClick: () => {
             setSelectedStoneQuality(record.pk);
             editStoneQuality.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_color_stone_quality),
           onClick: () => {
             setSelectedStoneQuality(record.pk);
             deleteStoneQuality.open();
@@ -136,7 +136,7 @@ export default function ColorStoneQualityTable() {
         key="add-stone-quality"
         onClick={() => newStoneQuality.open()}
         tooltip={t`Add Stone Quality`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_color_stone_quality)}
       />,
     ];
   }, [user]);

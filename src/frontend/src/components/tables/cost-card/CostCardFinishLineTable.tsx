@@ -92,14 +92,14 @@ export default function CostCardFinishLineTable({
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.cost_card_finish_line),
           onClick: () => {
             setSelectedLine(record.pk);
             editLine.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.cost_card_finish_line),
           onClick: () => {
             setSelectedLine(record.pk);
             deleteLine.open();
@@ -117,7 +117,7 @@ export default function CostCardFinishLineTable({
         key="add-finish-line"
         onClick={() => newLine.open()}
         tooltip={t`Add Finish Type`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.cost_card_finish_line)}
       />,
     ];
   }, [user]);

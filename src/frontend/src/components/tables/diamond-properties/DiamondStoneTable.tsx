@@ -95,14 +95,14 @@ export default function DiamondStoneTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_stone),
           onClick: () => {
             setSelectedDiamondStone(record.pk);
             editDiamondStone.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_stone),
           onClick: () => {
             setSelectedDiamondStone(record.pk);
             deleteDiamondStone.open();
@@ -132,7 +132,7 @@ export default function DiamondStoneTable() {
         key="add-diamond-stone"
         onClick={() => newDiamondStone.open()}
         tooltip={t`Add Diamond Stone`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_stone)}
       />,
     ];
   }, [user]);

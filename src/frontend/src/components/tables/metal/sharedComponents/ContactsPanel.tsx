@@ -147,8 +147,8 @@ export function ContactsPanel({
     },
   });
 
-  const canChange = user.hasChangeRole(UserRoles.part);
-  const canDelete = user.hasDeleteRole(UserRoles.part);
+  const canChange = user.hasChangeRole(UserRoles.company_contact);
+  const canDelete = user.hasDeleteRole(UserRoles.company_contact);
 
   if (!id || query.isLoading) {
     return (

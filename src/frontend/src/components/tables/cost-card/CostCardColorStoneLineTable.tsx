@@ -251,14 +251,14 @@ export default function CostCardColorStoneLineTable({
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.cost_card_color_stone_line),
           onClick: () => {
             setSelectedLine(record.pk);
             editLine.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.cost_card_color_stone_line),
           onClick: () => {
             setSelectedLine(record.pk);
             deleteLine.open();
@@ -276,7 +276,7 @@ export default function CostCardColorStoneLineTable({
         key="add-colorstone-line"
         onClick={() => newLine.open()}
         tooltip={t`Add Color Stone Line`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.cost_card_color_stone_line)}
       />,
     ];
   }, [user]);

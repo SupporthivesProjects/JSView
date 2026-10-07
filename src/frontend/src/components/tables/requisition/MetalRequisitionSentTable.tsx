@@ -137,14 +137,14 @@ export default function MetalRequisitionSentTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.requisition_metal_sent),
           onClick: () => {
             setSelectedMetalRequisitionSent(record.pk);
             editMetalRequisitionSent.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.requisition_metal_sent),
           onClick: () => {
             setSelectedMetalRequisitionSent(record.pk);
             deleteMetalRequisitionSent.open();
@@ -174,7 +174,7 @@ export default function MetalRequisitionSentTable() {
         key="add-metal-type"
         onClick={() => newMetalRequisitionSent.open()}
         tooltip={t`Add Metal Requisition Sent`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.requisition_metal_sent)}
       />,
     ];
   }, [user]);

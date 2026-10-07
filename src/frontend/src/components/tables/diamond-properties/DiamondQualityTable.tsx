@@ -95,14 +95,14 @@ export default function DiamondQualityTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_quality),
           onClick: () => {
             setSelectedDiamondQuality(record.pk);
             editDiamondQuality.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_quality),
           onClick: () => {
             setSelectedDiamondQuality(record.pk);
             deleteDiamondQuality.open();
@@ -132,7 +132,7 @@ export default function DiamondQualityTable() {
         key="add-diamond-quality"
         onClick={() => newDiamondQuality.open()}
         tooltip={t`Add Diamond Quality`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_quality)}
       />,
     ];
   }, [user]);

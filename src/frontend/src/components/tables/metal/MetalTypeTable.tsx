@@ -96,14 +96,14 @@ export default function MetalTypeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_metal_type),
           onClick: () => {
             setSelectedMetalType(record.pk);
             editMetalType.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_metal_type),
           onClick: () => {
             setSelectedMetalType(record.pk);
             deleteMetalType.open();
@@ -133,7 +133,7 @@ export default function MetalTypeTable() {
         key="add-metal-type"
         onClick={() => newMetalType.open()}
         tooltip={t`Add Metal Type`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_metal_type)}
       />,
     ];
   }, [user]);

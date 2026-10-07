@@ -87,14 +87,14 @@ export default function FindingTypeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_finding_type),
           onClick: () => {
             setSelectedFindingQuery(record.pk);
             editFindingType.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_finding_type),
           onClick: () => {
             setSelectedFindingQuery(record.pk);
             deleteFindingType.open();
@@ -124,7 +124,7 @@ export default function FindingTypeTable() {
         key="add-finding-type"
         onClick={() => newFindingType.open()}
         tooltip={t`Add Finding Type`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_finding_type)}
       />,
     ];
   }, [user]);

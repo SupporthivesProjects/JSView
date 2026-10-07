@@ -319,14 +319,14 @@ export default function DiamondRateTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_stone_rate),
           onClick: () => {
             setSelectedDiamondRate(record.pk);
             editDiamondRate.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_stone_rate),
           onClick: () => {
             setSelectedDiamondRate(record.pk);
             deleteDiamondRate.open();
@@ -356,7 +356,7 @@ export default function DiamondRateTable() {
         key="add-diamond-rate"
         onClick={() => newDiamondRate.open()}
         tooltip={t`Add Diamond Rate`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_stone_rate)}
       />,
     ];
   }, [user]);

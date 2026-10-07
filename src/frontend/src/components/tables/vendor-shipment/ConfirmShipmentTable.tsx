@@ -5,8 +5,10 @@ import { useMutation } from "@tanstack/react-query";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { ApiEndpoints } from "@lib/enums/ApiEndpoints";
+import { UserRoles } from "@lib/enums/Roles";
 import { apiUrl } from "@lib/functions/Api";
 import { useApi } from "@context/ApiContext";
+import { useUserState } from "@store/UserState";
 
 import "./confirmShipment.css";
 
@@ -100,6 +102,7 @@ export default function ConfirmShipmentTable({
   onUpdated,
 }: Readonly<{ lines: ConfirmShipmentLine[]; onUpdated?: () => void }>) {
   const api = useApi();
+  const user = useUserState();
   const columns = useMemo(() => splitColumns(), []);
 
   // Line ids ticked for confirmation, seeded from the saved state
@@ -224,18 +227,20 @@ export default function ConfirmShipmentTable({
             </Fragment>
           ))}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={5 + columns.length}>
-              <Button
-                onClick={() => updateConfirmation.mutate()}
-                loading={updateConfirmation.isPending}
-              >
-                {t`Update Confirmation`}
-              </Button>
-            </td>
-          </tr>
-        </tfoot>
+        {user.hasChangeRole(UserRoles.vendor_shipment) && (
+          <tfoot>
+            <tr>
+              <td colSpan={5 + columns.length}>
+                <Button
+                  onClick={() => updateConfirmation.mutate()}
+                  loading={updateConfirmation.isPending}
+                >
+                  {t`Update Confirmation`}
+                </Button>
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );

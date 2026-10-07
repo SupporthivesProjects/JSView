@@ -172,7 +172,7 @@ export default function StampTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_stamp),
           onClick: () => {
             setChangeImage(false);
             setPreviewImage(undefined);
@@ -181,7 +181,7 @@ export default function StampTable() {
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_stamp),
           onClick: () => {
             setSelectedStamp(record.pk);
             deleteStamp.open();
@@ -211,7 +211,7 @@ export default function StampTable() {
         key="add-stamp"
         onClick={() => newStamp.open()}
         tooltip={t`Add Stamp`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_stamp)}
       />,
     ];
   }, [user]);

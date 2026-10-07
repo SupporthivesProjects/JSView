@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StylishText } from "@lib/components/StylishText";
 import { ModelType } from "@lib/enums/ModelType";
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles } from "@lib/enums/Roles";
 import { AboutLinks } from "@config/links";
 import useInstanceName from "../../hooks/UseInstanceName";
 import * as classes from "../../styles/main.css";
@@ -68,49 +68,49 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
       {
         id: "properties",
         title: t`Properties`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["properties"]),
         link: "properties/",
         icon: "list_details",
       },
       {
         id: "master",
         title: t`Master`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["master"]),
         link: "master/",
         icon: "category",
       },
       {
         id: "cards",
         title: t`Cards`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["cards"]),
         link: "cards/",
         icon: "component",
       },
       {
         id: "purchase",
         title: t`Purchase`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["purchase"]),
         link: "purchase/",
         icon: "purchase_orders",
       },
       {
         id: "requisition",
         title: t`Requisition`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["requisition"]),
         link: "requisition/",
         icon: "stocktake",
       },
       {
         id: "vendor-shipment",
         title: t`Shipment`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["vendor-shipment"]),
         link: "vendor-shipment/",
         icon: "shipment",
       },
       {
         id: "reports",
         title: t`Reports`,
-        hidden: !user.isStaff() && !user.hasViewPermission(ModelType.part),
+        hidden: !user.hasViewAnyRole(MenuRoles["reports"]),
         link: "reports/",
         icon: "chart_bar",
       },

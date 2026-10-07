@@ -174,7 +174,7 @@ export default function PurchaseOrderTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.js_purchase_order),
           onClick: () => {
             setSelectedPurchaseOrder(record.pk);
             setSelectedLines(record.lines ?? []);
@@ -182,7 +182,7 @@ export default function PurchaseOrderTable() {
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.js_purchase_order),
           onClick: () => {
             setSelectedPurchaseOrder(record.pk);
             deletePurchaseOrder.open();
@@ -223,7 +223,7 @@ export default function PurchaseOrderTable() {
         key="add-purchase-order"
         onClick={() => newPurchaseOrder.open()}
         tooltip={t`Add Purchase Order`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.js_purchase_order)}
       />,
     ];
   }, [user, newPurchaseOrder.open, clearColumnFiltersAction]);

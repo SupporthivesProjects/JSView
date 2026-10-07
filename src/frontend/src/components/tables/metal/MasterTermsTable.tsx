@@ -115,14 +115,14 @@ export default function MasterTermsTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_terms),
           onClick: () => {
             setSelectedTerms(record.pk);
             editMasterTerms.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_terms),
           onClick: () => {
             setSelectedTerms(record.pk);
             deleteMasterTerms.open();
@@ -152,7 +152,7 @@ export default function MasterTermsTable() {
         key="add-master-terms"
         onClick={() => newMasterTerms.open()}
         tooltip={t`Add Master Terms`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_terms)}
       />,
     ];
   }, [user]);

@@ -95,14 +95,14 @@ export default function DiamondCutTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_cut),
           onClick: () => {
             setSelectedDiamondCut(record.pk);
             editDiamondCut.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_cut),
           onClick: () => {
             setSelectedDiamondCut(record.pk);
             deleteDiamondCut.open();
@@ -132,7 +132,7 @@ export default function DiamondCutTable() {
         key="add-diamond-cut"
         onClick={() => newDiamondCut.open()}
         tooltip={t`Add Diamond Cut`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_cut)}
       />,
     ];
   }, [user]);

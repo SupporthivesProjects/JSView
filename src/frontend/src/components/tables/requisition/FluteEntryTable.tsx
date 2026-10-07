@@ -171,7 +171,7 @@ export default function FluteEntryTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.requisition_flute_entry),
           onClick: () => {
             setSelectedFluteEntry(record.pk);
             setSelectedLines(record.lines ?? []);
@@ -179,7 +179,7 @@ export default function FluteEntryTable() {
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.requisition_flute_entry),
           onClick: () => {
             setSelectedFluteEntry(record.pk);
             deleteFluteEntry.open();
@@ -197,7 +197,7 @@ export default function FluteEntryTable() {
         key="add-flute-entry"
         onClick={() => newFluteEntry.open()}
         tooltip={t`Add Flute Entry`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.requisition_flute_entry)}
       />,
     ];
   }, [user, newFluteEntry.open]);

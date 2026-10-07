@@ -48,6 +48,7 @@ export interface UserStateProps {
   hasChangeRole: (role: UserRoles) => boolean;
   hasAddRole: (role: UserRoles) => boolean;
   hasViewRole: (role: UserRoles) => boolean;
+  hasViewAnyRole: (roles: UserRoles[]) => boolean;
   checkUserPermission: (
     model: ModelType,
     permission: UserPermissions

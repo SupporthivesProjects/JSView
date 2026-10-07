@@ -126,14 +126,14 @@ export default function FindingItemTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_finding_item),
           onClick: () => {
             setSelectedFindingItem(record.pk);
             editFindingItem.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_finding_item),
           onClick: () => {
             setSelectedFindingItem(record.pk);
             deleteFindingItem.open();
@@ -163,7 +163,7 @@ export default function FindingItemTable() {
         key="add-finding-item"
         onClick={() => newFindingItem.open()}
         tooltip={t`Add Finding Item`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_finding_item)}
       />,
     ];
   }, [user]);

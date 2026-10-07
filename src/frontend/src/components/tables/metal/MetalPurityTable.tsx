@@ -125,14 +125,14 @@ export default function MetalPurityTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_metal_purity),
           onClick: () => {
             setSelectedMetalPurity(record.pk);
             editMetalPurity.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_metal_purity),
           onClick: () => {
             setSelectedMetalPurity(record.pk);
             deleteMetalPurity.open();
@@ -162,7 +162,7 @@ export default function MetalPurityTable() {
         key="add-metal-purity"
         onClick={() => newMetalPurity.open()}
         tooltip={t`Add Metal Purity`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_metal_purity)}
       />,
     ];
   }, [user]);

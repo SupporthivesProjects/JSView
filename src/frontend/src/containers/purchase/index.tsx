@@ -22,7 +22,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -38,21 +38,23 @@ export default function MetalTypeIndex() {
     return [
       {
         name: "purchase-request",
+        hidden: !user.hasViewRole(UserRoles.js_purchase_request),
         label: t`Purchase Request`,
         icon: <IconCoin />,
         content: <PurchaseRequestTable />,
       },
       {
         name: "purchase-order",
+        hidden: !user.hasViewRole(UserRoles.js_purchase_order),
         label: t`Purchase Order`,
         icon: <IconScale />,
         content: <PurchaseOrderTable />,
       },
       
     ];
-  }, []);
+  }, [user]);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["purchase"])) {
     return <PermissionDenied />;
   }
 

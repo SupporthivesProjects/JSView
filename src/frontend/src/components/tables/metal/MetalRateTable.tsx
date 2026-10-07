@@ -137,14 +137,14 @@ export default function MetalRateTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_metal_rate),
           onClick: () => {
             setSelectedMetalRate(record.pk);
             editMetalRate.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_metal_rate),
           onClick: () => {
             setSelectedMetalRate(record.pk);
             deleteMetalRate.open();
@@ -174,7 +174,7 @@ export default function MetalRateTable() {
         key="add-metal-rate"
         onClick={() => newMetalRate.open()}
         tooltip={t`Add Metal Rate`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_metal_rate)}
       />,
     ];
   }, [user]);

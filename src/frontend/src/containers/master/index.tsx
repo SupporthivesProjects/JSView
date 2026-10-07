@@ -22,7 +22,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -54,116 +54,134 @@ export default function MetalTypeIndex() {
     return [
       {
         name: "metal-types",
+        hidden: !user.hasViewRole(UserRoles.master_metal_type),
         label: t`Metal Types`,
         icon: <IconCoin />,
         content: <MetalTypeTable />,
       },
       {
         name: "metal-purity",
+        hidden: !user.hasViewRole(UserRoles.master_metal_purity),
         label: t`Metal Purity`,
         icon: <IconScale />,
         content: <MetalPurityTable />,
       },
       {
         name: "jewellery-category",
+        hidden: !user.hasViewRole(UserRoles.master_jewelry_category),
         label: t`Jewel Category`,
         icon: <IconDiamond />,
         content: <JewelleryCategoryTable />,
       },
       {
         name: "jewellery-sub-category",
+        hidden: !user.hasViewRole(UserRoles.master_jewelry_sub_category),
         label: t`Jewel Sub Category`,
         icon: <IconTag />,
         content: <JewellerySubCategoryTable />,
       },
       {
         name: "settings",
+        hidden: !user.hasViewRole(UserRoles.master_setting),
         label: t`Settings`,
         icon: <IconSettings />,
         content: <MasterSettingsTable />,
       },
       {
         name: "labour-setting",
+        hidden: !user.hasViewRole(UserRoles.master_labour_setting),
         label: t`Labour Settings`,
         icon: <IconHammer />,
         content: <LabourSettingTable />,
       },
       {
         name: "metal-rate",
+        hidden: !user.hasViewRole(UserRoles.master_metal_rate),
         label: t`Metal Rate`,
         icon: <IconTrendingUp />,
         content: <MetalRateTable />,
       },
       {
         name: "finding-type",
+        hidden: !user.hasViewRole(UserRoles.master_finding_type),
         label: t`Finding Type`,
         icon: <IconComponents />,
         content: <FindingTypeTable />,
       },
       {
         name: "finding-item",
+        hidden: !user.hasViewRole(UserRoles.master_finding_item),
         label: t`Finding Item`,
         icon: <IconTag />,
         content: <FindingItemTable />,
       },
       {
         name: "master-customer",
+        hidden: !user.hasViewRole(UserRoles.customer),
         label: t`Customer`,
         icon: <IconUsers />,
         content: <MasterCustomerTable />,
       },
       {
         name: "master-vendor",
+        hidden: !user.hasViewRole(UserRoles.vendor),
         label: t`Vendor`,
         icon: <IconBuildingStore />,
         content: <MasterVendorTable />,
       },
       {
         name: "finish-type",
+        hidden: !user.hasViewRole(UserRoles.master_finish_type),
         label: t`Finish Type`,
         icon: <IconBrush />,
         content: <FinishTypeTable />,
       },
       {
         name: "duty-list",
+        hidden: !user.hasViewRole(UserRoles.master_duty),
         label: t`Duty`,
         icon: <IconReceiptTax />,
         content: <ListDutyTable />,
       },
       {
         name: "stamp",
+        hidden: !user.hasViewRole(UserRoles.master_stamp),
         label: t`Stamp`,
         icon: <IconCertificate />,
         content: <StampTable />,
       },
       {
         name: "master-executive",
+        hidden: !user.hasViewRole(UserRoles.master_ac_executive),
         label: t`A/C Executive`,
         icon: <IconUserCheck />,
         content: <MasterExecutiveTable />,
       },
       {
         name: "master-terms",
+        hidden: !user.hasViewRole(UserRoles.master_terms),
         label: t`Terms`,
         icon: <IconFileDescription />,
         content: <MasterTermsTable />,
       },
       {
         name: "courier-service",
+        hidden: !user.hasViewRole(UserRoles.master_courier_service),
         label: t`Courier Service`,
         icon: <IconTruckDelivery />,
         content: <CourierServiceTable />,
       },
       {
         name: "stone-place",
+        hidden: !user.hasViewRole(UserRoles.cost_card_stone_place),
         label: t`Stone Place`,
         icon: <IconTruckDelivery />,
         content: <StonePlaceTable />,
       },
     ];
-  }, []);
+  }, [user]);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["master"])) {
     return <PermissionDenied />;
   }
 

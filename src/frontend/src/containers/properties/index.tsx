@@ -1,9 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Stack, Tabs } from "@mantine/core";
 import { IconDiamond, IconPalette } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
 import { PanelGroup } from "@components/shared/panels/PanelGroup";
@@ -25,8 +25,19 @@ export default function PropertiesIndex({
   const diamondPanels = useDiamondPropertyPanels();
   const colorStonePanels = useColorStonePropertyPanels();
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["properties"])) {
     return <PermissionDenied />;
+  }
+
+  const canViewDiamond = diamondPanels.some((panel) => !panel.hidden);
+  const canViewColorStone = colorStonePanels.some((panel) => !panel.hidden);
+
+  // Send the user to the other property set if they cannot view this one
+  if (section === "diamond" && !canViewDiamond) {
+    return <Navigate to="/properties/color-stone/" replace />;
+  }
+  if (section === "color-stone" && !canViewColorStone) {
+    return <Navigate to="/properties/diamond/" replace />;
   }
 
   const isDiamond = section === "diamond";
@@ -39,12 +50,19 @@ export default function PropertiesIndex({
         onChange={(value) => value && navigate(`/properties/${value}/`)}
       >
         <Tabs.List>
-          <Tabs.Tab value="diamond" leftSection={<IconDiamond size={16} />}>
-            {t`Diamond Properties`}
-          </Tabs.Tab>
-          <Tabs.Tab value="color-stone" leftSection={<IconPalette size={16} />}>
-            {t`Color Stone Properties`}
-          </Tabs.Tab>
+          {canViewDiamond && (
+            <Tabs.Tab value="diamond" leftSection={<IconDiamond size={16} />}>
+              {t`Diamond Properties`}
+            </Tabs.Tab>
+          )}
+          {canViewColorStone && (
+            <Tabs.Tab
+              value="color-stone"
+              leftSection={<IconPalette size={16} />}
+            >
+              {t`Color Stone Properties`}
+            </Tabs.Tab>
+          )}
         </Tabs.List>
       </Tabs>
       <PanelGroup

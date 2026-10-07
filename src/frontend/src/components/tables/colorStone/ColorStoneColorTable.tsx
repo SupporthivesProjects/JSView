@@ -99,14 +99,14 @@ export default function ColorStoneColorTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_color_stone_color),
           onClick: () => {
             setSelectedStoneColor(record.pk);
             editStoneColor.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_color_stone_color),
           onClick: () => {
             setSelectedStoneColor(record.pk);
             deleteStoneColor.open();
@@ -136,7 +136,7 @@ export default function ColorStoneColorTable() {
         key="add-stone-color"
         onClick={() => newStoneColor.open()}
         tooltip={t`Add Stone Color`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_color_stone_color)}
       />,
     ];
   }, [user]);

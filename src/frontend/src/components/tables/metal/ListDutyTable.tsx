@@ -125,14 +125,14 @@ export default function ListDutyTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_duty),
           onClick: () => {
             setSelectedListDuty(record.pk);
             editListDuty.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_duty),
           onClick: () => {
             setSelectedListDuty(record.pk);
             deleteListDuty.open();
@@ -162,7 +162,7 @@ export default function ListDutyTable() {
         key="add-metal-purity"
         onClick={() => newListDuty.open()}
         tooltip={t`Add Metal Purity`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_duty)}
       />,
     ];
   }, [user]);

@@ -87,14 +87,14 @@ export default function JewelleryCategoryTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_jewelry_category),
           onClick: () => {
             setSelectedJewelleryCategory(record.pk);
             editJewelleryCategory.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_jewelry_category),
           onClick: () => {
             setSelectedJewelleryCategory(record.pk);
             deleteJewelleryCategory.open();
@@ -124,7 +124,7 @@ export default function JewelleryCategoryTable() {
         key="add-jewellery-category"
         onClick={() => newJewelleryCategory.open()}
         tooltip={t`Add Jewellery Category`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_jewelry_category)}
       />,
     ];
   }, [user]);

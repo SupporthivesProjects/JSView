@@ -232,28 +232,28 @@ export default function MasterVendorTable() {
     (record: any): RowAction[] => {
       return [
         RowContactAction({
-          hidden: !user.hasViewRole(UserRoles.part),
+          hidden: !user.hasViewRole(UserRoles.company_contact),
           onClick: () => {
             setSelectedVendor(record.pk);
             contactMasterVendor.open();
           },
         }),
         RowAddContactAction({
-          hidden: !user.hasAddRole(UserRoles.part),
+          hidden: !user.hasAddRole(UserRoles.company_contact),
           onClick: () => {
             setSelectedVendor(record.pk);
             addContactMasterVendor.open();
           },
         }),
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.vendor),
           onClick: () => {
             setSelectedVendor(record.pk);
             editMasterVendor.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.vendor),
           onClick: () => {
             setSelectedVendor(record.pk);
             deleteMasterVendor.open();
@@ -283,7 +283,7 @@ export default function MasterVendorTable() {
         key="add-master-vendor"
         onClick={() => newMasterVendor.open()}
         tooltip={t`Add Master Vendor`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.vendor)}
       />,
     ];
   }, [user]);

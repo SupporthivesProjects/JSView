@@ -8,7 +8,7 @@ import {
   IconScale,
 } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -24,6 +24,7 @@ export default function CostCardIndex() {
     return [
       {
         name: "cost-card",
+        hidden: !user.hasViewRole(UserRoles.cost_card),
         label: t`Cost Card`,
         icon: <IconCoin />,
         content: <CostCardTable />,
@@ -35,9 +36,9 @@ export default function CostCardIndex() {
     //     content: <MetalPurityTable />,
     //   },
     ];
-  }, []);
+  }, [user]);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["cards"])) {
     return <PermissionDenied />;
   }
 

@@ -87,14 +87,14 @@ export default function FinishTypeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_finish_type),
           onClick: () => {
             setSelectedFinishQuery(record.pk);
             editFinishType.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_finish_type),
           onClick: () => {
             setSelectedFinishQuery(record.pk);
             deleteFinishType.open();
@@ -124,7 +124,7 @@ export default function FinishTypeTable() {
         key="add-finish-type"
         onClick={() => newFinishType.open()}
         tooltip={t`Add Finish Type`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_finish_type)}
       />,
     ];
   }, [user]);
