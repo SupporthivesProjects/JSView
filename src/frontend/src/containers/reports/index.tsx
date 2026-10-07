@@ -28,6 +28,7 @@ import POStoneValuationReport from "@components/tables/reports/POStoneValuationR
 import POStoneStatusReport from "@components/tables/reports/POStoneStatusReport";
 import POStatusReport from "@components/tables/reports/POStatusReport";
 import CostCardExportReport from "@components/tables/reports/CostCardExportReport";
+import BalanceDiaVendorReport from "@components/tables/reports/BalanceDiaVendorReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -80,7 +81,7 @@ export default function ReportsIndex() {
         name: "balance-vendor",
         label: t`Balance Dia. With Vendor`,
         icon: <IconScale />,
-        content: "",
+        content: <BalanceDiaVendorReport />,
       },
       {
         name: "cost-card-export",
