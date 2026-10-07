@@ -92,7 +92,7 @@ export default function ReportsIndex() {
     ];
   }, []);
 
-  if (!user.hasViewRole(UserRoles.part)) {
+  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
     return <PermissionDenied />;
   }
 

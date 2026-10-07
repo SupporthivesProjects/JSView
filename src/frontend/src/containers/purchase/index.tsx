@@ -52,7 +52,7 @@ export default function MetalTypeIndex() {
     ];
   }, []);
 
-  if (!user.hasViewRole(UserRoles.part)) {
+  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
     return <PermissionDenied />;
   }
 

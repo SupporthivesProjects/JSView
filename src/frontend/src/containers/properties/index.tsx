@@ -25,7 +25,7 @@ export default function PropertiesIndex({
   const diamondPanels = useDiamondPropertyPanels();
   const colorStonePanels = useColorStonePropertyPanels();
 
-  if (!user.hasViewRole(UserRoles.part)) {
+  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
     return <PermissionDenied />;
   }
 
