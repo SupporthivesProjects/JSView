@@ -37,7 +37,7 @@ export default function CostCardIndex() {
     ];
   }, []);
 
-  if (!user.hasViewRole(UserRoles.part)) {
+  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
     return <PermissionDenied />;
   }
 
