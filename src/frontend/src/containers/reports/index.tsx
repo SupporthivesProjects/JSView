@@ -29,6 +29,7 @@ import POStoneStatusReport from "@components/tables/reports/POStoneStatusReport"
 import POStatusReport from "@components/tables/reports/POStatusReport";
 import CostCardExportReport from "@components/tables/reports/CostCardExportReport";
 import BalanceDiaVendorReport from "@components/tables/reports/BalanceDiaVendorReport";
+import PicturePresentationReport from "@components/tables/reports/PicturePresentationReport";
 
 export default function ReportsIndex() {
   const user = useUserState();
@@ -57,7 +58,7 @@ export default function ReportsIndex() {
         name: "picture-presentation",
         label: t`Picture Presentation`,
         icon: <IconPhoto />,
-        content: "",
+        content: <PicturePresentationReport />,
       },
       {
         name: "po-stone-valuation",

@@ -18,6 +18,7 @@ import type {
   StatusCodeInterface,
   StatusCodeListInterface,
 } from "../shared/render/StatusRenderer";
+import { api } from "@app-lib/api/client";
 import { useApi } from "@context/ApiContext";
 import { useGlobalStatusState } from "@store/GlobalStatusState";
 import { useUserState } from "@store/UserState";
@@ -3139,6 +3140,16 @@ export function picturePresentationFields(
             api_url: apiUrl(ApiEndpoints.purchase_api_line),
             filters: { poid: poPk, active: true },
             pk_field: "costcardid",
+            // Styles already on the form are cost card PKs, not line PKs, so
+            // they are resolved against the cost card itself
+            singleFetchFunction: (pk: any) =>
+              api
+                .get(apiUrl(ApiEndpoints.cost_card, pk))
+                .then((response) => ({
+                  ...response.data,
+                  costcardid: response.data?.pk,
+                }))
+                .catch(() => null),
           }
         : {
             api_url: apiUrl(ApiEndpoints.cost_card),
