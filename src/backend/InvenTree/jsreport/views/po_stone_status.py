@@ -80,6 +80,6 @@ class POStoneStatusReportView(JSReportExportMixin, ListAPI):
 
         if params.get('vendor'):
             vendor = line.poid.vendorid
-            meta.append(('Vendor', vendor.name if vendor else ''))
+            meta.append(('Vendor', vendor.code if vendor else ''))
 
         return meta

@@ -58,4 +58,4 @@ class BalanceDiaReportView(JSReportExportMixin, ListAPI):
     def get_export_sheet_title(self, instance):
         """One sheet per vendor."""
         vendor = instance.poid.vendorid
-        return vendor.name if vendor else None
+        return vendor.code if vendor else None

@@ -56,6 +56,6 @@ class InvoiceValueReportView(JSReportExportMixin, ListAPI):
 
         return [
             ('Invoice No.', shipment.vsno),
-            ('Vendor', vendor.name if vendor else ''),
+            ('Vendor', vendor.code if vendor else ''),
             ('Invoice Date', shipment.vsdate.strftime(DATE_FMT) if shipment.vsdate else ''),
         ]

@@ -121,10 +121,10 @@ class CostCardExportSerializer(drf_serializers.ModelSerializer):
         ]
 
     def get_customer(self, obj):
-        return obj.customer.name if obj.customer else ''
+        return obj.customer.code if obj.customer else ''
 
     def get_vendor(self, obj):
-        return obj.vendor.name if obj.vendor else ''
+        return obj.vendor.code if obj.vendor else ''
 
     def get_v_style(self, obj):
         return obj.vendor_style_no or ''
