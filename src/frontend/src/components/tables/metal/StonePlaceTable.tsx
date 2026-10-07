@@ -91,14 +91,14 @@ export default function StonePlaceTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.cost_card_stone_place),
           onClick: () => {
             setSelectedStonePlace(record.pk);
             editStonePlace.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.cost_card_stone_place),
           onClick: () => {
             setSelectedStonePlace(record.pk);
             deleteStonePlace.open();
@@ -128,7 +128,7 @@ export default function StonePlaceTable() {
         key="add-stone-place"
         onClick={() => newStonePlace.open()}
         tooltip={t`Add Stone Placement`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.cost_card_stone_place)}
       />,
     ];
   }, [user]);

@@ -100,14 +100,14 @@ export default function DiamondSizeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_size),
           onClick: () => {
             setSelectedDiamondSize(record.pk);
             editDiamondSize.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_size),
           onClick: () => {
             setSelectedDiamondSize(record.pk);
             deleteDiamondSize.open();
@@ -137,7 +137,7 @@ export default function DiamondSizeTable() {
         key="add-diamond-size"
         onClick={() => newDiamondSize.open()}
         tooltip={t`Add Diamond Size`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_size)}
       />,
     ];
   }, [user]);

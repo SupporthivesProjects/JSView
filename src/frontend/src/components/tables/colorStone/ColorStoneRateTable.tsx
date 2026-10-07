@@ -318,14 +318,14 @@ export default function ColorStoneRateTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_color_stone_rate),
           onClick: () => {
             setSelectedStoneRate(record.pk);
             editStoneRate.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_color_stone_rate),
           onClick: () => {
             setSelectedStoneRate(record.pk);
             deleteStoneRate.open();
@@ -355,7 +355,7 @@ export default function ColorStoneRateTable() {
         key="add-stone-rate"
         onClick={() => newStoneRate.open()}
         tooltip={t`Add Stone Rate`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_color_stone_rate)}
       />,
     ];
   }, [user]);

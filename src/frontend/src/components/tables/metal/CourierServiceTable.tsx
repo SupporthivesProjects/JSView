@@ -110,14 +110,14 @@ export default function CourierServiceTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_courier_service),
           onClick: () => {
             setSelectedCourierService(record.pk);
             editCourierService.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_courier_service),
           onClick: () => {
             setSelectedCourierService(record.pk);
             deleteCourierService.open();
@@ -147,7 +147,7 @@ export default function CourierServiceTable() {
         key="add-courier-service"
         onClick={() => newCourierService.open()}
         tooltip={t`Add Courier Service`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_courier_service)}
       />,
     ];
   }, [user]);

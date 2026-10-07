@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { IconCoin, IconDiamond, IconScale, IconTag } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles, UserRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -20,20 +20,22 @@ export default function VendorShipmentIndex() {
     return [
       {
         name: "shipment",
+        hidden: !user.hasViewRole(UserRoles.vendor_shipment),
         label: t`Shipment`,
         icon: <IconCoin />,
         content: <VendorShipmentTable />,
       },
       {
         name: "confirm-shipment",
+        hidden: !user.hasViewRole(UserRoles.vendor_shipment),
         label: t`Confirm Shipment`,
         icon: <IconScale />,
         content: <ConfirmShipmentPanel />,
       },
     ];
-  }, []);
+  }, [user]);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["vendor-shipment"])) {
     return <PermissionDenied />;
   }
 

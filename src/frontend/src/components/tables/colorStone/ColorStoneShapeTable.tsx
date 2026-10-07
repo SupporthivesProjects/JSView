@@ -99,14 +99,14 @@ export default function ColorStoneShapeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_color_stone_shape),
           onClick: () => {
             setSelectedStoneShape(record.pk);
             editStoneShape.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_color_stone_shape),
           onClick: () => {
             setSelectedStoneShape(record.pk);
             deleteStoneShape.open();
@@ -136,7 +136,7 @@ export default function ColorStoneShapeTable() {
         key="add-stone-shape"
         onClick={() => newStoneShape.open()}
         tooltip={t`Add Stone Shape`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_color_stone_shape)}
       />,
     ];
   }, [user]);

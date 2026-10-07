@@ -105,14 +105,14 @@ export default function ColorStoneSizeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_color_stone_size),
           onClick: () => {
             setSelectedStoneSize(record.pk);
             editStoneSize.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_color_stone_size),
           onClick: () => {
             setSelectedStoneSize(record.pk);
             deleteStoneSize.open();
@@ -142,7 +142,7 @@ export default function ColorStoneSizeTable() {
         key="add-stone-size"
         onClick={() => newStoneSize.open()}
         tooltip={t`Add Stone Size`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_color_stone_size)}
       />,
     ];
   }, [user]);

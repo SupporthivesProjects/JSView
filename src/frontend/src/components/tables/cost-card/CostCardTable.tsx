@@ -1293,7 +1293,7 @@ export default function CostCardTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.cost_card),
           onClick: () => {
             navigate(`/cards/cost-card/${record.pk}`);
           },
@@ -1301,7 +1301,7 @@ export default function CostCardTable() {
         // Asks for confirmation, then opens the create view pre-filled from
         // this card - nothing is created until the General tab is saved
         RowDuplicateAction({
-          hidden: !user.hasAddRole(UserRoles.part),
+          hidden: !user.hasAddRole(UserRoles.cost_card),
           onClick: () => {
             modals.openConfirmModal({
               title: (
@@ -1323,7 +1323,7 @@ export default function CostCardTable() {
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.cost_card),
           onClick: () => {
             setSelectedStamp(record.pk);
             deleteStamp.open();
@@ -1363,7 +1363,7 @@ export default function CostCardTable() {
         key="add-stamp"
         onClick={() => navigate("/cards/cost-card/new")}
         tooltip={t`Add Stamp`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.cost_card)}
       />,
       <Checkbox
         key="select-all"

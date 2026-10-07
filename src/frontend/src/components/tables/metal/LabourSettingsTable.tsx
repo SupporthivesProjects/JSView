@@ -113,14 +113,14 @@ export default function LabourSettingTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_labour_setting),
           onClick: () => {
             setSelectedLabourSetting(record.pk);
             editLabourSetting.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_labour_setting),
           onClick: () => {
             setSelectedLabourSetting(record.pk);
             deleteLabourSetting.open();
@@ -150,7 +150,7 @@ export default function LabourSettingTable() {
         key="add-labour-setting"
         onClick={() => newLabourSettings.open()}
         tooltip={t`Add Labour Setting`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_labour_setting)}
       />,
     ];
   }, [user]);

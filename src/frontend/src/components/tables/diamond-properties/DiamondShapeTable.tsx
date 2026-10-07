@@ -95,14 +95,14 @@ export default function DiamondShapeTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_shape),
           onClick: () => {
             setSelectedDiamondShape(record.pk);
             editDiamondShape.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_shape),
           onClick: () => {
             setSelectedDiamondShape(record.pk);
             deleteDiamondShape.open();
@@ -132,7 +132,7 @@ export default function DiamondShapeTable() {
         key="add-diamond-shape"
         onClick={() => newDiamondShape.open()}
         tooltip={t`Add Diamond Shape`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_shape)}
       />,
     ];
   }, [user]);

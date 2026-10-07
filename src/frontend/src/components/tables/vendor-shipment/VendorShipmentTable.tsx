@@ -205,7 +205,7 @@ export default function VendorShipmentTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.vendor_shipment),
           onClick: () => {
             setSelectedShipment(record.pk);
             setSelectedLines(record.lines ?? []);
@@ -213,7 +213,7 @@ export default function VendorShipmentTable() {
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.vendor_shipment),
           onClick: () => {
             setSelectedShipment(record.pk);
             deleteShipment.open();
@@ -253,7 +253,7 @@ export default function VendorShipmentTable() {
         key="add-vendor-shipment"
         onClick={() => newShipment.open()}
         tooltip={t`Add Vendor Shipment`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.vendor_shipment)}
       />,
     ];
   }, [user, newShipment.open]);

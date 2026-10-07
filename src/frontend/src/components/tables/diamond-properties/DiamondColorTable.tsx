@@ -95,14 +95,14 @@ export default function DiamondColorTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.properties_diamond_color),
           onClick: () => {
             setSelectedDiamondColor(record.pk);
             editDiamondColor.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.properties_diamond_color),
           onClick: () => {
             setSelectedDiamondColor(record.pk);
             deleteDiamondColor.open();
@@ -132,7 +132,7 @@ export default function DiamondColorTable() {
         key="add-diamond-color"
         onClick={() => newDiamondColor.open()}
         tooltip={t`Add Diamond Color`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.properties_diamond_color)}
       />,
     ];
   }, [user]);

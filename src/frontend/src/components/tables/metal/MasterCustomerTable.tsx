@@ -200,28 +200,28 @@ export default function MasterCustomerTable() {
     (record: any): RowAction[] => {
       return [
         RowContactAction({
-          hidden: !user.hasViewRole(UserRoles.part),
+          hidden: !user.hasViewRole(UserRoles.company_contact),
           onClick: () => {
             setSelectedCustomer(record.pk);
             contactMasterCustomer.open();
           },
         }),
         RowAddContactAction({
-          hidden: !user.hasAddRole(UserRoles.part),
+          hidden: !user.hasAddRole(UserRoles.company_contact),
           onClick: () => {
             setSelectedCustomer(record.pk);
             addContactMasterCustomer.open();
           },
         }),
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.customer),
           onClick: () => {
             setSelectedCustomer(record.pk);
             editMasterCustomer.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.customer),
           onClick: () => {
             setSelectedCustomer(record.pk);
             deleteMasterCustomer.open();
@@ -253,7 +253,7 @@ export default function MasterCustomerTable() {
         key="add-master-customer"
         onClick={() => newMasterCustomer.open()}
         tooltip={t`Add Master Customer`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.customer)}
       />,
     ];
   }, [user]);

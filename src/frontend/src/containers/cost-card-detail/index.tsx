@@ -267,7 +267,12 @@ export default function CostCardDetail() {
     });
   };
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewRole(UserRoles.cost_card)) {
+    return <PermissionDenied />;
+  }
+
+  // Creating (or duplicating) a cost card requires the add permission
+  if (isNew && !user.hasAddRole(UserRoles.cost_card)) {
     return <PermissionDenied />;
   }
 
@@ -308,27 +313,33 @@ export default function CostCardDetail() {
             <Tabs.Tab value="general" leftSection={<IconId size={16} />}>
               {t`General`}
             </Tabs.Tab>
-            <Tabs.Tab
-              value="finish-type"
-              leftSection={<IconBrush size={16} />}
-              disabled={isNew}
-            >
-              {t`Finish Type`}
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="diamond"
-              leftSection={<IconDiamond size={16} />}
-              disabled={isNew}
-            >
-              {t`Diamond`}
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="color-stone"
-              leftSection={<IconPalette size={16} />}
-              disabled={isNew}
-            >
-              {t`Color Stone`}
-            </Tabs.Tab>
+            {user.hasViewRole(UserRoles.cost_card_finish_line) && (
+              <Tabs.Tab
+                value="finish-type"
+                leftSection={<IconBrush size={16} />}
+                disabled={isNew}
+              >
+                {t`Finish Type`}
+              </Tabs.Tab>
+            )}
+            {user.hasViewRole(UserRoles.cost_card_diamond_line) && (
+              <Tabs.Tab
+                value="diamond"
+                leftSection={<IconDiamond size={16} />}
+                disabled={isNew}
+              >
+                {t`Diamond`}
+              </Tabs.Tab>
+            )}
+            {user.hasViewRole(UserRoles.cost_card_color_stone_line) && (
+              <Tabs.Tab
+                value="color-stone"
+                leftSection={<IconPalette size={16} />}
+                disabled={isNew}
+              >
+                {t`Color Stone`}
+              </Tabs.Tab>
+            )}
             <Tabs.Tab
               value="labour-details"
               leftSection={<IconTools size={16} />}
@@ -408,15 +419,20 @@ export default function CostCardDetail() {
           </Tabs.Panel>
 
           <Tabs.Panel value="finish-type" p="sm">
-            {costCardId && <CostCardFinishLineTable costCardId={costCardId} />}
+            {costCardId && user.hasViewRole(UserRoles.cost_card_finish_line) && (
+              <CostCardFinishLineTable costCardId={costCardId} />
+            )}
           </Tabs.Panel>
 
           <Tabs.Panel value="diamond" p="sm">
-            {costCardId && <CostCardDiamondLineTable costCardId={costCardId} />}
+            {costCardId && user.hasViewRole(UserRoles.cost_card_diamond_line) && (
+              <CostCardDiamondLineTable costCardId={costCardId} />
+            )}
           </Tabs.Panel>
 
           <Tabs.Panel value="color-stone" p="sm">
-            {costCardId && (
+            {costCardId &&
+              user.hasViewRole(UserRoles.cost_card_color_stone_line) && (
               <CostCardColorStoneLineTable costCardId={costCardId} />
             )}
           </Tabs.Panel>

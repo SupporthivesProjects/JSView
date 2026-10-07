@@ -13,7 +13,7 @@ import {
   IconReceipt,
 } from "@tabler/icons-react";
 
-import { UserRoles } from "@lib/enums/Roles";
+import { MenuRoles } from "@lib/enums/Roles";
 import type { PanelType } from "@lib/types/Panel";
 import PermissionDenied from "@components/shared/errors/PermissionDenied";
 import { PageDetail } from "@components/nav/PageDetail";
@@ -92,7 +92,7 @@ export default function ReportsIndex() {
     ];
   }, []);
 
-  if (!user.isStaff() && !user.hasViewRole(UserRoles.part)) {
+  if (!user.hasViewAnyRole(MenuRoles["reports"])) {
     return <PermissionDenied />;
   }
 

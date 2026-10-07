@@ -87,14 +87,14 @@ export default function MasterSettingsTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_setting),
           onClick: () => {
             setSelectedMasterSetting(record.pk);
             editMasterSetting.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_setting),
           onClick: () => {
             setSelectedMasterSetting(record.pk);
             deleteMasterSetting.open();
@@ -124,7 +124,7 @@ export default function MasterSettingsTable() {
         key="add-master-setting"
         onClick={() => newMasterSetting.open()}
         tooltip={t`Add setting`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_setting)}
       />,
     ];
   }, [user]);

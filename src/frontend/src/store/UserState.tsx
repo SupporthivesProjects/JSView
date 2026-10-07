@@ -147,6 +147,9 @@ export const useUserState = create<UserStateProps>((set, get) => ({
   hasViewRole: (role: UserRoles) => {
     return get().checkUserRole(role, UserPermissions.view);
   },
+  hasViewAnyRole: (roles: UserRoles[]) => {
+    return roles.some((role) => get().hasViewRole(role));
+  },
   checkUserPermission: (model: ModelType, permission: UserPermissions) => {
     // Check if the user has the specified permission for the specified model
     const user: UserProps = get().user as UserProps;

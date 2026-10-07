@@ -103,14 +103,14 @@ export default function MasterExecutiveTable() {
     (record: any): RowAction[] => {
       return [
         RowEditAction({
-          hidden: !user.hasChangeRole(UserRoles.part),
+          hidden: !user.hasChangeRole(UserRoles.master_ac_executive),
           onClick: () => {
             setSelectedExecutive(record.pk);
             editMasterExecutive.open();
           },
         }),
         RowDeleteAction({
-          hidden: !user.hasDeleteRole(UserRoles.part),
+          hidden: !user.hasDeleteRole(UserRoles.master_ac_executive),
           onClick: () => {
             setSelectedExecutive(record.pk);
             deleteMasterExecutive.open();
@@ -140,7 +140,7 @@ export default function MasterExecutiveTable() {
         key="add-master-executive"
         onClick={() => newMasterExecutive.open()}
         tooltip={t`Add Master Executive`}
-        hidden={!user.hasAddRole(UserRoles.part)}
+        hidden={!user.hasAddRole(UserRoles.master_ac_executive)}
       />,
     ];
   }, [user]);
