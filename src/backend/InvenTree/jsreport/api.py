@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from jsreport.views.balance_dia_vendor import BalanceDiaReportView
 from jsreport.views.close_order import CloseOrderReportView
 from jsreport.views.costcard import CostCardExportReportView
 from jsreport.views.invoice_value import InvoiceValueReportView
@@ -45,5 +46,10 @@ jsreport_api_urls = [
         'costcard/',
         CostCardExportReportView.as_view(),
         name='api-jsreport-costcard',
+    ),
+    path(
+        'bal-dia-with-vendor/',
+        BalanceDiaReportView.as_view(),
+        name='api-jsreport-bal-dia-with-vendor',
     ),
 ]
