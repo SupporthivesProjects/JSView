@@ -81,7 +81,15 @@ class RuleSetEnum(StringEnum):
     VENDOR_SHIPMENT = 'vendor_shipment'
     VENDOR_SHIPMENT_LINE = 'vendor_shipment_line'
 
-    REPORT = 'report'
+    REPORT = 'report'  # kept for backward compatibility (hidden from RULESET_CHOICES)
+    REPORT_OPEN_ORDER = 'report_open_order'
+    REPORT_CLOSE_ORDER = 'report_close_order'
+    REPORT_INVOICE_VALUE = 'report_invoice_value'
+    REPORT_PO_STONE_VALUATION = 'report_po_stone_valuation'
+    REPORT_PO_STONE_STATUS = 'report_po_stone_status'
+    REPORT_PO_STATUS = 'report_po_status'
+    REPORT_BAL_DIA_VENDOR = 'report_bal_dia_vendor'
+    REPORT_COST_CARD = 'report_cost_card'
 
 
 # Ruleset choices shown in the system (used to assign permissions to a group).
@@ -156,8 +164,16 @@ RULESET_CHOICES = [
     (RuleSetEnum.VENDOR_SHIPMENT, _('Vendor Shipment -> Shipments')),
     (RuleSetEnum.VENDOR_SHIPMENT_LINE, _('Vendor Shipment -> Shipment Items')),
 
-    # Report
-    (RuleSetEnum.REPORT, _('Report -> Reports')),
+    # Report (same order as the Reports menu)
+    # (RuleSetEnum.REPORT, _('Report -> Reports')),
+    (RuleSetEnum.REPORT_OPEN_ORDER, _('Report -> Open Order')),
+    (RuleSetEnum.REPORT_CLOSE_ORDER, _('Report -> Close Order')),
+    (RuleSetEnum.REPORT_INVOICE_VALUE, _('Report -> Invoice Value P/C')),
+    (RuleSetEnum.REPORT_PO_STONE_VALUATION, _('Report -> P.O. Stone Valuation')),
+    (RuleSetEnum.REPORT_PO_STONE_STATUS, _('Report -> P.O. Stone Status')),
+    (RuleSetEnum.REPORT_PO_STATUS, _('Report -> P.O. Status')),
+    (RuleSetEnum.REPORT_BAL_DIA_VENDOR, _('Report -> Balance Dia. With Vendor')),
+    (RuleSetEnum.REPORT_COST_CARD, _('Report -> Cost Card Export')),
 
     # Hidden
     # (RuleSetEnum.COMPANY, _('Master -> Companies')),
@@ -388,8 +404,16 @@ def get_ruleset_models() -> dict:
         RuleSetEnum.VENDOR_SHIPMENT: ['vendor_shipment_vendorshipment'],
         RuleSetEnum.VENDOR_SHIPMENT_LINE: ['vendor_shipment_vendorshipmentline'],
 
-        # Report
-        RuleSetEnum.REPORT: [],
+        # Report (permission-only models in the jsreport app)
+        RuleSetEnum.REPORT: [],  # legacy, hidden from choices
+        RuleSetEnum.REPORT_OPEN_ORDER: ['jsreport_openorderreport'],
+        RuleSetEnum.REPORT_CLOSE_ORDER: ['jsreport_closeorderreport'],
+        RuleSetEnum.REPORT_INVOICE_VALUE: ['jsreport_invoicevaluereport'],
+        RuleSetEnum.REPORT_PO_STONE_VALUATION: ['jsreport_postonevaluationreport'],
+        RuleSetEnum.REPORT_PO_STONE_STATUS: ['jsreport_postonestatusreport'],
+        RuleSetEnum.REPORT_PO_STATUS: ['jsreport_postatusreport'],
+        RuleSetEnum.REPORT_BAL_DIA_VENDOR: ['jsreport_balancediavendorreport'],
+        RuleSetEnum.REPORT_COST_CARD: ['jsreport_costcardexportreport'],
     }
 
     if settings.SITE_MULTI:

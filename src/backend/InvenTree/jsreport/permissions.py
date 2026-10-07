@@ -3,7 +3,8 @@
 from rest_framework.permissions import BasePermission
 
 from users.permissions import check_user_role
-from users.ruleset import RuleSetEnum
+
+# from users.ruleset import RuleSetEnum
 
 
 # HTTP method -> ruleset permission
