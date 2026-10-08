@@ -83,7 +83,7 @@ export function GroupDrawer({
         <Accordion.Item key='details' value='details'>
           <Accordion.Control>
             <StylishText size='lg'>
-              <Trans>Group Details</Trans>
+              <Trans>Permissions To</Trans>
             </StylishText>
           </Accordion.Control>
           <Accordion.Panel>
@@ -94,7 +94,8 @@ export function GroupDrawer({
                 fields: {
                   name: {
                     label: t`Name`,
-                    description: t`Name of the user group`
+                    description: t`Name of the user group`,
+                    disabled: true
                   }
                 },
                 onFormSuccess: () => {
@@ -110,7 +111,7 @@ export function GroupDrawer({
         <Accordion.Item key='roles' value='roles'>
           <Accordion.Control>
             <StylishText size='lg'>
-              <Trans>Group Roles</Trans>
+              <Trans>Permissions By Role</Trans>
             </StylishText>
           </Accordion.Control>
           <Accordion.Panel>
