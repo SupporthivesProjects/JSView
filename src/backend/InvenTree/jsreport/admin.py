@@ -67,3 +67,8 @@ class BalanceDiaVendorReportAdmin(ReportPermissionAdmin):
 @admin.register(models.CostCardExportReport)
 class CostCardExportReportAdmin(ReportPermissionAdmin):
     """Admin class for the CostCardExportReport model."""
+
+
+@admin.register(models.PicturePresentationReport)
+class PicturePresentationReportAdmin(ReportPermissionAdmin):
+    """Admin class for the PicturePresentationReport model."""

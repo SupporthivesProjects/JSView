@@ -85,6 +85,7 @@ class RuleSetEnum(StringEnum):
     REPORT_OPEN_ORDER = 'report_open_order'
     REPORT_CLOSE_ORDER = 'report_close_order'
     REPORT_INVOICE_VALUE = 'report_invoice_value'
+    REPORT_PICTURE_PRESENTATION = 'report_picture_presentation'  # NEW
     REPORT_PO_STONE_VALUATION = 'report_po_stone_valuation'
     REPORT_PO_STONE_STATUS = 'report_po_stone_status'
     REPORT_PO_STATUS = 'report_po_status'
@@ -169,6 +170,7 @@ RULESET_CHOICES = [
     (RuleSetEnum.REPORT_OPEN_ORDER, _('Report -> Open Order')),
     (RuleSetEnum.REPORT_CLOSE_ORDER, _('Report -> Close Order')),
     (RuleSetEnum.REPORT_INVOICE_VALUE, _('Report -> Invoice Value P/C')),
+    (RuleSetEnum.REPORT_PICTURE_PRESENTATION, _('Report -> Picture Presentation')),  # NEW
     (RuleSetEnum.REPORT_PO_STONE_VALUATION, _('Report -> P.O. Stone Valuation')),
     (RuleSetEnum.REPORT_PO_STONE_STATUS, _('Report -> P.O. Stone Status')),
     (RuleSetEnum.REPORT_PO_STATUS, _('Report -> P.O. Status')),
@@ -409,6 +411,7 @@ def get_ruleset_models() -> dict:
         RuleSetEnum.REPORT_OPEN_ORDER: ['jsreport_openorderreport'],
         RuleSetEnum.REPORT_CLOSE_ORDER: ['jsreport_closeorderreport'],
         RuleSetEnum.REPORT_INVOICE_VALUE: ['jsreport_invoicevaluereport'],
+        RuleSetEnum.REPORT_PICTURE_PRESENTATION: ['jsreport_picturepresentationreport'],  # NEW
         RuleSetEnum.REPORT_PO_STONE_VALUATION: ['jsreport_postonevaluationreport'],
         RuleSetEnum.REPORT_PO_STONE_STATUS: ['jsreport_postonestatusreport'],
         RuleSetEnum.REPORT_PO_STATUS: ['jsreport_postatusreport'],

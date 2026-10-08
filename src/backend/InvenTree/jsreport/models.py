@@ -35,6 +35,14 @@ class InvoiceValueReport(ReportPermissionBase):
         verbose_name = 'Invoice Value Report'
 
 
+class PicturePresentationReport(ReportPermissionBase):
+    """Permission model for the Picture Presentation report."""
+
+    class Meta(ReportPermissionBase.Meta):
+        abstract = False
+        verbose_name = 'Picture Presentation Report'
+        
+
 class POStoneValuationReport(ReportPermissionBase):
     """Permission model for the P.O. Stone Valuation report."""
 
