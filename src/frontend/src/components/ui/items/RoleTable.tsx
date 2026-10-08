@@ -28,6 +28,15 @@ export interface RuleSet {
   edited?: boolean;
 }
 
+type PermissionField = 'can_view' | 'can_add' | 'can_change' | 'can_delete';
+
+const PERMISSION_FIELDS: PermissionField[] = [
+  'can_view',
+  'can_change',
+  'can_add',
+  'can_delete'
+];
+
 export function RoleTable({
   roles,
   editable = false
@@ -70,6 +79,63 @@ export function RoleTable({
     },
     [editable]
   );
+
+  // Set a permission field for every ruleset (column "select all")
+  const onToggleAll = useCallback(
+    (field: PermissionField, value: boolean) => {
+      if (!editable) {
+        return;
+      }
+      setRulesets((prev) =>
+        prev.map((r) =>
+          r[field] === value ? r : { ...r, [field]: value, edited: true }
+        )
+      );
+    },
+    [editable]
+  );
+
+  // Set every permission field for a single ruleset (row "select all")
+  const onToggleRow = useCallback(
+    (rule: RuleSet, value: boolean) => {
+      if (!editable) {
+        return;
+      }
+      setRulesets((prev) =>
+        prev.map((r) => {
+          if (r.pk !== rule.pk) {
+            return r;
+          }
+          const updated = { ...r, edited: true };
+          PERMISSION_FIELDS.forEach((field) => {
+            updated[field] = value;
+          });
+          return updated;
+        })
+      );
+    },
+    [editable]
+  );
+
+  const columnHeader = (field: PermissionField, label: string) => {
+    const checkedCount = rulesets.filter((r) => r[field]).length;
+    const allChecked = rulesets.length > 0 && checkedCount === rulesets.length;
+
+    return (
+      <Table.Th>
+        <Group gap='xs' wrap='nowrap'>
+          <Text fw={700}>{label}</Text>
+          <Checkbox
+            disabled={!editable || rulesets.length === 0}
+            checked={allChecked}
+            indeterminate={checkedCount > 0 && !allChecked}
+            onChange={() => onToggleAll(field, !allChecked)}
+            aria-label={label}
+          />
+        </Group>
+      </Table.Th>
+    );
+  };
 
   const onSave = async (rulesets: RuleSet[]) => {
     if (!editable) {
@@ -135,24 +201,13 @@ export function RoleTable({
                   <Trans>Role</Trans>
                 </Text>
               </Table.Th>
+              {columnHeader('can_view', t`View`)}
+              {columnHeader('can_change', t`Change`)}
+              {columnHeader('can_add', t`Add`)}
+              {columnHeader('can_delete', t`Delete`)}
               <Table.Th>
                 <Text fw={700}>
-                  <Trans>View</Trans>
-                </Text>
-              </Table.Th>
-              <Table.Th>
-                <Text fw={700}>
-                  <Trans>Change</Trans>
-                </Text>
-              </Table.Th>
-              <Table.Th>
-                <Text fw={700}>
-                  <Trans>Add</Trans>
-                </Text>
-              </Table.Th>
-              <Table.Th>
-                <Text fw={700}>
-                  <Trans>Delete</Trans>
+                  <Trans>All</Trans>
                 </Text>
               </Table.Th>
             </Table.Tr>
@@ -167,32 +222,59 @@ export function RoleTable({
                   </Group>
                 </Table.Td>
                 <Table.Td>
+                  <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                   <Checkbox
                     disabled={!editable}
                     checked={rule.can_view}
                     onChange={() => onToggle(rule, 'can_view')}
                   />
+                  </div>
                 </Table.Td>
                 <Table.Td>
+                  <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                   <Checkbox
                     disabled={!editable}
                     checked={rule.can_change}
                     onChange={() => onToggle(rule, 'can_change')}
                   />
+                  </div>
                 </Table.Td>
                 <Table.Td>
+                  <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                   <Checkbox
                     disabled={!editable}
                     checked={rule.can_add}
                     onChange={() => onToggle(rule, 'can_add')}
                   />
+                  </div>
                 </Table.Td>
                 <Table.Td>
+                  <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                   <Checkbox
                     disabled={!editable}
                     checked={rule.can_delete}
                     onChange={() => onToggle(rule, 'can_delete')}
                   />
+                  </div>
+                </Table.Td>
+                <Table.Td>
+                  {(() => {
+                    const checkedCount = PERMISSION_FIELDS.filter(
+                      (field) => rule[field]
+                    ).length;
+                    const allChecked =
+                      checkedCount === PERMISSION_FIELDS.length;
+
+                    return (
+                      <Checkbox
+                        disabled={!editable}
+                        checked={allChecked}
+                        indeterminate={checkedCount > 0 && !allChecked}
+                        onChange={() => onToggleRow(rule, !allChecked)}
+                        aria-label={rule.label}
+                      />
+                    );
+                  })()}
                 </Table.Td>
               </Table.Tr>
             ))}
