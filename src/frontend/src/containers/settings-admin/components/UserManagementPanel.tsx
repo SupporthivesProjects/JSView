@@ -20,7 +20,7 @@ export default function UserManagementPanel() {
       </Accordion.Item>
       <Accordion.Item value='groups' key='groups'>
         <Accordion.Control>
-          <StylishText size='lg'>{t`Groups`}</StylishText>
+          <StylishText size='lg'>{t`Permissions`}</StylishText>
         </Accordion.Control>
         <Accordion.Panel>
           <GroupTable />
