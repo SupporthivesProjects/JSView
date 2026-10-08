@@ -146,7 +146,7 @@ RULESET_CHOICES = [
     (RuleSetEnum.COST_CARD_COLOR_STONE_LINE, _('Cost Card -> Color Stones')),
     (RuleSetEnum.COST_CARD_FINISH_LINE, _('Cost Card -> Finish Types')),
     (RuleSetEnum.COST_CARD_STONE_PLACE, _('Cost Card -> Stone Places')),
-    (RuleSetEnum.COST_CARD_VERSION, _('Cost Card -> Versions')),
+    #(RuleSetEnum.COST_CARD_VERSION, _('Cost Card -> Versions')),
 
     # Purchase (same PurchaseOrder model, split into Requests and Orders)
     (RuleSetEnum.JS_PURCHASE_REQUEST, _('Purchase -> Requests')),
