@@ -4,6 +4,8 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from users.models import RuleSet
+from users.ruleset import RULESET_NAMES
+from users.tasks import update_group_roles
 
 
 @receiver(pre_save, sender=User)
@@ -36,10 +38,23 @@ def sync_personal_group(sender, instance, created, update_fields=None, **kwargs)
         group, group_created = Group.objects.get_or_create(name=instance.username)
 
         if group_created:
+            # Create any missing RuleSet rows (bulk_create skips save(), so no nested group.save())
+            existing = set(
+                RuleSet.objects.filter(group=group).values_list('name', flat=True)
+            )
+            RuleSet.objects.bulk_create([
+                RuleSet(group=group, name=name)
+                for name in RULESET_NAMES
+                if name not in existing
+            ])
+
             RuleSet.objects.filter(group=group).update(can_view=True)
             # RuleSet.objects.filter(group=group).exclude(
             #     name__startswith='report'
             # ).update(can_view=True)
+
+            # .update() skips RuleSet.save(), so sync the Django permissions explicitly
+            update_group_roles(group)
 
         if not instance.groups.filter(pk=group.pk).exists():
             instance.groups.add(group)
