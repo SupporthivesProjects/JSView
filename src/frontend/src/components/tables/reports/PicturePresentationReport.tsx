@@ -44,7 +44,12 @@ export default function PicturePresentationReport() {
     ];
   }, [columnFilter]);
 
-  const presentation = usePicturePresentation();
+  // The report has its own export endpoint, and only offers the Picture
+  // Presentation export (not the Cost Card Representation)
+  const presentation = usePicturePresentation({
+    exportUrl: ApiEndpoints.reports_picture_presentation,
+    showRepresentation: false,
+  });
 
   // Guards against a second click while the cost cards are being loaded
   const opening = useRef<boolean>(false);

@@ -16,12 +16,7 @@ import { useCreateApiFormModal } from "../../../hooks/UseForm";
 import useDataOutput from "../../../hooks/UseDataOutput";
 import useNameLookup from "../../../hooks/UseNameLookup";
 
-/*
- * Pricing inputs on the Presentation form which both exports accept as
- * overrides. The Picture Presentation export picks them up from the submitted
- * form data; the Cost Card Representation export runs outside the submit, so
- * their current values are mirrored into component state as they are edited.
- */
+
 const PRESENTATION_OVERRIDE_FIELDS = [
   "gold_troy_ounce",
   "silver_troy_ounce",
@@ -29,13 +24,6 @@ const PRESENTATION_OVERRIDE_FIELDS = [
   "margin_pct",
 ] as const;
 
-/*
- * Resolved display names for the property tables a stone line points at.
- *
- * Diamond lines and color stone lines reference different sets of tables
- * (DiamondShape vs ColorStoneShape, and so on), so each kind of line is
- * rendered with its own maps.
- */
 type StoneNameMaps = {
   stone: Record<number, string>;
   shape: Record<number, string>;
@@ -45,15 +33,7 @@ type StoneNameMaps = {
   quality: Record<number, string>;
 };
 
-/*
- * Turn one diamond / color stone line into a row of the Picture Presentation
- * stone listing: the foreign keys on the line are swapped for the names they
- * point at, and the cost card's style number is carried along so that rows
- * coming from different cards can be told apart.
- *
- * `id` is what the form's table field keys the row on, so it has to stay
- * unique across both line types (their primary keys are independent).
- */
+
 function picturePresentationStoneRow(
   line: any,
   names: StoneNameMaps,
@@ -79,29 +59,22 @@ function picturePresentationStoneRow(
 }
 
 export type PicturePresentationSeed = {
-  // Cost card records the form starts out with - their PKs fill the style
-  // picker and their figures pre-fill the pricing inputs
+
   records: any[];
-  // Purchase order the form starts out with, if any
   po?: number | null;
 };
 
-/**
- * The Presentation modal (Picture Presentation / Cost Card Representation
- * exports), shared by the cost card listing and the Picture Presentation
- * report so both open the same form.
- *
- * @param knownCards - Cost card records the caller already holds; any card
- * picked on the form which is not among these (or the seed records) is
- * fetched individually so its stone lines can be listed.
- */
 export default function usePicturePresentation({
   knownCards = [],
-}: Readonly<{ knownCards?: any[] }> = {}) {
+  exportUrl = ApiEndpoints.cost_card_picture_presentation,
+  showRepresentation = true,
+}: Readonly<{
+  knownCards?: any[];
+  exportUrl?: ApiEndpoints;
+  showRepresentation?: boolean;
+}> = {}) {
   const api = useApi();
 
-  // Metal purity - only needed to tell gold apart from silver when pre-filling
-  // the troy ounce price on the Picture Presentation form
   const metalPurityQuery = useQuery({
     queryKey: ["cost-card-metal-purity-lookup"],
     queryFn: () =>
@@ -120,13 +93,7 @@ export default function usePicturePresentation({
     return map;
   }, [metalPurityQuery.data]);
 
-  /*
-   * Stone line properties, used to render the Picture Presentation stone
-   * listing: the lines nested on a cost card record hold primary keys, so the
-   * names they point at are pulled in separately. The query keys are shared
-   * with the cost card Diamond / Color Stone tabs, so the lookups are only
-   * fetched once between them.
-   */
+ 
   const { nameByPk: diamondStoneByPk } = useNameLookup(
     ApiEndpoints.diamond_stone_list,
     "cost-card-diamond-stone-lookup",
@@ -250,15 +217,12 @@ export default function usePicturePresentation({
     [seedRecords],
   );
 
-  // The cost cards the modal is currently working with. Seeded when the form
-  // is opened, and kept in step with the style-number picker afterwards, so
-  // the stone preview always matches what will be exported.
+
   const [picturePresentationCards, setPicturePresentationCards] = useState<
     number[]
   >([]);
 
-  // The purchase order selected on the form (if any). It restricts the
-  // style-number picker to the cost cards linked to that order.
+
   const [picturePresentationPo, setPicturePresentationPo] = useState<
     number | null
   >(null);
@@ -266,9 +230,6 @@ export default function usePicturePresentation({
   // The purchase order the form was opened with, used to pre-fill the field
   const [seedPo, setSeedPo] = useState<number | null>(null);
 
-  // The pricing overrides as they currently stand on the form. Seeded when the
-  // form is opened, then kept in step with the inputs so the Cost Card
-  // Representation export sends what is on screen.
   const [presentationOverrides, setPresentationOverrides] = useState<
     Record<string, any>
   >({});
@@ -278,13 +239,7 @@ export default function usePicturePresentation({
     [knownCards, seedRecords],
   );
 
-  /*
-   * Cost cards picked on the form which the caller has not loaded. The style
-   * picker is filtered independently of the caller (and, with a P.O. selected,
-   * lists that order's line items instead), so it can offer cards which are
-   * not already held - fetch those individually so their stone lines are
-   * listed too. A card which cannot be fetched is simply left out.
-   */
+
   const missingCardPks = useMemo(() => {
     const loaded = new Set(loadedCards.map((record: any) => record.pk));
     return picturePresentationCards.filter((pk) => !loaded.has(pk));
@@ -305,14 +260,7 @@ export default function usePicturePresentation({
       ).then((records) => records.filter((record) => !!record)),
   });
 
-  /*
-   * Every stone line on the selected cost cards, one row each.
-   *
-   * The export endpoint also returns a stone summary, but it pools the lines
-   * and keeps only one row per distinct combination - two cards carrying the
-   * same stone would show up once. The rows are built here instead, from the
-   * lines the cost card records already carry, so nothing is collapsed.
-   */
+
   const picturePresentationStones = useMemo(() => {
     const cardByPk: Record<number, any> = {};
 
@@ -363,13 +311,7 @@ export default function usePicturePresentation({
     colorStoneNames,
   ]);
 
-  /*
-   * The pricing inputs apply to the export as a whole, so a figure is only
-   * pre-filled when every seeded card agrees on it - otherwise the field is
-   * left empty rather than presenting one card's number as if it covered all
-   * of them. The troy ounce price is split by metal the same way the export
-   * itself splits it: on the metal purity name.
-   */
+
   const pricingValues = useCallback(
     (records: any[]) => {
       const isSilver = (record: any) =>
@@ -415,9 +357,7 @@ export default function usePicturePresentation({
 
   const picturePresentationValues = useMemo(() => {
     return {
-      // Always handed to the field (even when empty), so that dropping the
-      // cards which do not belong to a newly selected P.O. also clears them
-      // from the picker
+ 
       stylenumber: picturePresentationCards,
       ...(seedPo ? { ponumber: seedPo } : {}),
       ...pricingValues(seedRecords),
@@ -526,12 +466,7 @@ export default function usePicturePresentation({
     [seedPks],
   );
 
-  /*
-   * The Cost Card Representation export builds a different sheet from the same
-   * cost cards and pricing overrides, so it runs from a button on the form
-   * rather than by submitting it - the request is issued here instead, and its
-   * data output is handed to the same download monitor the submit uses.
-   */
+
   const representationRunning = useRef<boolean>(false);
   const closePicturePresentation = useRef<() => void>(() => {});
 
@@ -540,9 +475,6 @@ export default function usePicturePresentation({
       return;
     }
 
-    // Same fallback as the submit: the picker holds what the user last said
-    // should be exported, and only an emptied (P.O.-less) form falls back to
-    // the seeded cards
     const ids =
       picturePresentationCards.length > 0 || picturePresentationPo
         ? picturePresentationCards
@@ -598,7 +530,7 @@ export default function usePicturePresentation({
   ]);
 
   const picturePresentationModal = useCreateApiFormModal({
-    url: ApiEndpoints.cost_card_picture_presentation,
+    url: exportUrl,
     queryParams: picturePresentationParams,
     method: "GET",
     title: t`Presentation`,
@@ -607,12 +539,14 @@ export default function usePicturePresentation({
     // Both exports are offered from a dropdown in the modal header, keeping
     // the (tall) form itself free of a button row
     headerActions: true,
-    actions: [
-      {
-        text: t`Cost Card Representation`,
-        onClick: exportCostCardRepresentation,
-      },
-    ],
+    actions: showRepresentation
+      ? [
+          {
+            text: t`Cost Card Representation`,
+            onClick: exportCostCardRepresentation,
+          },
+        ]
+      : [],
     submitText: t`Picture Presentation`,
     successMessage: null,
     timeout: 30 * 1000,
