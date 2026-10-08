@@ -52,7 +52,8 @@ function PurchaseOrderListWidget() {
   const user = useUserState();
   const api = useApi();
 
-  const canEdit: boolean = user.hasChangeRole(UserRoles.part);
+  const canEdit: boolean =
+    user.isStaff() || user.hasChangeRole(UserRoles.part);
 
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<
     number | undefined
@@ -234,7 +235,7 @@ export default function PurchaseOrderListDashboardWidget(): DashboardWidgetProps
     minWidth: 8,
     minHeight: 6,
     icon: 'purchase_orders',
-    enabled: user.hasViewRole(UserRoles.part),
+    enabled: user.isStaff() || user.hasViewRole(UserRoles.part),
     render: () => <PurchaseOrderListWidget />
   };
 }
