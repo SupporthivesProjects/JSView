@@ -111,7 +111,7 @@ export function GroupDrawer({
         <Accordion.Item key='roles' value='roles'>
           <Accordion.Control>
             <StylishText size='lg'>
-              <Trans>Permissions By Role</Trans>
+              <Trans>Permissions By Module</Trans>
             </StylishText>
           </Accordion.Control>
           <Accordion.Panel>
