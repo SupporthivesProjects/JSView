@@ -198,7 +198,7 @@ export function RoleTable({
             <Table.Tr>
               <Table.Th>
                 <Text fw={700}>
-                  <Trans>Role</Trans>
+                  <Trans>Module</Trans>
                 </Text>
               </Table.Th>
               {columnHeader('can_view', t`View`)}
