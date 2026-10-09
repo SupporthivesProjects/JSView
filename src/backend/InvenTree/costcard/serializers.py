@@ -26,8 +26,8 @@ from .models import (
 
 class SafeImageField(drf_serializers.ImageField):
     """
-    ImageField that works even when the request in the serializer context
-    has no build_absolute_uri (e.g. RequestFactory used by the data exporter).
+    ImageField that works when the request in the serializer context has no
+    build_absolute_uri (the data exporter uses a RequestFactory).
     """
 
     def to_representation(self, value):
@@ -272,7 +272,7 @@ class CostCardSerializer(
 
     stone_lines_rate = drf_serializers.SerializerMethodField()
 
-    # Safe image fields: export uses a RequestFactory without build_absolute_uri
+    # The data exporter uses a RequestFactory without build_absolute_uri
     front_view = SafeImageField(read_only=True)
     side_view = SafeImageField(read_only=True)
     back_view = SafeImageField(read_only=True)
