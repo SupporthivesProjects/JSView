@@ -47,7 +47,7 @@ export default function ColorStoneSizeTable() {
         sortable: true,
         switchable: false,
       },
-      DescriptionColumn({}),
+      // DescriptionColumn({}),
       BooleanColumn({
         accessor: "active",
       }),

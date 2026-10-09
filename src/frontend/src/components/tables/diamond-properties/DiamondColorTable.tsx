@@ -37,7 +37,7 @@ export default function DiamondColorTable() {
         sortable: true,
         switchable: false,
       },
-      DescriptionColumn({}),
+      // DescriptionColumn({}),
       BooleanColumn({
         accessor: "active",
       }),

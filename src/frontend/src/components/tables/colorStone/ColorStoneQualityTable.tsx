@@ -41,7 +41,7 @@ export default function ColorStoneQualityTable() {
         sortable: true,
         switchable: false,
       },
-      DescriptionColumn({}),
+      // DescriptionColumn({}),
       BooleanColumn({
         accessor: "active",
       }),
