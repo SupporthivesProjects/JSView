@@ -453,8 +453,8 @@ class DataExportViewMixin:
             serializer.is_valid(raise_exception=True)
             serializer_data = serializer.validated_data
 
-            export_format = serializer_data.pop('export_format', 'xlsx')
-            plugin_slug = serializer_data.pop('export_plugin', 'jsiview-exporter')
+            export_format = serializer_data.pop('export_format', 'csv')
+            plugin_slug = serializer_data.pop('export_plugin', 'inventree-exporter')
             export_plugin = self.get_plugin(plugin_slug)
 
             export_context = {}
