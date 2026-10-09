@@ -77,7 +77,7 @@ class DataExportOptionsSerializer(serializers.Serializer):
     # Select plugin for export - the options will be dynamically generated later on
     export_plugin = serializers.ChoiceField(
         choices=[],
-        default='inventree-exporter',
+        default='jsiview-exporter',
         label=_('Export Plugin'),
         help_text=_('Select export plugin'),
     )
