@@ -24,6 +24,38 @@ from .models import (
 )
 
 
+class SafeImageField(drf_serializers.ImageField):
+    """
+    ImageField that works even when the request in the serializer context
+    has no build_absolute_uri (e.g. RequestFactory used by the data exporter).
+    """
+
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        try:
+            url = value.url
+        except Exception:
+            return None
+
+        request = self.context.get('request')
+        build = getattr(request, 'build_absolute_uri', None)
+
+        if build:
+            try:
+                return build(url)
+            except Exception:
+                pass
+
+        try:
+            from InvenTree.helpers_model import construct_absolute_url
+
+            return construct_absolute_url(url)
+        except Exception:
+            return url
+
+
 @register_importer()
 class StonePlaceSerializer(
     DataImportSerializerMixin,
@@ -239,6 +271,11 @@ class CostCardSerializer(
     diamond_lines_rate = drf_serializers.SerializerMethodField()
 
     stone_lines_rate = drf_serializers.SerializerMethodField()
+
+    # Safe image fields: export uses a RequestFactory without build_absolute_uri
+    front_view = SafeImageField(read_only=True)
+    side_view = SafeImageField(read_only=True)
+    back_view = SafeImageField(read_only=True)
 
     NESTED_LINE_FIELDS = (
         'diamond_lines',
