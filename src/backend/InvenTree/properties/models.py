@@ -23,7 +23,7 @@ class PropertiesFieldsMixin(models.Model):
 class DiamondStone(PropertiesFieldsMixin):
     """Diamond stone type (e.g. Natural, Lab Grown)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond stone type.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Stone'), help_text=_('Name of the diamond stone type.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond stone type.'))
 
     class Meta:
@@ -41,7 +41,7 @@ class DiamondStone(PropertiesFieldsMixin):
 class DiamondCut(PropertiesFieldsMixin):
     """Diamond cut type (e.g. Round Brilliant, Princess)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond cut type.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Cut'), help_text=_('Name of the diamond cut type.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond cut type.'))
 
     class Meta:
@@ -59,7 +59,7 @@ class DiamondCut(PropertiesFieldsMixin):
 class DiamondShape(PropertiesFieldsMixin):
     """Diamond shape (e.g. Round, Pear, Emerald)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond shape.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Shape'), help_text=_('Name of the diamond shape.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond shape.'))
 
     class Meta:
@@ -77,7 +77,7 @@ class DiamondShape(PropertiesFieldsMixin):
 class DiamondColor(PropertiesFieldsMixin):
     """Diamond color grade (e.g. D, E, F)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond color grade.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Color'), help_text=_('Name of the diamond color grade.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond color grade.'))
 
     class Meta:
@@ -95,7 +95,7 @@ class DiamondColor(PropertiesFieldsMixin):
 class DiamondSize(PropertiesFieldsMixin):
     """Diamond size (in mm) and optional sieve size."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond size.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Size'), help_text=_('Name of the diamond size.'))
     mm_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Diamond size in millimeters.'))
     sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this diamond size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond size.'))
@@ -115,7 +115,7 @@ class DiamondSize(PropertiesFieldsMixin):
 class DiamondQuality(PropertiesFieldsMixin):
     """Diamond quality grade (e.g. VVS1, VS1, SI1)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the diamond quality grade.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Quality'), help_text=_('Name of the diamond quality grade.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond quality grade.'))
 
     class Meta:
@@ -133,7 +133,7 @@ class DiamondQuality(PropertiesFieldsMixin):
 class ColorStone(PropertiesFieldsMixin):
     """Color stone type (e.g. Ruby, Sapphire, Emerald)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone type.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Stone'), help_text=_('Name of the color stone type.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone type.'))
 
     class Meta:
@@ -151,7 +151,7 @@ class ColorStone(PropertiesFieldsMixin):
 class ColorStoneCut(PropertiesFieldsMixin):
     """Color stone cut type."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone cut type.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Cut'), help_text=_('Name of the color stone cut type.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone cut type.'))
 
     class Meta:
@@ -169,7 +169,7 @@ class ColorStoneCut(PropertiesFieldsMixin):
 class ColorStoneShape(PropertiesFieldsMixin):
     """Color stone shape."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone shape.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Shape'), help_text=_('Name of the color stone shape.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone shape.'))
 
     class Meta:
@@ -187,7 +187,7 @@ class ColorStoneShape(PropertiesFieldsMixin):
 class ColorStoneColor(PropertiesFieldsMixin):
     """Color stone color (e.g. Red, Blue, Green)."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone color.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Color'), help_text=_('Name of the color stone color.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone color.'))
 
     class Meta:
@@ -205,7 +205,7 @@ class ColorStoneColor(PropertiesFieldsMixin):
 class ColorStoneSize(PropertiesFieldsMixin):
     """Color stone size (in mm) and optional sieve size."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone size.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Size'), help_text=_('Name of the color stone size.'))
     mm_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Color stone size in millimeters.'))
     sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this color stone size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone size.'))
@@ -225,7 +225,7 @@ class ColorStoneSize(PropertiesFieldsMixin):
 class ColorStoneQuality(PropertiesFieldsMixin):
     """Color stone quality grade."""
 
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Name'), help_text=_('Name of the color stone quality grade.'))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Quality'), help_text=_('Name of the color stone quality grade.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone quality grade.'))
 
     class Meta:
