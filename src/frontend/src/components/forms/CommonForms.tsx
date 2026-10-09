@@ -1853,7 +1853,7 @@ export function jewellerySubCategoryFields(): ApiFormFieldSet {
 export function colorStoneTypeFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -1861,7 +1861,7 @@ export function colorStoneTypeFields(): ApiFormFieldSet {
 export function colorStoneCutFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -1869,7 +1869,7 @@ export function colorStoneCutFields(): ApiFormFieldSet {
 export function colorStoneShapeFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -1877,7 +1877,7 @@ export function colorStoneShapeFields(): ApiFormFieldSet {
 export function colorStoneColorFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -1918,7 +1918,7 @@ export function colorStoneSizeFields(): ApiFormFieldSet {
     name: {},
     mm_size: { ...STONE_MM_SIZE_FIELD },
     sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -1926,7 +1926,7 @@ export function colorStoneSizeFields(): ApiFormFieldSet {
 export function colorStoneQualityFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2840,7 +2840,7 @@ export function costCardFinishLineFields(costCardId: number): ApiFormFieldSet {
 export function DiamondStoneFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2848,7 +2848,7 @@ export function DiamondStoneFields(): ApiFormFieldSet {
 export function diamondCutFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2856,7 +2856,7 @@ export function diamondCutFields(): ApiFormFieldSet {
 export function diamondShapeFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2864,7 +2864,7 @@ export function diamondShapeFields(): ApiFormFieldSet {
 export function diamondColorFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2874,7 +2874,7 @@ export function diamondSizeFields(): ApiFormFieldSet {
     name: {},
     mm_size: { ...STONE_MM_SIZE_FIELD },
     sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
@@ -2882,7 +2882,7 @@ export function diamondSizeFields(): ApiFormFieldSet {
 export function diamondQualityFields(): ApiFormFieldSet {
   return {
     name: {},
-    description: {},
+    // description: {},
     active: { boxed: true },
   };
 }
