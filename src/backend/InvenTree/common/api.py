@@ -1331,8 +1331,8 @@ class EmailViewSet(BulkDeleteViewsetMixin, RetrieveDestroyModelViewSet):
         data = serializer.validated_data
 
         delivered, reason = send_email(
-            subject='Test email from InvenTree',
-            body='This is a test email from InvenTree.',
+            subject='Test email from JSIView New',
+            body='This is a test email from JSIView New.',
             recipients=[data['email']],
         )
         if not delivered:
@@ -1349,7 +1349,7 @@ class HealthCheckStatusSerializer(serializers.Serializer):
     """Status of the overall system health."""
 
     status = serializers.ChoiceField(
-        help_text='Health status of the InvenTree server',
+        help_text='Health status of the JSIView New server',
         choices=['ok', 'loading'],
         read_only=True,
         default='ok',
@@ -1357,9 +1357,9 @@ class HealthCheckStatusSerializer(serializers.Serializer):
 
 
 class HealthCheckView(APIView):
-    """Simple JSON endpoint for InvenTree health check.
+    """Simple JSON endpoint for JSIView New health check.
 
-    Intended to be used by external services to confirm that the InvenTree server is running.
+    Intended to be used by external services to confirm that the JSIView New server is running.
     """
 
     permission_classes = [AllowAnyOrReadScope]
@@ -1368,7 +1368,7 @@ class HealthCheckView(APIView):
         responses={
             200: OpenApiResponse(
                 response=HealthCheckStatusSerializer,
-                description='InvenTree server health status',
+                description='JSIView New server health status',
             )
         }
     )
