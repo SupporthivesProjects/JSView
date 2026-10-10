@@ -46,7 +46,7 @@ class CostCardAdmin(admin.ModelAdmin):
         'cost_card_no', 'our_style_no', 'vendor', 'customer', 'category',
         'sub_category', 'final_amount', 'active', 'created_at', 'updated_at',
     )
-    search_fields = ('cost_card_no', 'our_style_no', 'vendor_style_no')
+    search_fields = ('cost_card_no', 'our_style_no', 'reference_style_no', 'vendor_style_no')
     autocomplete_fields = (
         'vendor',
         'customer',

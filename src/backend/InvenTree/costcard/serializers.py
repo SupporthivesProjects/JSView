@@ -283,6 +283,11 @@ class CostCardSerializer(
         'finish_lines',
     )
 
+    # Internal fields exposed through the API only (not in import/export sheets)
+    API_ONLY_FIELDS = ['reference_style_no']
+    export_exclude_fields = API_ONLY_FIELDS
+    import_exclude_fields = API_ONLY_FIELDS
+
     def skip_create_fields(self):
         return [*super().skip_create_fields(), *self.NESTED_LINE_FIELDS]
 
@@ -292,6 +297,7 @@ class CostCardSerializer(
             'pk',
             'cost_card_no',
             'our_style_no',
+            'reference_style_no',
             'vendor_style_no',
             'vendor',
             'customer',

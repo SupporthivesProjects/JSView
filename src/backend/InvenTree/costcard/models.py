@@ -60,19 +60,20 @@ class CostCard(CardsFieldsMixin):
     # ---- General tab ----
     cost_card_no = models.CharField(max_length=50, unique=True, verbose_name=_('Cost Card No'), help_text=_('Auto-generated identifier for this cost card.'))
     our_style_no = models.CharField(max_length=100, verbose_name=_('Our Style No'), help_text=_('Style number used internally to identify this jewelry piece.'))
+    reference_style_no = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Reference Style No'), help_text=_('Reference style number for this costcard.'))
     vendor_style_no = models.CharField(max_length=100, null=True, blank=True, verbose_name=_('Vendor Style No'), help_text=_("Style number used by the vendor for this piece."))
     vendor = models.ForeignKey(Company, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards_as_vendor', verbose_name=_('Vendor'), help_text=_('Vendor this cost card is raised against.'))
     customer = models.ForeignKey(Company, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards_as_customer', verbose_name=_('Customer'), help_text=_('Customer this cost card is prepared for.'))
-    category = models.ForeignKey(JewelryCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Category'), help_text=_('Jewelry category of this piece.'))
-    sub_category = models.ForeignKey(JewelrySubCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Sub Category'), help_text=_('Jewelry sub-category of this piece.'))
-    metal_purity = models.ForeignKey(MetalPurity, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Metal Purity'), help_text=_('Metal purity grade used for this piece.'))
+    category = models.ForeignKey(JewelryCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Category'), help_text=_('Jewelry category of this costcard.'))
+    sub_category = models.ForeignKey(JewelrySubCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Jewelry Sub Category'), help_text=_('Jewelry sub-category of this costcard.'))
+    metal_purity = models.ForeignKey(MetalPurity, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Metal Purity'), help_text=_('Metal purity grade used for this costcard.'))
     karat = models.PositiveIntegerField(validators=[MinValueValidator(1)],null=True, blank=True, verbose_name=_('Kt'), help_text=_('Karat value of the metal, e.g. 14, 18, 22, or 24.'))
     metal_grams = models.DecimalField(max_digits=10, decimal_places=3, verbose_name=_('Metal Grams'), help_text=_('Weight of metal used, in grams.'))
-    finding_type = models.ForeignKey(FindingType, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Finding Type'), help_text=_('Finding type used on this piece.'))
-    finding_item = models.ForeignKey(FindingItem,null=True, blank=True,on_delete=models.SET_NULL,related_name='cost_cards', verbose_name=_('Finding Type'),help_text=_('Finding type item used on this piece.'),)
+    finding_type = models.ForeignKey(FindingType, null=True, blank=True, on_delete=models.SET_NULL, related_name='cost_cards', verbose_name=_('Finding Type'), help_text=_('Finding type used on this costcard.'))
+    finding_item = models.ForeignKey(FindingItem,null=True, blank=True,on_delete=models.SET_NULL,related_name='cost_cards', verbose_name=_('Finding Type'),help_text=_('Finding type item used on this costcard.'),)
     finding_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Finding Price'), help_text=_('Price charged for the finding used.'))
-    gross_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Gross Weight'), help_text=_('Total gross weight of the piece.'))
-    net_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Net Weight'), help_text=_('Net weight of the piece excluding stones.'))
+    gross_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Gross Weight'), help_text=_('Total gross weight of the costcard.'))
+    net_weight = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, verbose_name=_('Net Weight'), help_text=_('Net weight of the costcard excluding stones.'))
     troy_ounce_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_('Troy Ounce Price'), help_text=_('Metal price per troy ounce, frozen at the time of costing.'))
 
     height_mm = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Height MM'), help_text=_('Height of the piece in millimeters.'))
@@ -86,14 +87,14 @@ class CostCard(CardsFieldsMixin):
     drape_length_mm = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Drape Length MM'), help_text=_('Drape length in millimeters.'))
     drape_length_inch = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True, verbose_name=_('Drape Length Inch'), help_text=_('Drape length in inches.'))
 
-    design_note = models.TextField(null=True, blank=True, verbose_name=_('Design Instruction'), help_text=_('Design instructions for this piece.'))
-    special_note = models.TextField(null=True, blank=True, verbose_name=_('Special Instruction'), help_text=_('Special instructions for this piece.'))
+    design_note = models.TextField(null=True, blank=True, verbose_name=_('Design Instruction'), help_text=_('Design instructions for this costcard.'))
+    special_note = models.TextField(null=True, blank=True, verbose_name=_('Special Instruction'), help_text=_('Special instructions for this costcard.'))
     remarks = models.TextField(null=True, blank=True, verbose_name=_('Remarks'), help_text=_('Short remarks entered on the General tab.'))
 
     # ---- Images tab ----
-    front_view = models.ImageField(upload_to=front_view_image, null=True, blank=True, verbose_name=_('Front View'), help_text=_('Front view image of the piece.'))
-    side_view = models.ImageField(upload_to=side_view_image, null=True, blank=True, verbose_name=_('Side View'), help_text=_('Side view image of the piece.'))
-    back_view = models.ImageField(upload_to=back_view_image, null=True, blank=True, verbose_name=_('Back View'), help_text=_('Back view image of the piece.'))
+    front_view = models.ImageField(upload_to=front_view_image, null=True, blank=True, verbose_name=_('Front View'), help_text=_('Front view image of the costcard.'))
+    side_view = models.ImageField(upload_to=side_view_image, null=True, blank=True, verbose_name=_('Side View'), help_text=_('Side view image of the costcard.'))
+    back_view = models.ImageField(upload_to=back_view_image, null=True, blank=True, verbose_name=_('Back View'), help_text=_('Back view image of the costcard.'))
 
     # ---- Labour Details tab (read-only rollups, one per source) ----
     labour_finish_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Finish Type'), help_text=_('Total labour cost rolled up from finish lines.'))
@@ -127,7 +128,7 @@ class CostCard(CardsFieldsMixin):
     vendor_markup_pct = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Vendor Markup %'), help_text=_('Vendor markup as a percentage.'))
     vendor_markup_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Vendor Markup Amount'), help_text=_('Computed vendor markup amount.'))
 
-    fob = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('F.O.B'), help_text=_('Free-on-board amount for this piece.'))
+    fob = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('F.O.B'), help_text=_('Free-on-board amount for this costcard.'))
 
     duty_pct = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Duty %'), help_text=_('Import/export duty as a percentage.'))
     duty_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), blank=True, verbose_name=_('Duty Amount'), help_text=_('Computed duty amount.'))
