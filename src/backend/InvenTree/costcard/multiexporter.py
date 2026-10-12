@@ -1,15 +1,6 @@
-"""Reusable openpyxl builder for the cost card presentation workbook.
-
-One "COST BREAKDOWN SHEET" per cost card, all inside a single workbook.
-Nothing here touches the database: cards are only read, never saved.
-
-Usage:
-    builder = CostCardSheetBuilder(overrides={'duty_pct': '100'}, modified_by='Shekhar')
-    data = builder.to_bytes(builder.build(cards))
-"""
-
+import os
 import re
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from io import BytesIO
 from pathlib import Path
 
@@ -18,12 +9,10 @@ from django.utils import timezone
 
 from openpyxl import Workbook
 from openpyxl.cell.cell import MergedCell
+from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image as XLImage
 from PIL import Image as PILImage
-import os
-from django.conf import settings
 
 DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
 
@@ -35,7 +24,10 @@ CENTER = Alignment(horizontal='center', vertical='center', wrap_text=True)
 MONEY = '0.00'
 MIN_COL_WIDTH = 4
 MAX_COL_WIDTH = 26
-FIXED_LABOUR_ROWS = 2  # finish-type rows only; a STONE row is always added on top of these
+MIN_FINISH_ROWS = 2
+ZERO = Decimal('0')
+CENT = Decimal('0.01')
+HUNDRED = Decimal('100')
 STUDDING_HEADERS = [
     'Type', 'Shape', 'Cut', 'MM Size', 'Sieve Size', 'Stone Type', 'Colour', 'Pointer',
     'Pcs', 'Carats', 'P/C', 'Rate', 'Amount', 'Setting', 'Rate', 'Amount',
@@ -59,6 +51,18 @@ def dec(value):
 
 def num(value):
     return None if value is None else float(value)
+
+
+def money(value):
+    return Decimal(value).quantize(CENT, rounding=ROUND_HALF_UP)
+
+
+def percent_of(base, pct):
+    return money(Decimal(base) * Decimal(pct or 0) / HUNDRED)
+
+
+def total(values):
+    return sum(values, ZERO)
 
 
 def name_of(value):
@@ -91,9 +95,6 @@ def merge(ws, cell_range, value, bold=False, border=True, fmt=None, size=11):
 
 
 class CostCardSheetBuilder:
-    """Builds one sheet per cost card. Every block is its own method, so blocks can be
-    switched off, reordered or replaced through `sections`."""
-
     SECTIONS = ('title', 'header', 'metal', 'studding', 'labour_and_cost', 'design', 'footer')
 
     def __init__(self, overrides=None, modified_by='', logo_path=None, footer_text=FOOTER_TEXT, sheet_title=None, sections=None):
@@ -121,10 +122,6 @@ class CostCardSheetBuilder:
         return buffer.getvalue()
 
     def fill_sheet(self, ws, card):
-        # Keep the workbook's default gridlines visible everywhere. Only the explicit
-        # thin BORDER boxes drawn on the Metal / Studding / Labour / Cost tables (the
-        # "data area") are meant to stand out - the rest of the sheet should still show
-        # the normal default book border/gridline like any other worksheet.
         ws.sheet_view.showGridLines = True
         figures = self.figures(card)
         row = 1
@@ -133,6 +130,10 @@ class CostCardSheetBuilder:
         self._apply_outer_border(ws, row - 1)
         self._autofit_columns(ws)
 
+    def _pct(self, key, stored):
+        value = self.overrides.get(key)
+        return Decimal(stored or 0) if value is None else value
+
     def figures(self, card):
         overrides = self.overrides
         purity = card.metal_purity
@@ -140,29 +141,53 @@ class CostCardSheetBuilder:
         price = overrides.get('silver_troy_ounce' if 'silver' in text else 'gold_troy_ounce')
         ratio = price / card.troy_ounce_price if price is not None and card.troy_ounce_price else None
 
-        metal, tr_oz = card.metal_amount, card.troy_ounce_price
+        metal_amount, tr_oz = Decimal(card.metal_amount or 0), card.troy_ounce_price
         if ratio is not None:
-            metal, tr_oz = metal * ratio, price
+            metal_amount, tr_oz = metal_amount * ratio, price
+        metal_amount = money(metal_amount)
 
-        studding = card.stone_amount
-        labour = card.labour_amount
+        diamond_lines = list(card.diamond_lines.all())
+        color_lines = list(card.colorstone_lines.all())
+        finish_lines = list(card.finish_lines.all())
+        stone_lines = diamond_lines + color_lines
 
-        markup_pct = overrides['markup_pct'] if overrides.get('markup_pct') is not None else card.vendor_markup_pct
-        duty_pct = overrides['duty_pct'] if overrides.get('duty_pct') is not None else card.duty_pct
-        margin_pct = overrides['margin_pct'] if overrides.get('margin_pct') is not None else card.margin_pct
+        if stone_lines:
+            diamond_amount = money(total(line.amount for line in diamond_lines))
+            color_amount = money(total(line.amount for line in color_lines))
+            stone_amount = diamond_amount + color_amount
+        else:
+            diamond_amount = Decimal(card.dia_amount or 0)
+            color_amount = Decimal(card.col_amount or 0)
+            stone_amount = Decimal(card.stone_amount or 0)
 
-        # FOB, With Duty and Final Price are always derived from the live components
-        # (Metal + Studding + Labour + Markup, then Duty%, then Margin%) rather than
-        # read off the card's stored aggregate columns, which are not kept in sync and
-        # can sit at 0 even when the underlying figures are correct.
+        if stone_lines or finish_lines:
+            labour = money(
+                total(line.rate for line in finish_lines)
+                + total(line.labour_amount for line in stone_lines)
+            )
+        else:
+            labour = Decimal(card.labour_amount or 0)
+
+        handling = (
+            percent_of(diamond_amount, card.dia_handling_pct)
+            + percent_of(color_amount, card.col_handling_pct)
+        )
+        metal = metal_amount + money(card.finding_price or 0)
+        studding = stone_amount + handling
+
+        markup_pct = self._pct('markup_pct', card.vendor_markup_pct)
+        duty_pct = self._pct('duty_pct', card.duty_pct)
+        margin_pct = self._pct('margin_pct', card.margin_pct)
+
         subtotal = metal + studding + labour
-        markup_amount = subtotal * markup_pct / 100
+        markup_amount = percent_of(subtotal, markup_pct)
         fob = subtotal + markup_amount
-        with_duty = fob + fob * duty_pct / 100
-        final = (with_duty + with_duty * margin_pct / 100).quantize(Decimal('0.01'))
+        with_duty = fob + percent_of(fob, duty_pct)
+        final = with_duty + percent_of(with_duty, margin_pct)
 
         return {
             'tr_oz': tr_oz,
+            'metal_amount': metal_amount,
             'metal': metal,
             'studding': studding,
             'labour': labour,
@@ -178,7 +203,6 @@ class CostCardSheetBuilder:
     def _section_title(self, ws, card, figures, row):
         merge(ws, f'A{row}:P{row}', 'COST BREAKDOWN SHEET', bold=True, border=False, size=14)
         if self.logo_path:
-            # self._image(ws, self.logo_path, f'B{row + 1}', (80, 80))
             self._image(ws, self.logo_path, f'B{row + 1}', (230, 90))
             return row + 5
         return row + 1
@@ -223,7 +247,7 @@ class CostCardSheetBuilder:
         ]
         for col, value in zip('ABCDE', values):
             put(ws, f'{col}{row + 1}', value)
-        merge(ws, f'F{row + 1}:G{row + 1}', num(figures['metal']), fmt=MONEY)
+        merge(ws, f'F{row + 1}:G{row + 1}', num(figures['metal_amount']), fmt=MONEY)
         return row + 3
 
     def _section_studding(self, ws, card, figures, row):
@@ -234,7 +258,6 @@ class CostCardSheetBuilder:
         row += 2
 
         lines = self._lines(card)
-        pcs = cts = amount = labour = 0
         for kind, line in lines:
             values = [
                 kind, name_of(line.shape), name_of(line.cut), size_of(line.mm_size), line.sieve_size or '',
@@ -243,20 +266,15 @@ class CostCardSheetBuilder:
             ]
             for col, value in enumerate(values, start=1):
                 put(ws, f'{get_column_letter(col)}{row}', value, fmt=STUDDING_FORMATS.get(col))
-            pcs += line.pcs
-            cts += line.cts
-            amount += line.amount
-            labour += line.labour_amount
             row += 1
 
-        # No lines -> leave the total values blank (not 0); the "Total" label always stays.
         has_lines = bool(lines)
         totals = {
             8: 'Total',
-            9: pcs if has_lines else None,
-            10: num(cts) if has_lines else None,
-            13: num(amount) if has_lines else None,
-            16: num(labour) if has_lines else None,
+            9: sum(line.pcs for _, line in lines) if has_lines else None,
+            10: num(total(line.cts for _, line in lines)) if has_lines else None,
+            13: num(total(line.amount for _, line in lines)) if has_lines else None,
+            16: num(total(line.labour_amount for _, line in lines)) if has_lines else None,
         }
         for col in range(1, LAST_COL + 1):
             put(ws, f'{get_column_letter(col)}{row}', totals.get(col), bold=col in totals, fmt=STUDDING_FORMATS.get(col))
@@ -265,15 +283,11 @@ class CostCardSheetBuilder:
     def _section_labour_and_cost(self, ws, card, figures, row):
         merge(ws, f'A{row}:B{row}', 'Labour Details', bold=True)
 
-        # Fixed layout: always exactly FIXED_LABOUR_ROWS finish-type rows (padded with
-        # blanks if there are fewer, truncated if there are more) plus one STONE row -
-        # matching the original template, regardless of how many finish lines exist.
         finish_rows = [(line.finish_type.name, line.rate) for line in card.finish_lines.all()]
-        finish_rows = finish_rows[:FIXED_LABOUR_ROWS]
-        while len(finish_rows) < FIXED_LABOUR_ROWS:
+        while len(finish_rows) < MIN_FINISH_ROWS:
             finish_rows.append(('', None))
         stone_lines = self._lines(card)
-        stone_value = sum(line.labour_amount for _, line in stone_lines) if stone_lines else None
+        stone_value = total(line.labour_amount for _, line in stone_lines) if stone_lines else None
         labour_rows = finish_rows + [('STONE', stone_value)]
 
         for offset, (label, value) in enumerate(labour_rows, start=1):
@@ -298,7 +312,10 @@ class CostCardSheetBuilder:
 
     @staticmethod
     def _lines(card):
-        return [('DIAMOND', line) for line in card.diamond_lines.all()] + [('COLORSTONE', line) for line in card.colorstone_lines.all()]
+        return (
+            [('DIAMOND', line) for line in card.diamond_lines.all()]
+            + [('COLORSTONE', line) for line in card.colorstone_lines.all()]
+        )
 
     def _image(self, ws, path, anchor, size):
         try:
@@ -313,8 +330,6 @@ class CostCardSheetBuilder:
             pass
 
     def _apply_outer_border(self, ws, last_row, last_col=LAST_COL):
-        """Draw a single thin border around the sheet's whole used range (A1:last_col,
-        1..last_row), preserving whatever inner borders each cell already has."""
         for col in range(1, last_col + 1):
             top_cell = ws.cell(row=1, column=col)
             top_cell.border = Border(
@@ -357,7 +372,6 @@ class CostCardSheetBuilder:
         for col in range(1, LAST_COL + 1):
             letter = get_column_letter(col)
             length = widths.get(letter, 0)
-            # Fit tightly to the actual content - no extra padding added on top.
             ws.column_dimensions[letter].width = min(max(length, MIN_COL_WIDTH), MAX_COL_WIDTH)
 
     def _unique_title(self, card, used):

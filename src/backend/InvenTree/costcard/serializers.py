@@ -1,5 +1,5 @@
 import json
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from io import BytesIO
 from urllib.request import Request, urlopen
 
@@ -23,13 +23,11 @@ from .models import (
     StonePlace,
 )
 
+CENT = Decimal('0.01')
+HUNDRED = Decimal('100')
+
 
 class SafeImageField(drf_serializers.ImageField):
-    """
-    ImageField that works when the request in the serializer context has no
-    build_absolute_uri (the data exporter uses a RequestFactory).
-    """
-
     def to_representation(self, value):
         if not value:
             return None
@@ -272,7 +270,6 @@ class CostCardSerializer(
 
     stone_lines_rate = drf_serializers.SerializerMethodField()
 
-    # The data exporter uses a RequestFactory without build_absolute_uri
     front_view = SafeImageField(read_only=True)
     side_view = SafeImageField(read_only=True)
     back_view = SafeImageField(read_only=True)
@@ -283,7 +280,6 @@ class CostCardSerializer(
         'finish_lines',
     )
 
-    # Internal fields exposed through the API only (not in import/export sheets)
     API_ONLY_FIELDS = ['reference_style_no']
     export_exclude_fields = API_ONLY_FIELDS
     import_exclude_fields = API_ONLY_FIELDS
@@ -462,19 +458,16 @@ class CostCardSerializer(
         last_card = CostCard.objects.order_by('-id').first()
 
         if last_card and last_card.cost_card_no:
-            try:
-                number = int(
-                    ''.join(
-                        char
-                        for char in last_card.cost_card_no
-                        if char.isdigit()
-                    )
-                )
-                return str(number + 1)
-            except (ValueError, TypeError):
-                pass
+            digits = ''.join(
+                char
+                for char in last_card.cost_card_no
+                if char.isdigit()
+            )
 
-        return "00001"
+            if digits:
+                return str(int(digits) + 1)
+
+        return '1'
 
     def _scalar_fields(self, validated_data):
         return {
@@ -653,15 +646,6 @@ class CostCardImageSerializer(InvenTreeModelSerializer):
         return instance
 
 
-# def _dec(value):
-#     if value in (None, '', 'null'):
-#         return None
-#     try:
-#         return Decimal(str(value))
-#     except InvalidOperation:
-#         return None
-
-
 def _dec(value):
     if isinstance(value, (list, tuple)):
         value = value[0] if value else None
@@ -670,9 +654,19 @@ def _dec(value):
         return None
 
     try:
-        return Decimal(str(value).strip())
+        result = Decimal(str(value).strip())
     except InvalidOperation:
         return None
+
+    return result if result.is_finite() else None
+
+
+def _money(value):
+    return Decimal(value).quantize(CENT, rounding=ROUND_HALF_UP)
+
+
+def _percent(base, pct):
+    return _money(Decimal(base) * Decimal(pct or 0) / HUNDRED)
 
 
 class CostCardPicturePresentationSerializer(
@@ -722,14 +716,6 @@ class CostCardPicturePresentationSerializer(
             'margin',
         ]
 
-    # def _param(self, key):
-    #     value = self.context.get(key)
-    #     if value in (None, ''):
-    #         request = self.context.get('request')
-    #         params = getattr(request, 'query_params', None) or {}
-    #         value = params.get(key)
-    #     return value
-
     def _param(self, key):
         value = self.context.get(key)
 
@@ -753,13 +739,6 @@ class CostCardPicturePresentationSerializer(
     def _margin_pct(self, obj):
         value = _dec(self._param('margin_pct'))
         return value if value is not None else obj.margin_pct
-
-    # def get_picture(self, obj):
-    #     if not obj.front_view:
-    #         return ''
-    #     url = obj.front_view.url
-    #     request = self.context.get('request')
-    #     return request.build_absolute_uri(url) if request else url
 
     def get_picture(self, obj):
         if not obj.front_view:
@@ -788,15 +767,16 @@ class CostCardPicturePresentationSerializer(
         return line.stone.name if line and line.stone else ''
 
     def _metal_ratio(self, obj):
-        name = (
-            obj.metal_purity.name
-            if obj.metal_purity
-            else ''
+        purity = obj.metal_purity
+        metal_type = getattr(purity, 'metal_type', None)
+        text = (
+            f"{getattr(metal_type, 'name', metal_type or '')} "
+            f"{purity.name if purity else ''}"
         ).lower()
 
         key = (
             'silver_troy_ounce'
-            if 'silver' in name
+            if 'silver' in text
             else 'gold_troy_ounce'
         )
 
@@ -813,9 +793,13 @@ class CostCardPicturePresentationSerializer(
         if ratio is None:
             return obj.fob
 
-        return obj.fob + (
-            obj.metal_amount + obj.metal_loss_amount
-        ) * (ratio - 1)
+        metal_change = Decimal(obj.metal_amount or 0) * (ratio - 1)
+
+        return _money(
+            obj.fob
+            + metal_change
+            + _percent(metal_change, obj.vendor_markup_pct)
+        )
 
     def get_cost(self, obj):
         keys = (
@@ -829,24 +813,11 @@ class CostCardPicturePresentationSerializer(
             return obj.final_amount
 
         fob = self._fob(obj)
+        with_duty = fob + _percent(fob, self._duty_pct(obj))
 
-        duty_amt = (
-            fob
-            * self._duty_pct(obj)
-            / 100
+        return _money(
+            with_duty + _percent(with_duty, self._margin_pct(obj))
         )
-
-        margin_amt = (
-            (fob + duty_amt)
-            * self._margin_pct(obj)
-            / 100
-        )
-
-        return (
-            fob
-            + duty_amt
-            + margin_amt
-        ).quantize(Decimal('0.01'))
 
     def get_duty(self, obj):
         return self._duty_pct(obj)
@@ -855,14 +826,6 @@ class CostCardPicturePresentationSerializer(
         return self._margin_pct(obj)
 
     def export_to_file(self, data, headers, file_format):
-        """
-        Keep the existing InvenTree export behavior for all formats
-        except XLSX.
-
-        For XLSX, generate the workbook here so the Picture column
-        contains the actual embedded image instead of the image URL.
-        """
-
         if file_format != 'xlsx':
             return super().export_to_file(
                 data,
@@ -881,7 +844,6 @@ class CostCardPicturePresentationSerializer(
         field_names = list(headers.keys())
         field_headers = list(headers.values())
 
-        # Header row
         for column_index, header in enumerate(field_headers, start=1):
             worksheet.cell(
                 row=1,
@@ -889,7 +851,6 @@ class CostCardPicturePresentationSerializer(
                 value=header,
             )
 
-        # Find the Picture column
         picture_column = None
 
         for index, field_name in enumerate(field_names, start=1):
@@ -897,7 +858,6 @@ class CostCardPicturePresentationSerializer(
                 picture_column = index
                 break
 
-        # Existing data
         for row_index, row in enumerate(data, start=2):
             for column_index, field_name in enumerate(
                 field_names,
@@ -908,8 +868,6 @@ class CostCardPicturePresentationSerializer(
                     field_name,
                 )
 
-                # Do not write the image URL into Excel.
-                # The actual image will be embedded below.
                 if (
                     picture_column is not None
                     and column_index == picture_column
@@ -922,7 +880,6 @@ class CostCardPicturePresentationSerializer(
                     value=value,
                 )
 
-            # Embed actual image
             if picture_column is not None:
                 picture_url = self.get_nested_value(
                     row,
@@ -950,7 +907,6 @@ class CostCardPicturePresentationSerializer(
                             image_stream
                         )
 
-                        # Keep image size reasonable
                         max_width = 120
                         max_height = 120
 
@@ -984,21 +940,17 @@ class CostCardPicturePresentationSerializer(
                             cell_reference,
                         )
 
-                        # Make row high enough for image
                         worksheet.row_dimensions[
                             row_index
                         ].height = 95
 
                     except Exception:
-                        # If image cannot be downloaded,
-                        # keep the rest of the export working.
                         worksheet.cell(
                             row=row_index,
                             column=picture_column,
                             value='',
                         )
 
-        # Basic column sizing
         for column_index, field_name in enumerate(
             field_names,
             start=1,
