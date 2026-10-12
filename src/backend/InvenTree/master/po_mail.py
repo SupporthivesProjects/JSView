@@ -1,6 +1,6 @@
 import mimetypes
 import re
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from email.mime.image import MIMEImage
 from functools import lru_cache
 from io import BytesIO
@@ -18,6 +18,7 @@ import os
 
 DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
 LOGO_CID = 'company_logo'
+CENT = Decimal('0.01')
 
 COMPANY_PROFILE = {
     'name': 'Jewel Source Inc.',
@@ -201,8 +202,29 @@ def label(value):
     return getattr(value, 'name', None) or str(value)
 
 
+def to_decimal(value):
+    value = getattr(value, 'amount', value)
+
+    if value is None or value == '':
+        return Decimal(0)
+
+    return Decimal(str(value))
+
+
 def dec(obj, name):
-    return Decimal(getattr(obj, name, 0) or 0)
+    return to_decimal(getattr(obj, name, None))
+
+
+def rounded(value, places=CENT):
+    return value.quantize(places, rounding=ROUND_HALF_UP)
+
+
+def fixed(value):
+    return f'{rounded(value)}'
+
+
+def number(value):
+    return format(value.normalize(), 'f')
 
 
 def money(value):
@@ -211,7 +233,7 @@ def money(value):
     if amount is None or amount == '':
         return ''
 
-    return f'{Decimal(amount):,.2f}'
+    return f'{rounded(Decimal(str(amount))):,.2f}'
 
 
 def fmt_date(value):
@@ -316,13 +338,15 @@ def order_items(order, pairs):
     items = []
 
     for line, card in pairs:
-        qty = Decimal(line.qty or 0)
+        qty = dec(line, 'qty')
         weight = dec(card, 'net_weight')
         purity = getattr(card, 'metal_purity', None)
         description = card_description(card) or line.styleno
 
-        if line.vstyleno and line.styleno:
+        if line.vstyleno and line.styleno and description != line.styleno:
             description = f'{description} (our style {line.styleno})'
+
+        amount = rounded(dec(card, 'fob') * qty)
 
         items.append({
             'code': line.vstyleno or line.styleno,
@@ -330,11 +354,12 @@ def order_items(order, pairs):
             'metal': label(getattr(purity, 'metal_type', None)),
             'purity': getattr(card, 'karat', '') or label(purity),
             'size': size_text(line),
-            'net_weight': f'{weight:.2f}' if weight else '',
+            'net_weight': fixed(weight) if weight else '',
             'weight_value': weight * qty,
-            'quantity': f'{qty:g}',
-            'amount': money(dec(card, 'fob') * qty),
-            'amount_value': dec(card, 'fob') * qty,
+            'quantity': number(qty),
+            'quantity_value': qty,
+            'amount': money(amount),
+            'amount_value': amount,
         })
 
     return items
@@ -353,15 +378,15 @@ def stone_rows(pairs, etype):
     grouped = {}
 
     for line, card in pairs:
-        qty = Decimal(line.qty or 0)
+        qty = dec(line, 'qty')
 
         for stone_line in stone_lines(card):
             if getattr(stone_line, 'etype', '') != etype:
                 continue
 
             key = tuple(label(getattr(stone_line, field, '')) for field in STONE_KEYS)
-            row = grouped.setdefault(key, {'pcs': 0, 'cts': Decimal(0)})
-            row['pcs'] += int(getattr(stone_line, 'pcs', 0) or 0) * int(qty)
+            row = grouped.setdefault(key, {'pcs': Decimal(0), 'cts': Decimal(0)})
+            row['pcs'] += dec(stone_line, 'pcs') * qty
             row['cts'] += dec(stone_line, 'cts') * qty
 
     return [
@@ -371,8 +396,8 @@ def stone_rows(pairs, etype):
             'size': key[2],
             'colour': key[3],
             'quality': key[4],
-            'pcs': row['pcs'],
-            'cts': row['cts'],
+            'pcs': int(rounded(row['pcs'], Decimal(1))),
+            'cts': rounded(row['cts']),
         }
         for key, row in sorted(grouped.items())
     ]
@@ -382,14 +407,20 @@ def cost_rows(pairs):
     rows = []
 
     for line, card in pairs:
-        qty = Decimal(line.qty or 0)
+        qty = dec(line, 'qty')
+        metal = rounded(dec(card, 'metal_amount') * qty)
+        stones = rounded(dec(card, 'stone_amount') * qty)
+        labour = rounded(dec(card, 'labour_amount') * qty)
+        total = rounded(dec(card, 'final_amount') * qty)
+
         rows.append({
             'style': line.styleno,
             'quantity': qty,
-            'metal': dec(card, 'metal_amount') * qty,
-            'stones': dec(card, 'stone_amount') * qty,
-            'labour': dec(card, 'labour_amount') * qty,
-            'total': dec(card, 'final_amount') * qty,
+            'metal': metal,
+            'stones': stones,
+            'labour': labour,
+            'other': total - metal - stones - labour,
+            'total': total,
         })
 
     return rows
@@ -481,7 +512,7 @@ def build_context(order, vendor=None):
 
     vendor_total = sum((item['amount_value'] for item in items), Decimal(0))
     total_weight = sum((item['weight_value'] for item in items), Decimal(0))
-    total_qty = sum((Decimal(item['quantity']) for item in items), Decimal(0))
+    total_qty = sum((item['quantity_value'] for item in items), Decimal(0))
 
     diamonds = stone_rows(pairs, 'DIAMOND')
     colour_stones = stone_rows(pairs, 'COLOURSTONE')
@@ -504,7 +535,7 @@ def build_context(order, vendor=None):
         'customer_po_no': order.customer_pono,
         'delivery_address': company_address_text,
         'items': items,
-        'total_net_weight': f'{total_weight:.2f}',
+        'total_net_weight': fixed(total_weight),
         'subtotal': money(vendor_total),
         'gst_percent': '',
         'gst_amount': '',
@@ -524,12 +555,12 @@ def build_context(order, vendor=None):
                 'color': row['colour'],
                 'clarity': row['quality'],
                 'pcs': row['pcs'],
-                'weight': f"{row['cts']:.2f}",
+                'weight': fixed(row['cts']),
             }
             for row in diamonds
         ],
         'total_diamond_pcs': sum(row['pcs'] for row in diamonds),
-        'total_diamond_ct': f"{sum((row['cts'] for row in diamonds), Decimal(0)):.2f}",
+        'total_diamond_ct': fixed(sum((row['cts'] for row in diamonds), Decimal(0))),
         'stones': [
             {
                 'name': row['stone'],
@@ -538,29 +569,31 @@ def build_context(order, vendor=None):
                 'colour': row['colour'],
                 'quality': row['quality'],
                 'pcs': row['pcs'],
-                'weight': f"{row['cts']:.2f}",
+                'weight': fixed(row['cts']),
             }
             for row in colour_stones
         ],
         'total_color_pcs': sum(row['pcs'] for row in colour_stones),
-        'total_color_ct': f"{sum((row['cts'] for row in colour_stones), Decimal(0)):.2f}",
+        'total_color_ct': fixed(sum((row['cts'] for row in colour_stones), Decimal(0))),
         'ny_eta': ship_date,
         'ny_address': company_address_text,
         'costs': [
             {
                 'style': row['style'],
-                'quantity': f"{row['quantity']:g}",
+                'quantity': number(row['quantity']),
                 'metal': money(row['metal']),
                 'stones': money(row['stones']),
                 'labour': money(row['labour']),
+                'other': money(row['other']),
                 'total': money(row['total']),
             }
             for row in costs
         ],
-        'total_qty': f'{total_qty:g}',
+        'total_qty': number(total_qty),
         'total_metal': money(sum((row['metal'] for row in costs), Decimal(0))),
         'total_stones': money(sum((row['stones'] for row in costs), Decimal(0))),
         'total_labour': money(sum((row['labour'] for row in costs), Decimal(0))),
+        'total_other': money(sum((row['other'] for row in costs), Decimal(0))),
         'ny_total': money(sum((row['total'] for row in costs), Decimal(0))),
         'company_name': company_name,
         'company_logo_url': COMPANY_PROFILE['logo_url'],
