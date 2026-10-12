@@ -133,6 +133,7 @@ export const MenuRoles: Record<string, UserRoles[]> = {
     UserRoles.requisition_metal_sent
   ],
   'vendor-shipment': [UserRoles.vendor_shipment],
+  'po-mail': [UserRoles.master_po_mail],
   reports: [UserRoles.report]
 };
 
