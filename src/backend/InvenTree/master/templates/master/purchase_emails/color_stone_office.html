@@ -52,15 +52,7 @@
       </table>
     </td>
   </tr>
-
   <tr>
-    <td class="pad btn" align="center" style="padding:26px 32px 28px 32px;">
-      {% if po_view_url %}
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td align="center" style="background:#1B4B8A;border-radius:6px;"><a href="{{ po_view_url }}" style="display:inline-block;padding:13px 32px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Open purchase order</a></td>
-      </tr></table>
-      {% endif %}
-      {% if attachment_names %}<div style="margin-top:14px;font-size:13px;line-height:20px;color:#6B7A8D;">Attached: {{ attachment_names }}</div>{% endif %}
-    </td>
+    <td class="pad btn" align="center" style="padding:26px 32px 28px 32px;"></td>
   </tr>
 {% include "master/purchase_emails/_footer.html" %}

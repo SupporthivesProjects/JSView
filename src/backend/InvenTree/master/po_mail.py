@@ -1,9 +1,9 @@
-import mimetypes
+import logging
+import os
 import re
 from decimal import ROUND_HALF_UP, Decimal
 from email.mime.image import MIMEImage
 from functools import lru_cache
-from io import BytesIO
 
 from django.apps import apps
 from django.conf import settings
@@ -14,7 +14,8 @@ from django.template import Context, Template
 from django.template.loader import get_template
 from common.settings import get_global_setting
 from .models import POMail
-import os
+
+logger = logging.getLogger('inventree')
 
 DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
 LOGO_CID = 'company_logo'
@@ -46,52 +47,6 @@ DEFAULT_TEMPLATES = {
 }
 
 STONE_KEYS = ('stone', 'shape', 'mm_size', 'colour', 'quality')
-
-
-def pdf_attachment(template_name):
-    def build(context):
-        from weasyprint import HTML
-
-        return HTML(string=get_template(template_name).render(context)).write_pdf()
-
-    return build
-
-
-def excel_attachment(key, columns):
-    def build(context):
-        from openpyxl import Workbook
-
-        book = Workbook()
-        sheet = book.active
-        sheet.append([title for title, _field in columns])
-
-        for row in context[key]:
-            sheet.append([row[field] for _title, field in columns])
-
-        buffer = BytesIO()
-        book.save(buffer)
-
-        return buffer.getvalue()
-
-    return build
-
-
-ATTACHMENTS = {
-    'po_vendor_pdf': ('P.O. Vendor PDF', 'PO_{po_number}.pdf', pdf_attachment('master/purchase_emails/vendor.html')),
-    'po_vendor_costcard_pdf': ('P.O. Vendor Cost Card PDF', 'PO_{po_number}_CostCard.pdf', pdf_attachment('master/purchase_emails/vendor_costcard.html')),
-    'po_self_pdf': ('P.O. Self PDF', 'PO_{po_number}_Self.pdf', pdf_attachment('master/purchase_emails/self.html')),
-    'po_self_costcard_pdf': ('P.O. Self Cost Card PDF', 'PO_{po_number}_Self_CostCard.pdf', pdf_attachment('master/purchase_emails/self_costcard.html')),
-    'stone_diamond_xlsx': (
-        'Stone Requisition Details [Diamond] Excel',
-        'Diamond_Requisition_{po_number}.xlsx',
-        excel_attachment('diamonds', [('Shape', 'shape'), ('Size', 'size'), ('Color', 'color'), ('Clarity', 'clarity'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
-    ),
-    'stone_color_xlsx': (
-        'Stone Requisition Details [Color Stone] Excel',
-        'ColorStone_Requisition_{po_number}.xlsx',
-        excel_attachment('stones', [('Stone', 'name'), ('Shape', 'shape'), ('Size', 'size'), ('Colour', 'colour'), ('Quality', 'quality'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
-    ),
-}
 
 
 def logo_image():
@@ -195,7 +150,21 @@ def split_emails(value):
     return [item.strip() for item in re.split(r'[;,]', value or '') if item.strip()]
 
 
-def label(value):
+def unique_emails(value):
+    seen = set()
+    result = []
+
+    for item in split_emails(value):
+        marker = item.lower()
+
+        if marker not in seen:
+            seen.add(marker)
+            result.append(item)
+
+    return result
+
+
+def display_name(value):
     if value is None or value == '':
         return ''
 
@@ -211,29 +180,29 @@ def to_decimal(value):
     return Decimal(str(value))
 
 
-def dec(obj, name):
+def decimal_field(obj, name):
     return to_decimal(getattr(obj, name, None))
 
 
-def rounded(value, places=CENT):
+def round_decimal(value, places=CENT):
     return value.quantize(places, rounding=ROUND_HALF_UP)
 
 
-def fixed(value):
-    return f'{rounded(value)}'
+def format_fixed(value):
+    return f'{round_decimal(value)}'
 
 
-def number(value):
+def format_number(value):
     return format(value.normalize(), 'f')
 
 
-def money(value):
+def format_money(value):
     amount = getattr(value, 'amount', value)
 
     if amount is None or amount == '':
         return ''
 
-    return f'{rounded(Decimal(str(amount))):,.2f}'
+    return f'{round_decimal(Decimal(str(amount))):,.2f}'
 
 
 def fmt_date(value):
@@ -261,7 +230,7 @@ def company_address(company):
     )
 
 
-def party(company):
+def company_summary(company):
     if company is None:
         return None
 
@@ -328,8 +297,8 @@ def size_text(line):
 
 
 def card_description(card):
-    sub_category = label(getattr(card, 'sub_category', None))
-    category = label(getattr(card, 'category', None))
+    sub_category = display_name(getattr(card, 'sub_category', None))
+    category = display_name(getattr(card, 'category', None))
 
     return sub_category or category
 
@@ -338,27 +307,27 @@ def order_items(order, pairs):
     items = []
 
     for line, card in pairs:
-        qty = dec(line, 'qty')
-        weight = dec(card, 'net_weight')
+        qty = decimal_field(line, 'qty')
+        weight = decimal_field(card, 'net_weight')
         purity = getattr(card, 'metal_purity', None)
         description = card_description(card) or line.styleno
 
         if line.vstyleno and line.styleno and description != line.styleno:
             description = f'{description} (our style {line.styleno})'
 
-        amount = rounded(dec(card, 'fob') * qty)
+        amount = round_decimal(decimal_field(card, 'fob') * qty)
 
         items.append({
             'code': line.vstyleno or line.styleno,
             'description': description,
-            'metal': label(getattr(purity, 'metal_type', None)),
-            'purity': getattr(card, 'karat', '') or label(purity),
+            'metal': display_name(getattr(purity, 'metal_type', None)),
+            'purity': getattr(card, 'karat', '') or display_name(purity),
             'size': size_text(line),
-            'net_weight': fixed(weight) if weight else '',
+            'net_weight': format_fixed(weight) if weight else '',
             'weight_value': weight * qty,
-            'quantity': number(qty),
+            'quantity': format_number(qty),
             'quantity_value': qty,
-            'amount': money(amount),
+            'amount': format_money(amount),
             'amount_value': amount,
         })
 
@@ -378,16 +347,16 @@ def stone_rows(pairs, etype):
     grouped = {}
 
     for line, card in pairs:
-        qty = dec(line, 'qty')
+        qty = decimal_field(line, 'qty')
 
         for stone_line in stone_lines(card):
             if getattr(stone_line, 'etype', '') != etype:
                 continue
 
-            key = tuple(label(getattr(stone_line, field, '')) for field in STONE_KEYS)
+            key = tuple(display_name(getattr(stone_line, field, '')) for field in STONE_KEYS)
             row = grouped.setdefault(key, {'pcs': Decimal(0), 'cts': Decimal(0)})
-            row['pcs'] += dec(stone_line, 'pcs') * qty
-            row['cts'] += dec(stone_line, 'cts') * qty
+            row['pcs'] += decimal_field(stone_line, 'pcs') * qty
+            row['cts'] += decimal_field(stone_line, 'cts') * qty
 
     return [
         {
@@ -396,8 +365,8 @@ def stone_rows(pairs, etype):
             'size': key[2],
             'colour': key[3],
             'quality': key[4],
-            'pcs': int(rounded(row['pcs'], Decimal(1))),
-            'cts': rounded(row['cts']),
+            'pcs': int(round_decimal(row['pcs'], Decimal(1))),
+            'cts': round_decimal(row['cts']),
         }
         for key, row in sorted(grouped.items())
     ]
@@ -407,11 +376,11 @@ def cost_rows(pairs):
     rows = []
 
     for line, card in pairs:
-        qty = dec(line, 'qty')
-        metal = rounded(dec(card, 'metal_amount') * qty)
-        stones = rounded(dec(card, 'stone_amount') * qty)
-        labour = rounded(dec(card, 'labour_amount') * qty)
-        total = rounded(dec(card, 'final_amount') * qty)
+        qty = decimal_field(line, 'qty')
+        metal = round_decimal(decimal_field(card, 'metal_amount') * qty)
+        stones = round_decimal(decimal_field(card, 'stone_amount') * qty)
+        labour = round_decimal(decimal_field(card, 'labour_amount') * qty)
+        total = round_decimal(decimal_field(card, 'final_amount') * qty)
 
         rows.append({
             'style': line.styleno,
@@ -435,14 +404,8 @@ def subject_context(order):
         'po_date': fmt_date(order.podate),
         'supplier_name': vendors[0].name if vendors else '',
         'customer_name': order.customerid.name if order.customerid else '',
-        'company_name': get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name'],
+        'company_name': COMPANY_PROFILE['name'],
     }
-
-
-def attachment_label(template):
-    codes = split_emails(template.attachments) if template else []
-
-    return ', '.join(ATTACHMENTS[code][0] for code in codes if code in ATTACHMENTS)
 
 
 def default_email(template, key, vendor):
@@ -472,7 +435,7 @@ def mail_options(order, mail):
             'template_name': template.name if template else None,
             'subject': render_subject(template, context) if template else '',
             'email': default_email(template, key, vendor),
-            'attachments': attachment_label(template),
+            'attachments': '',
         })
 
     return {
@@ -481,9 +444,9 @@ def mail_options(order, mail):
         'po_type': order.potype,
         'cancelled': bool(order.canc_dt),
         'mail': mail.pk if mail else None,
-        'vendor': party(vendors[0]) if vendors else None,
-        'vendors': [party(item) for item in vendors],
-        'customer': party(order.customerid),
+        'vendor': company_summary(vendors[0]) if vendors else None,
+        'vendors': [company_summary(item) for item in vendors],
+        'customer': company_summary(order.customerid),
         'vendor_email': vendor,
         'customer_email': customer,
         'formats': formats,
@@ -493,16 +456,27 @@ def mail_options(order, mail):
 def build_context(order, vendor=None):
     lines = order_lines(order)
 
-    if vendor is not None:
-        lines = [line for line in lines if line_vendor(order, line) == vendor]
+    if isinstance(vendor, (list, tuple, set)):
+        selected = list(vendor)
+    elif vendor is not None:
+        selected = [vendor]
+    else:
+        selected = []
+
+    if selected:
+        selected_ids = {item.pk for item in selected}
+        lines = [
+            line for line in lines
+            if line_vendor(order, line) is not None and line_vendor(order, line).pk in selected_ids
+        ]
 
     pairs = line_cards(order, lines)
     items = order_items(order, pairs)
     vendors = order_vendors(order, lines)
-    supplier = vendor or (vendors[0] if vendors else None)
+    supplier = selected[0] if selected else (vendors[0] if vendors else None)
     creator = order.prepby
-    base_url = (get_global_setting('INVENTREE_BASE_URL') or '').rstrip('/')
-    company_name = get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name']
+    base_url = ('').rstrip('/')
+    company_name = COMPANY_PROFILE['name']
     delivery_date = fmt_date(order.ddate)
     stones_needed_by = fmt_date(order.esdstone) or delivery_date
     ship_date = fmt_date(order.vcsdate) or delivery_date
@@ -535,11 +509,11 @@ def build_context(order, vendor=None):
         'customer_po_no': order.customer_pono,
         'delivery_address': company_address_text,
         'items': items,
-        'total_net_weight': fixed(total_weight),
-        'subtotal': money(vendor_total),
+        'total_net_weight': format_fixed(total_weight),
+        'subtotal': format_money(vendor_total),
         'gst_percent': '',
         'gst_amount': '',
-        'grand_total': money(vendor_total),
+        'grand_total': format_money(vendor_total),
         'order_notes': order.rem or '',
         'weight_tolerance': '',
         'po_view_url': f'{base_url}/web/purchasing/purchase-order/{order.pk}' if base_url else '',
@@ -555,12 +529,12 @@ def build_context(order, vendor=None):
                 'color': row['colour'],
                 'clarity': row['quality'],
                 'pcs': row['pcs'],
-                'weight': fixed(row['cts']),
+                'weight': format_fixed(row['cts']),
             }
             for row in diamonds
         ],
         'total_diamond_pcs': sum(row['pcs'] for row in diamonds),
-        'total_diamond_ct': fixed(sum((row['cts'] for row in diamonds), Decimal(0))),
+        'total_diamond_ct': format_fixed(sum((row['cts'] for row in diamonds), Decimal(0))),
         'stones': [
             {
                 'name': row['stone'],
@@ -569,32 +543,32 @@ def build_context(order, vendor=None):
                 'colour': row['colour'],
                 'quality': row['quality'],
                 'pcs': row['pcs'],
-                'weight': fixed(row['cts']),
+                'weight': format_fixed(row['cts']),
             }
             for row in colour_stones
         ],
         'total_color_pcs': sum(row['pcs'] for row in colour_stones),
-        'total_color_ct': fixed(sum((row['cts'] for row in colour_stones), Decimal(0))),
+        'total_color_ct': format_fixed(sum((row['cts'] for row in colour_stones), Decimal(0))),
         'ny_eta': ship_date,
         'ny_address': company_address_text,
         'costs': [
             {
                 'style': row['style'],
-                'quantity': number(row['quantity']),
-                'metal': money(row['metal']),
-                'stones': money(row['stones']),
-                'labour': money(row['labour']),
-                'other': money(row['other']),
-                'total': money(row['total']),
+                'quantity': format_number(row['quantity']),
+                'metal': format_money(row['metal']),
+                'stones': format_money(row['stones']),
+                'labour': format_money(row['labour']),
+                'other': format_money(row['other']),
+                'total': format_money(row['total']),
             }
             for row in costs
         ],
-        'total_qty': number(total_qty),
-        'total_metal': money(sum((row['metal'] for row in costs), Decimal(0))),
-        'total_stones': money(sum((row['stones'] for row in costs), Decimal(0))),
-        'total_labour': money(sum((row['labour'] for row in costs), Decimal(0))),
-        'total_other': money(sum((row['other'] for row in costs), Decimal(0))),
-        'ny_total': money(sum((row['total'] for row in costs), Decimal(0))),
+        'total_qty': format_number(total_qty),
+        'total_metal': format_money(sum((row['metal'] for row in costs), Decimal(0))),
+        'total_stones': format_money(sum((row['stones'] for row in costs), Decimal(0))),
+        'total_labour': format_money(sum((row['labour'] for row in costs), Decimal(0))),
+        'total_other': format_money(sum((row['other'] for row in costs), Decimal(0))),
+        'ny_total': format_money(sum((row['total'] for row in costs), Decimal(0))),
         'company_name': company_name,
         'company_logo_url': COMPANY_PROFILE['logo_url'],
         'company_address_line1': COMPANY_PROFILE['address_line1'],
@@ -626,8 +600,8 @@ def render_subject(template, context):
     return f"Purchase {context['po_type']} {context['po_number']}"
 
 
-def deliver(key, template, entered, context, subject_text):
-    recipients = split_emails(entered)
+def deliver_mail(key, template, entered, context, subject_text):
+    recipients = unique_emails(entered)
 
     if not recipients:
         return False, {'key': key, 'email': entered, 'error': 'No recipient email.'}
@@ -639,7 +613,6 @@ def deliver(key, template, entered, context, subject_text):
         return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
 
     try:
-        context = dict(context, attachment_names=attachment_label(template))
         logo = logo_image()
         body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}') if logo else context
         html = render_body(template, key, body_context)
@@ -657,16 +630,25 @@ def deliver(key, template, entered, context, subject_text):
             message.mixed_subtype = 'related'
             message.attach(logo)
 
-        for code in split_emails(template.attachments if template else ''):
-            if code not in ATTACHMENTS:
-                continue
+        accepted = message.send(fail_silently=False)
 
-            _label, filename, builder = ATTACHMENTS[code]
-            name = filename.format(**context)
-            message.attach(name, builder(context), mimetypes.guess_type(name)[0] or 'application/octet-stream')
+        if not accepted:
+            logger.error('PO mail %s was not accepted by the mail backend (to: %s)', key, recipients)
+            return False, {
+                'key': key,
+                'email': ', '.join(recipients),
+                'error': 'Mail backend did not accept the message.',
+            }
 
-        message.send()
+        logger.info(
+            'PO mail %s handed to mail backend (from: %s, to: %s, subject: %s)',
+            key,
+            settings.DEFAULT_FROM_EMAIL,
+            recipients,
+            subject,
+        )
     except Exception as exc:
+        logger.exception('PO mail %s failed (to: %s)', key, recipients)
         return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}
 
     return True, {
@@ -682,6 +664,7 @@ def send_selected(order, mail, selections):
     vendors = order_vendors(order, order_lines(order))
     sent = []
     failed = []
+    handled = set()
 
     for selection in selections:
         if not isinstance(selection, dict):
@@ -696,6 +679,11 @@ def send_selected(order, mail, selections):
             failed.append({'key': key, 'email': entered, 'error': 'Unknown mail type.'})
             continue
 
+        if key in handled:
+            continue
+
+        handled.add(key)
+
         template = format_template(mail, field)
 
         if template is None:
@@ -703,15 +691,21 @@ def send_selected(order, mail, selections):
             continue
 
         if key == 'vendor' and len(vendors) > 1:
-            targets = [(company_email(item), item) for item in vendors]
+            grouped = {}
+
+            for item in vendors:
+                address = company_email(item)
+                grouped.setdefault(address.lower(), (address, []))[1].append(item)
+
+            targets = [(address, group) for address, group in grouped.values()]
         elif key == 'vendor' and vendors:
-            targets = [(entered, vendors[0])]
+            targets = [(entered, [vendors[0]])]
         else:
             targets = [(entered, None)]
 
-        for recipient, vendor in targets:
-            context = dict(build_context(order, vendor), custom_message=selection.get('message') or '')
-            ok, record = deliver(key, template, recipient, context, selection.get('subject'))
+        for recipient, vendor_group in targets:
+            context = dict(build_context(order, vendor_group), custom_message=selection.get('message') or '')
+            ok, record = deliver_mail(key, template, recipient, context, selection.get('subject'))
             (sent if ok else failed).append(record)
 
     return {'sent': sent, 'failed': failed}

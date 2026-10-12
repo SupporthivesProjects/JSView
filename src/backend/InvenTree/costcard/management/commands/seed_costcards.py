@@ -356,3 +356,7 @@ class Command(BaseCommand):
             if options['dry_run']:
                 transaction.set_rollback(True)
                 self.stdout.write('dry run: all changes rolled back')
+
+
+# python manage.py seed_costcards
+# python manage.py seed_costcards --skip-seed --recalc

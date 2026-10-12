@@ -250,7 +250,7 @@ SYSTEM_SETTINGS: dict[str, InvenTreeSettingsKeyType] = {
     'INVENTREE_COMPANY_NAME': {
         'name': _('Company name'),
         'description': _('Internal company name'),
-        'default': 'My company name',
+        'default': 'Jewel Source INC',
     },
     'INVENTREE_BASE_URL': {
         'name': _('Base URL'),

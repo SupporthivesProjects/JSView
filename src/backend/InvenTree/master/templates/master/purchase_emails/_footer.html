@@ -1,25 +1,33 @@
   <tr>
     <td class="pad" style="background:#F3F6FA;border-top:1px solid #DDE3EC;padding:26px 32px 22px 32px;font-family:Roboto,Arial,Helvetica,sans-serif;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed;">
         <tr>
-          <td class="col" width="45%" valign="top" style="padding-right:16px;">
+          <td class="col" width="45%" valign="top" align="left" style="padding:0 16px 0 0;">
             {% if company_name %}<div style="font-size:17px;line-height:23px;color:#1B4B8A;font-weight:bold;">{{ company_name }}</div>{% endif %}
             <div style="width:36px;height:3px;line-height:3px;font-size:0;background:#2FB59E;margin:8px 0 10px 0;">&nbsp;</div>
-            <div style="font-size:12px;line-height:18px;color:#6B7A8D;">Sent from JSIView ERP</div>
+            {% if company_phone %}<div style="font-size:12px;line-height:18px;color:#6B7A8D;">{{ company_phone }}</div>{% endif %}
+            {% if company_email %}<div style="font-size:12px;line-height:18px;color:#6B7A8D;"><a href="mailto:{{ company_email }}" style="color:#1B4B8A;">{{ company_email }}</a></div>{% endif %}
           </td>
-          <td class="col txt-l" width="55%" valign="top" align="right" style="padding-left:16px;border-left:1px solid #DDE3EC;text-align:right;font-size:13px;line-height:20px;color:#4A5B70;">
-            {% if company_address_line1 %}{{ company_address_line1 }}<br>{% endif %}
-            {% if company_address_line2 %}{{ company_address_line2 }}<br>{% endif %}
-            {% if company_phone %}{{ company_phone }}<br>{% endif %}
-            {% if company_email %}<a href="mailto:{{ company_email }}" style="color:#1B4B8A;">{{ company_email }}</a><br>{% endif %}
-            {% if company_website %}<a href="{% if company_website|slice:':4' == 'http' %}{{ company_website }}{% else %}https://{{ company_website }}{% endif %}" style="color:#1B4B8A;">{{ company_website }}</a>{% endif %}
-            {% if company_gstin %}<br>GSTIN: {{ company_gstin }}{% endif %}
-            {% if company_reg_line %}<br>{{ company_reg_line }}{% endif %}
+          <td class="col txt-l" width="55%" valign="top" align="right" style="padding:0 0 0 16px;border-left:1px solid #DDE3EC;text-align:right;font-size:13px;line-height:20px;color:#4A5B70;">
+            {% if company_address_line1 %}<div>{{ company_address_line1 }}</div>{% endif %}
+            {% if company_address_line2 %}<div>{{ company_address_line2 }}</div>{% endif %}
+            {% if company_website %}<div><a href="{% if company_website|slice:':4' == 'http' %}{{ company_website }}{% else %}https://{{ company_website }}{% endif %}" style="color:#1B4B8A;">{{ company_website }}</a></div>{% endif %}
+            {% if company_gstin %}<div>GSTIN: {{ company_gstin }}</div>{% endif %}
+            {% if company_reg_line %}<div>{{ company_reg_line }}</div>{% endif %}
           </td>
         </tr>
       </table>
-      <div style="height:1px;line-height:1px;font-size:0;background:#DDE3EC;margin:18px 0 14px 0;">&nbsp;</div>
-      <div style="font-size:11px;line-height:17px;color:#6B7A8D;text-align:center;">This email and its attachments are confidential and intended only for the recipient.</div>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="height:1px;line-height:1px;font-size:0;border-top:1px solid #DDE3EC;">&nbsp;</td></tr>
+        <tr><td style="height:14px;line-height:14px;font-size:0;">&nbsp;</td></tr>
+        <tr>
+          <td align="center" style="font-size:11px;line-height:17px;color:#6B7A8D;text-align:center;">This email and its attachments are confidential and intended only for the recipient.</td>
+        </tr>
+      </table>
+
     </td>
   </tr>
   <tr><td style="height:5px;line-height:5px;font-size:0;background:#2FB59E;">&nbsp;</td></tr>
