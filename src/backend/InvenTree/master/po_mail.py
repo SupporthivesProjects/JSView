@@ -1,18 +1,18 @@
 import re
 from decimal import Decimal
+from functools import lru_cache
 
+from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db.models import Q
 from django.template import Context, Template
 from django.template.loader import get_template
 
 from common.settings import get_global_setting
-from order.models import PurchaseOrder
 
-from .models import POMail, Terms
+from .models import POMail
 
 COMPANY_PROFILE = {
     'name': '',
@@ -39,6 +39,19 @@ DEFAULT_TEMPLATES = {
     key: f'master/purchase_emails/{key}.html' for key, _field, _label in FORMATS
 }
 
+STONE_KEYS = ('stone', 'shape', 'mm_size', 'colour', 'quality')
+
+
+@lru_cache(maxsize=1)
+def purchase_order_model():
+    for model in apps.get_models():
+        if model.__name__ == 'PurchaseOrder' and any(
+            field.name == 'pono' for field in model._meta.get_fields()
+        ):
+            return model
+
+    raise LookupError('Purchase order model with a pono field was not found.')
+
 
 def get_order(po_number):
     value = str(po_number or '').strip()
@@ -46,7 +59,46 @@ def get_order(po_number):
     if not value:
         return None
 
-    return PurchaseOrder.objects.select_related('supplier').filter(reference=value).first()
+    return (
+        purchase_order_model()
+        .objects.select_related('vendorid', 'customerid', 'termsid', 'prepby')
+        .filter(pono__iexact=value)
+        .first()
+    )
+
+
+def order_choices(search='', potype='', limit=50):
+    queryset = purchase_order_model().objects.filter(active=True, canc_dt__isnull=True).select_related(
+        'vendorid', 'customerid'
+    )
+
+    if search:
+        queryset = queryset.filter(pono__icontains=search)
+
+    if potype:
+        queryset = queryset.filter(potype=potype.upper())
+
+    return [
+        {
+            'id': order.pk,
+            'po_number': order.pono,
+            'po_type': order.potype,
+            'po_date': fmt_date(order.podate),
+            'customer': order.customerid.name if order.customerid else '',
+            'vendor': order.vendorid.name if order.vendorid else '',
+        }
+        for order in queryset.order_by('-podate', '-npono')[:limit]
+    ]
+
+
+def order_blocked(order):
+    if order.canc_dt:
+        return 'Purchase order is cancelled.'
+
+    if not order.active:
+        return 'Purchase order is inactive.'
+
+    return ''
 
 
 def active_mail(pk=None):
@@ -76,68 +128,15 @@ def split_emails(value):
     return [item.strip() for item in re.split(r'[;,]', value or '') if item.strip()]
 
 
-def company_email(company):
-    if company is None:
+def label(value):
+    if value is None or value == '':
         return ''
 
-    return (getattr(company, 'email', '') or '').strip()
+    return getattr(value, 'name', None) or str(value)
 
 
-def vendor_email(order):
-    contact = getattr(order, 'contact', None)
-    return ((getattr(contact, 'email', '') or '').strip()) or company_email(order.supplier)
-
-
-def customer_email(order):
-    return company_email(getattr(order, 'customer', None))
-
-
-def party(company, email):
-    if company is None:
-        return None
-
-    return {'id': company.pk, 'name': company.name, 'email': email}
-
-
-def subject_context(order):
-    supplier = order.supplier
-
-    return {
-        'po_number': order.reference,
-        'po_date': fmt_date(getattr(order, 'creation_date', None)),
-        'supplier_name': supplier.name if supplier else '',
-        'company_name': get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name'],
-    }
-
-
-def mail_options(order, mail):
-    vendor = vendor_email(order)
-    customer = customer_email(order)
-    context = subject_context(order)
-    formats = []
-
-    for key, field, label in FORMATS:
-        template = format_template(mail, field)
-        formats.append({
-            'key': key,
-            'label': label,
-            'active': template is not None,
-            'template': template.pk if template else None,
-            'template_name': template.name if template else None,
-            'subject': render_subject(template, context) if template else '',
-            'email': vendor if key == 'vendor' else customer,
-        })
-
-    return {
-        'order': order.pk,
-        'po_number': order.reference,
-        'mail': mail.pk if mail else None,
-        'vendor': party(order.supplier, vendor),
-        'customer': party(getattr(order, 'customer', None), customer),
-        'vendor_email': vendor,
-        'customer_email': customer,
-        'formats': formats,
-    }
+def dec(obj, name):
+    return Decimal(getattr(obj, name, 0) or 0)
 
 
 def money(value):
@@ -153,97 +152,333 @@ def fmt_date(value):
     return value.strftime('%d %b %Y') if value else ''
 
 
-def order_items(order):
+def company_email(company):
+    if company is None:
+        return ''
+
+    return (getattr(company, 'email', '') or '').strip()
+
+
+def company_address(company):
+    if company is None:
+        return ''
+
+    address = getattr(company, 'address', '') or ''
+
+    if address:
+        return str(address)
+
+    return ', '.join(
+        part for part in (company.city, company.state, company.country) if part
+    )
+
+
+def party(company):
+    if company is None:
+        return None
+
+    return {
+        'id': company.pk,
+        'code': company.code,
+        'name': company.name,
+        'email': company_email(company),
+        'contact': company.contact,
+        'phone': company.phone,
+        'tax_id': company.tax_id,
+        'address': company_address(company),
+    }
+
+
+def line_vendor(order, line):
+    return line.vendorid or order.vendorid
+
+
+def order_lines(order):
+    return list(order.lines.filter(active=True).select_related('costcardid'))
+
+
+def line_cards(order, lines):
+    snapshots = {
+        snapshot.costcard_id: snapshot
+        for snapshot in order.po_costcards.filter(active=True)
+        .select_related('metal_purity__metal_type', 'category', 'sub_category')
+        .prefetch_related('lines')
+    }
+
+    return [(line, snapshots.get(line.costcardid_id) or line.costcardid) for line in lines]
+
+
+def order_vendors(order, lines):
+    vendors = []
+    seen = set()
+
+    for line in lines:
+        vendor = line_vendor(order, line)
+
+        if vendor is not None and vendor.pk not in seen:
+            seen.add(vendor.pk)
+            vendors.append(vendor)
+
+    if not vendors and order.vendorid is not None:
+        vendors.append(order.vendorid)
+
+    return vendors
+
+
+def vendor_emails(vendors):
+    return ', '.join(dict.fromkeys(email for email in map(company_email, vendors) if email))
+
+
+def size_text(line):
+    sizes = split_emails(line.size)
+    pieces = split_emails(line.spcs)
+
+    if sizes and len(sizes) == len(pieces):
+        return ', '.join(f'{size} ({count})' for size, count in zip(sizes, pieces))
+
+    return line.size or ''
+
+
+def card_description(card):
+    sub_category = label(getattr(card, 'sub_category', None))
+    category = label(getattr(card, 'category', None))
+
+    return sub_category or category
+
+
+def order_items(order, pairs):
     items = []
 
-    for line in order.lines.select_related('part__part'):
-        supplier_part = line.part
-        part = getattr(supplier_part, 'part', None)
-        price = line.purchase_price
-        quantity = Decimal(line.quantity or 0)
-        price_amount = Decimal(getattr(price, 'amount', 0) or 0) if price else Decimal(0)
-        weight = getattr(part, 'weight', None)
+    for line, card in pairs:
+        qty = Decimal(line.qty or 0)
+        weight = dec(card, 'net_weight')
+        purity = getattr(card, 'metal_purity', None)
+        description = card_description(card) or line.styleno
+
+        if line.vstyleno and line.styleno:
+            description = f'{description} (our style {line.styleno})'
 
         items.append({
-            'code': getattr(supplier_part, 'SKU', '') or '',
-            'description': getattr(part, 'name', '') or '',
-            'metal': getattr(part, 'metal', '') or '',
-            'purity': getattr(part, 'purity', '') or '',
-            'size': getattr(part, 'size', '') or '',
-            'net_weight': f'{Decimal(weight):.2f}' if weight else '',
-            'weight_value': Decimal(weight) * quantity if weight else Decimal(0),
-            'quantity': f'{quantity:g}',
-            'amount': money(quantity * price_amount),
-            'amount_value': quantity * price_amount,
+            'code': line.vstyleno or line.styleno,
+            'description': description,
+            'metal': label(getattr(purity, 'metal_type', None)),
+            'purity': getattr(card, 'karat', '') or label(purity),
+            'size': size_text(line),
+            'net_weight': f'{weight:.2f}' if weight else '',
+            'weight_value': weight * qty,
+            'quantity': f'{qty:g}',
+            'amount': money(dec(card, 'fob') * qty),
+            'amount_value': dec(card, 'fob') * qty,
         })
 
     return items
 
 
-def build_context(order):
-    supplier = order.supplier
-    items = order_items(order)
-    computed_total = sum((item['amount_value'] for item in items), Decimal(0))
-    total = order.total_price if getattr(order, 'total_price', None) else computed_total
-    total_weight = sum((item['weight_value'] for item in items), Decimal(0))
+def stone_lines(card):
+    related = getattr(card, 'lines', None)
 
-    terms = (
-        Terms.objects.filter(active=True)
-        .filter(Q(all_vendors=True) | Q(vendors=supplier))
-        .distinct()
-        .order_by('name')
-        .first()
-    )
+    if related is None or not hasattr(related, 'all'):
+        return []
 
-    contact = getattr(order, 'contact', None)
-    address = getattr(order, 'address', None)
-    supplier_address = getattr(supplier, 'primary_address', None)
-    creator = getattr(order, 'created_by', None)
-    base_url = (get_global_setting('INVENTREE_BASE_URL') or '').rstrip('/')
-    company_name = get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name']
-    po_date = fmt_date(getattr(order, 'creation_date', None))
-    delivery_date = fmt_date(getattr(order, 'target_date', None))
-    currency = getattr(order, 'currency', '') or ''
-    grand_total = money(total)
+    return list(related.all())
+
+
+def stone_rows(pairs, etype):
+    grouped = {}
+
+    for line, card in pairs:
+        qty = Decimal(line.qty or 0)
+
+        for stone_line in stone_lines(card):
+            if getattr(stone_line, 'etype', '') != etype:
+                continue
+
+            key = tuple(label(getattr(stone_line, field, '')) for field in STONE_KEYS)
+            row = grouped.setdefault(key, {'pcs': 0, 'cts': Decimal(0)})
+            row['pcs'] += int(getattr(stone_line, 'pcs', 0) or 0) * int(qty)
+            row['cts'] += dec(stone_line, 'cts') * qty
+
+    return [
+        {
+            'stone': key[0],
+            'shape': key[1],
+            'size': key[2],
+            'colour': key[3],
+            'quality': key[4],
+            'pcs': row['pcs'],
+            'cts': row['cts'],
+        }
+        for key, row in sorted(grouped.items())
+    ]
+
+
+def cost_rows(pairs):
+    rows = []
+
+    for line, card in pairs:
+        qty = Decimal(line.qty or 0)
+        rows.append({
+            'style': line.styleno,
+            'quantity': qty,
+            'metal': dec(card, 'metal_amount') * qty,
+            'stones': dec(card, 'stone_amount') * qty,
+            'labour': dec(card, 'labour_amount') * qty,
+            'total': dec(card, 'final_amount') * qty,
+        })
+
+    return rows
+
+
+def subject_context(order):
+    vendors = order_vendors(order, order_lines(order))
 
     return {
-        'po_number': order.reference,
-        'po_date': po_date,
+        'po_number': order.pono,
+        'po_type': order.get_potype_display(),
+        'po_date': fmt_date(order.podate),
+        'supplier_name': vendors[0].name if vendors else '',
+        'customer_name': order.customerid.name if order.customerid else '',
+        'company_name': get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name'],
+    }
+
+
+def mail_options(order, mail):
+    vendors = order_vendors(order, order_lines(order))
+    vendor = vendor_emails(vendors)
+    customer = company_email(order.customerid)
+    context = subject_context(order)
+    formats = []
+
+    for key, field, label_text in FORMATS:
+        template = format_template(mail, field)
+        formats.append({
+            'key': key,
+            'label': label_text,
+            'active': template is not None,
+            'template': template.pk if template else None,
+            'template_name': template.name if template else None,
+            'subject': render_subject(template, context) if template else '',
+            'email': vendor if key == 'vendor' else customer,
+        })
+
+    return {
+        'order': order.pk,
+        'po_number': order.pono,
+        'po_type': order.potype,
+        'cancelled': bool(order.canc_dt),
+        'mail': mail.pk if mail else None,
+        'vendor': party(vendors[0]) if vendors else None,
+        'vendors': [party(item) for item in vendors],
+        'customer': party(order.customerid),
+        'vendor_email': vendor,
+        'customer_email': customer,
+        'formats': formats,
+    }
+
+
+def build_context(order, vendor=None):
+    lines = order_lines(order)
+
+    if vendor is not None:
+        lines = [line for line in lines if line_vendor(order, line) == vendor]
+
+    pairs = line_cards(order, lines)
+    items = order_items(order, pairs)
+    vendors = order_vendors(order, lines)
+    supplier = vendor or (vendors[0] if vendors else None)
+    creator = order.prepby
+    base_url = (get_global_setting('INVENTREE_BASE_URL') or '').rstrip('/')
+    company_name = get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name']
+    delivery_date = fmt_date(order.ddate)
+    stones_needed_by = fmt_date(order.esdstone) or delivery_date
+    ship_date = fmt_date(order.vcsdate) or delivery_date
+    company_address_text = ', '.join(
+        part for part in (COMPANY_PROFILE['address_line1'], COMPANY_PROFILE['address_line2']) if part
+    )
+
+    vendor_total = sum((item['amount_value'] for item in items), Decimal(0))
+    total_weight = sum((item['weight_value'] for item in items), Decimal(0))
+    total_qty = sum((Decimal(item['quantity']) for item in items), Decimal(0))
+
+    diamonds = stone_rows(pairs, 'DIAMOND')
+    colour_stones = stone_rows(pairs, 'COLOURSTONE')
+    costs = cost_rows(pairs)
+
+    return {
+        'po_number': order.pono,
+        'po_type': order.get_potype_display(),
+        'po_date': fmt_date(order.podate),
         'delivery_date': delivery_date,
         'confirm_by_date': delivery_date,
-        'payment_terms': terms.name if terms else '',
-        'currency': currency,
-        'preheader': f'New purchase order {order.reference} from {company_name}.',
+        'payment_terms': order.termsid.name if order.termsid else '',
+        'currency': getattr(supplier, 'currency_code', '') if supplier else '',
+        'preheader': f'New purchase {order.get_potype_display().lower()} {order.pono} from {company_name}.',
         'supplier_name': supplier.name if supplier else '',
-        'supplier_contact': getattr(contact, 'name', '') or (supplier.name if supplier else ''),
-        'supplier_address': str(supplier_address) if supplier_address else '',
-        'supplier_gstin': '',
-        'delivery_address': str(address) if address else '',
+        'supplier_contact': (supplier.contact or supplier.name) if supplier else '',
+        'supplier_address': company_address(supplier),
+        'supplier_gstin': supplier.tax_id if supplier else '',
+        'customer_name': order.customerid.name if order.customerid else '',
+        'customer_po_no': order.customer_pono,
+        'delivery_address': company_address_text,
         'items': items,
         'total_net_weight': f'{total_weight:.2f}',
-        'subtotal': grand_total,
-        'gst_percent': '0',
-        'gst_amount': '0.00',
-        'grand_total': grand_total,
-        'order_notes': getattr(order, 'description', '') or '',
+        'subtotal': money(vendor_total),
+        'gst_percent': '',
+        'gst_amount': '',
+        'grand_total': money(vendor_total),
+        'order_notes': order.rem or '',
         'weight_tolerance': '',
         'po_view_url': f'{base_url}/web/purchasing/purchase-order/{order.pk}' if base_url else '',
         'buyer_name': (creator.get_full_name() or creator.get_username()) if creator else '',
-        'buyer_email': getattr(creator, 'email', '') if creator else '',
+        'buyer_email': creator.email if creator else '',
         'buyer_phone': '',
         'attachment_names': '',
-        'stones_needed_by': delivery_date,
-        'total_stone_ct': '',
-        'total_stone_pcs': '',
-        'diamonds': [],
-        'stones': [],
-        'ny_eta': delivery_date,
-        'ny_address': str(address) if address else '',
-        'costs': [],
-        'total_qty': f"{sum((Decimal(item['quantity']) for item in items), Decimal(0)):g}",
-        'total_metal': '',
-        'total_stones': '',
-        'total_labour': '',
+        'stones_needed_by': stones_needed_by,
+        'diamonds': [
+            {
+                'shape': row['shape'],
+                'size': row['size'],
+                'color': row['colour'],
+                'clarity': row['quality'],
+                'pcs': row['pcs'],
+                'weight': f"{row['cts']:.2f}",
+            }
+            for row in diamonds
+        ],
+        'total_diamond_pcs': sum(row['pcs'] for row in diamonds),
+        'total_diamond_ct': f"{sum((row['cts'] for row in diamonds), Decimal(0)):.2f}",
+        'stones': [
+            {
+                'name': row['stone'],
+                'shape': row['shape'],
+                'size': row['size'],
+                'colour': row['colour'],
+                'quality': row['quality'],
+                'pcs': row['pcs'],
+                'weight': f"{row['cts']:.2f}",
+            }
+            for row in colour_stones
+        ],
+        'total_color_pcs': sum(row['pcs'] for row in colour_stones),
+        'total_color_ct': f"{sum((row['cts'] for row in colour_stones), Decimal(0)):.2f}",
+        'ny_eta': ship_date,
+        'ny_address': company_address_text,
+        'costs': [
+            {
+                'style': row['style'],
+                'quantity': f"{row['quantity']:g}",
+                'metal': money(row['metal']),
+                'stones': money(row['stones']),
+                'labour': money(row['labour']),
+                'total': money(row['total']),
+            }
+            for row in costs
+        ],
+        'total_qty': f'{total_qty:g}',
+        'total_metal': money(sum((row['metal'] for row in costs), Decimal(0))),
+        'total_stones': money(sum((row['stones'] for row in costs), Decimal(0))),
+        'total_labour': money(sum((row['labour'] for row in costs), Decimal(0))),
+        'ny_total': money(sum((row['total'] for row in costs), Decimal(0))),
         'company_name': company_name,
         'company_logo_url': COMPANY_PROFILE['logo_url'],
         'company_address_line1': COMPANY_PROFILE['address_line1'],
@@ -275,12 +510,47 @@ def render_subject(template, context):
     if subject:
         return ' '.join(Template(subject).render(Context(context)).split())
 
-    return f"Purchase Order {context['po_number']}"
+    return f"Purchase {context['po_type']} {context['po_number']}"
+
+
+def deliver(key, template, entered, context, subject_text):
+    recipients = split_emails(entered)
+
+    if not recipients:
+        return False, {'key': key, 'email': entered, 'error': 'No recipient email.'}
+
+    try:
+        for recipient in recipients:
+            validate_email(recipient)
+    except ValidationError:
+        return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
+
+    try:
+        html = render_body(template, key, context)
+        subject = ' '.join((subject_text or '').split()) or render_subject(template, context)
+        message = EmailMultiAlternatives(
+            subject,
+            f"Purchase {context['po_type']} {context['po_number']} from {context['company_name']}. "
+            'Please view this email in an HTML-capable client.',
+            settings.DEFAULT_FROM_EMAIL,
+            recipients,
+        )
+        message.attach_alternative(html, 'text/html')
+        message.send()
+    except Exception as exc:
+        return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}
+
+    return True, {
+        'key': key,
+        'email': ', '.join(recipients),
+        'subject': subject,
+        'vendor': context['supplier_name'] if key == 'vendor' else None,
+    }
 
 
 def send_selected(order, mail, selections):
-    base_context = build_context(order)
     defaults = {item['key']: item['email'] for item in mail_options(order, mail)['formats']}
+    vendors = order_vendors(order, order_lines(order))
     sent = []
     failed = []
 
@@ -303,35 +573,16 @@ def send_selected(order, mail, selections):
             failed.append({'key': key, 'email': entered, 'error': 'No active template for this mail type.'})
             continue
 
-        recipients = split_emails(entered)
+        if key == 'vendor' and len(vendors) > 1:
+            targets = [(company_email(item), item) for item in vendors]
+        elif key == 'vendor' and vendors:
+            targets = [(entered, vendors[0])]
+        else:
+            targets = [(entered, None)]
 
-        if not recipients:
-            failed.append({'key': key, 'email': entered, 'error': 'No recipient email.'})
-            continue
-
-        try:
-            for recipient in recipients:
-                validate_email(recipient)
-        except ValidationError:
-            failed.append({'key': key, 'email': entered, 'error': 'Invalid email address.'})
-            continue
-
-        context = dict(base_context, custom_message=selection.get('message') or '')
-
-        try:
-            html = render_body(template, key, context)
-            subject = ' '.join((selection.get('subject') or '').split()) or render_subject(template, context)
-            message = EmailMultiAlternatives(
-                subject,
-                f"Purchase Order {context['po_number']} from {context['company_name']}. "
-                'Please view this email in an HTML-capable client.',
-                settings.DEFAULT_FROM_EMAIL,
-                recipients,
-            )
-            message.attach_alternative(html, 'text/html')
-            message.send()
-            sent.append({'key': key, 'email': ', '.join(recipients), 'subject': subject})
-        except Exception as exc:
-            failed.append({'key': key, 'email': ', '.join(recipients), 'error': str(exc)})
+        for recipient, vendor in targets:
+            context = dict(build_context(order, vendor), custom_message=selection.get('message') or '')
+            ok, record = deliver(key, template, recipient, context, selection.get('subject'))
+            (sent if ok else failed).append(record)
 
     return {'sent': sent, 'failed': failed}

@@ -16,7 +16,7 @@
         <tr>
           <td class="col" width="34%" valign="top" style="padding:14px 16px;"><div style="font-size:12px;color:#6B7A8D;">Vendor</div><div style="font-size:15px;font-weight:bold;">{{ supplier_name }}</div></td>
           <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">Expected in New York</div><div style="font-size:15px;font-weight:bold;">{{ ny_eta }}</div></td>
-          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">PO value</div><div style="font-size:15px;font-weight:bold;">{{ currency }} {{ grand_total }}</div></td>
+          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">PO value</div><div style="font-size:15px;font-weight:bold;">{{ currency }} {{ ny_total }}</div></td>
         </tr>
       </table>
     </td>
@@ -44,7 +44,7 @@
         <tr style="background:#DCE8FB;color:#1B4B8A;font-weight:bold;">
           <td style="padding:12px 10px;">Total ({{ currency }})</td><td align="right" style="padding:12px 10px;">{{ total_qty }}</td>
           <td align="right" style="padding:12px 10px;">{{ total_metal }}</td><td align="right" style="padding:12px 10px;">{{ total_stones }}</td>
-          <td align="right" style="padding:12px 10px;">{{ total_labour }}</td><td align="right" style="padding:12px 10px;">{{ grand_total }}</td>
+          <td align="right" style="padding:12px 10px;">{{ total_labour }}</td><td align="right" style="padding:12px 10px;">{{ ny_total }}</td>
         </tr>
       </table>
     </td>

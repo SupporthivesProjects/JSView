@@ -32,7 +32,7 @@ from .models import (
     Templates,
     Terms,
 )
-from .po_mail import active_mail, get_order, mail_options, send_selected
+from .po_mail import active_mail, get_order, mail_options, order_blocked, order_choices, send_selected
 
 
 class MasterPagination(LimitOffsetPagination):
@@ -345,6 +345,18 @@ class POMailDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
+class POMailOrderList(APIView):
+    permission_classes = [MasterDataPermission]
+
+    def get(self, request):
+        return Response(
+            order_choices(
+                request.query_params.get('search', ''),
+                request.query_params.get('type', ''),
+            )
+        )
+
+
 class POMailOrderDetail(APIView):
     permission_classes = [MasterDataPermission]
 
@@ -367,6 +379,11 @@ class POMailSend(APIView):
 
         if order is None:
             return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        blocked = order_blocked(order)
+
+        if blocked:
+            return Response({'detail': blocked}, status=status.HTTP_400_BAD_REQUEST)
 
         selections = request.data.get('formats')
 
@@ -465,6 +482,7 @@ master_api_urls = [
 
     path('po-mail/', include([
         path('send/', POMailSend.as_view(), name='api-po-mail-send'),
+        path('orders/', POMailOrderList.as_view(), name='api-po-mail-order-list'),
         path('order/<path:po_number>/', POMailOrderDetail.as_view(), name='api-po-mail-order'),
         path('<int:pk>/', POMailDetail.as_view(), name='api-po-mail-detail'),
         path('', POMailList.as_view(), name='api-po-mail-list'),

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Purchase Order {{ po_number }}</title>
+<title>Purchase {{ po_type }} {{ po_number }}</title>
 <style>
   body{margin:0;padding:0;background:#F3F6FA;-webkit-text-size-adjust:100%;}
   table{border-collapse:collapse;}
@@ -38,7 +38,7 @@
             <img src="{{ company_logo_url }}" alt="Jewel Source" width="150" style="width:150px;height:auto;font-size:20px;color:#1B4B8A;">
           </td>
           <td valign="middle" align="right" style="font-family:Roboto,Arial,Helvetica,sans-serif;">
-            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">Purchase Order</div>
+            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">Purchase {{ po_type }}</div>
             <div style="font-size:22px;line-height:28px;color:#1B4B8A;font-weight:bold;">{{ po_number }}</div>
             <div style="font-size:12px;line-height:16px;color:#6B7A8D;">{{ po_date }}</div>
           </td>
