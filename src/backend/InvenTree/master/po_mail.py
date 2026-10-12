@@ -1,3 +1,4 @@
+import logging
 import re
 from decimal import ROUND_HALF_UP, Decimal
 from functools import lru_cache
@@ -12,6 +13,8 @@ from django.template.loader import get_template
 from django.templatetags.static import static
 from common.settings import get_global_setting
 from .models import POMail
+
+logger = logging.getLogger('inventree')
 
 LOGO_STATIC_PATH = 'logos/logo_for_excel_sheet.png'
 CENT = Decimal('0.01')
@@ -619,8 +622,25 @@ def deliver(key, template, entered, context, subject_text):
             recipients,
         )
         message.attach_alternative(html, 'text/html')
-        message.send()
+        accepted = message.send(fail_silently=False)
+
+        if not accepted:
+            logger.error('PO mail %s was not accepted by the mail backend (to: %s)', key, recipients)
+            return False, {
+                'key': key,
+                'email': ', '.join(recipients),
+                'error': 'Mail backend did not accept the message.',
+            }
+
+        logger.info(
+            'PO mail %s handed to mail backend (from: %s, to: %s, subject: %s)',
+            key,
+            settings.DEFAULT_FROM_EMAIL,
+            recipients,
+            subject,
+        )
     except Exception as exc:
+        logger.exception('PO mail %s failed (to: %s)', key, recipients)
         return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}
 
     return True, {
