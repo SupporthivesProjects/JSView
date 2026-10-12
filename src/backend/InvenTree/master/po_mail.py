@@ -11,19 +11,17 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.template import Context, Template
 from django.template.loader import get_template
-
 from common.settings import get_global_setting
-
 from .models import POMail
 
 COMPANY_PROFILE = {
-    'name': '',
+    'name': 'Jewel Source Inc.',
     'logo_url': '',
-    'address_line1': '',
-    'address_line2': '',
-    'phone': '',
-    'email': '',
-    'website': '',
+    'address_line1': '45 West 45th Street, 9th Floor',
+    'address_line2': 'New York, NY 10036, USA',
+    'phone': '1-212-3910312',
+    'email': 'sarju@jewelsourceinc.com',
+    'website': 'www.jsiview.com',
     'reg_line': '',
     'gstin': '',
 }
@@ -559,10 +557,6 @@ def build_context(order, vendor=None):
 
 def render_body(template, key, context):
     code = (template.code or '').strip() if template else ''
-
-    if not code and template and template.template:
-        with template.template.open('rb') as handle:
-            code = handle.read().decode('utf-8')
 
     if code:
         return Template(code).render(Context(context))
