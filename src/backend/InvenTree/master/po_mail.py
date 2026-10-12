@@ -1,6 +1,8 @@
+import mimetypes
 import re
 from decimal import Decimal
 from functools import lru_cache
+from io import BytesIO
 
 from django.apps import apps
 from django.conf import settings
@@ -42,6 +44,52 @@ DEFAULT_TEMPLATES = {
 STONE_KEYS = ('stone', 'shape', 'mm_size', 'colour', 'quality')
 
 
+def pdf_attachment(template_name):
+    def build(context):
+        from weasyprint import HTML
+
+        return HTML(string=get_template(template_name).render(context)).write_pdf()
+
+    return build
+
+
+def excel_attachment(key, columns):
+    def build(context):
+        from openpyxl import Workbook
+
+        book = Workbook()
+        sheet = book.active
+        sheet.append([title for title, _field in columns])
+
+        for row in context[key]:
+            sheet.append([row[field] for _title, field in columns])
+
+        buffer = BytesIO()
+        book.save(buffer)
+
+        return buffer.getvalue()
+
+    return build
+
+
+ATTACHMENTS = {
+    'po_vendor_pdf': ('P.O. Vendor PDF', 'PO_{po_number}.pdf', pdf_attachment('master/purchase_pdfs/vendor.html')),
+    'po_vendor_costcard_pdf': ('P.O. Vendor Cost Card PDF', 'PO_{po_number}_CostCard.pdf', pdf_attachment('master/purchase_pdfs/vendor_costcard.html')),
+    'po_self_pdf': ('P.O. Self PDF', 'PO_{po_number}_Self.pdf', pdf_attachment('master/purchase_pdfs/self.html')),
+    'po_self_costcard_pdf': ('P.O. Self Cost Card PDF', 'PO_{po_number}_Self_CostCard.pdf', pdf_attachment('master/purchase_pdfs/self_costcard.html')),
+    'stone_diamond_xlsx': (
+        'Stone Requisition Details [Diamond] Excel',
+        'Diamond_Requisition_{po_number}.xlsx',
+        excel_attachment('diamonds', [('Shape', 'shape'), ('Size', 'size'), ('Color', 'color'), ('Clarity', 'clarity'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
+    ),
+    'stone_color_xlsx': (
+        'Stone Requisition Details [Color Stone] Excel',
+        'ColorStone_Requisition_{po_number}.xlsx',
+        excel_attachment('stones', [('Stone', 'name'), ('Shape', 'shape'), ('Size', 'size'), ('Colour', 'colour'), ('Quality', 'quality'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
+    ),
+}
+
+
 @lru_cache(maxsize=1)
 def purchase_order_model():
     for model in apps.get_models():
@@ -53,16 +101,16 @@ def purchase_order_model():
     raise LookupError('Purchase order model with a pono field was not found.')
 
 
-def get_order(po_number):
-    value = str(po_number or '').strip()
-
-    if not value:
+def get_order(pk):
+    try:
+        value = int(pk)
+    except (TypeError, ValueError):
         return None
 
     return (
         purchase_order_model()
         .objects.select_related('vendorid', 'customerid', 'termsid', 'prepby')
-        .filter(pono__iexact=value)
+        .filter(pk=value)
         .first()
     )
 
@@ -342,6 +390,22 @@ def subject_context(order):
     }
 
 
+def attachment_label(template):
+    codes = split_emails(template.attachments) if template else []
+
+    return ', '.join(ATTACHMENTS[code][0] for code in codes if code in ATTACHMENTS)
+
+
+def default_email(template, key, vendor):
+    if template is not None and template.recipients:
+        return template.recipients
+
+    if key == 'vendor':
+        return vendor
+
+    return ''
+
+
 def mail_options(order, mail):
     vendors = order_vendors(order, order_lines(order))
     vendor = vendor_emails(vendors)
@@ -358,7 +422,8 @@ def mail_options(order, mail):
             'template': template.pk if template else None,
             'template_name': template.name if template else None,
             'subject': render_subject(template, context) if template else '',
-            'email': vendor if key == 'vendor' else customer,
+            'email': default_email(template, key, vendor),
+            'attachments': attachment_label(template),
         })
 
     return {
@@ -493,13 +558,14 @@ def build_context(order, vendor=None):
 
 
 def render_body(template, key, context):
-    text = (template.template or '').strip() if template else ''
+    code = (template.code or '').strip() if template else ''
 
-    if text and text.endswith('.html') and '<' not in text and '\n' not in text:
-        return get_template(text).render(context)
+    if not code and template and template.template:
+        with template.template.open('rb') as handle:
+            code = handle.read().decode('utf-8')
 
-    if text:
-        return Template(text).render(Context(context))
+    if code:
+        return Template(code).render(Context(context))
 
     return get_template(DEFAULT_TEMPLATES[key]).render(context)
 
@@ -526,6 +592,7 @@ def deliver(key, template, entered, context, subject_text):
         return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
 
     try:
+        context = dict(context, attachment_names=attachment_label(template))
         html = render_body(template, key, context)
         subject = ' '.join((subject_text or '').split()) or render_subject(template, context)
         message = EmailMultiAlternatives(
@@ -536,6 +603,15 @@ def deliver(key, template, entered, context, subject_text):
             recipients,
         )
         message.attach_alternative(html, 'text/html')
+
+        for code in split_emails(template.attachments if template else ''):
+            if code not in ATTACHMENTS:
+                continue
+
+            _label, filename, builder = ATTACHMENTS[code]
+            name = filename.format(**context)
+            message.attach(name, builder(context), mimetypes.guess_type(name)[0] or 'application/octet-stream')
+
         message.send()
     except Exception as exc:
         return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}

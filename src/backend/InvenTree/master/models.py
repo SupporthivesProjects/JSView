@@ -3,8 +3,10 @@ from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
 from company.models import Company
+from pathlib import Path
+from django.core.files.storage import FileSystemStorage
+from django.core.validators import FileExtensionValidator
 
 
 def stamp_image(instance, filename):
@@ -347,12 +349,24 @@ class CourierService(MasterFieldsMixin):
 
 
 
+
+def template_storage():
+    return FileSystemStorage(location=Path(__file__).resolve().parent / 'templates')
+
+
+def template_file(instance, filename):
+    return f'master/purchase_emails/{instance.pk}/{filename}'
+
+
 class Templates(MasterFieldsMixin):
-    """Email/attachment template used by POMail formats (stores template code or a path)."""
+    """Email/attachment template used by POMail formats."""
 
     name = models.CharField(max_length=150, verbose_name=_('Name'), help_text=_('Name of the template.'))
     subject = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Subject'), help_text=_('Email subject line to use with this template.'))
-    template = models.TextField(blank=True, null=True, verbose_name=_('Template'), help_text=_('Template content — inline HTML/code, or a path/reference to a report template.'))
+    recipients = models.CharField(max_length=500, blank=True, default='', verbose_name=_('Recipients'), help_text=_('Default email(s), comma or semicolon separated. Leave empty for Vendor to use the vendor email.'))
+    template = models.FileField(upload_to=template_file, storage=template_storage, blank=True, null=True, validators=[FileExtensionValidator(['html', 'htm'])], verbose_name=_('Template'), help_text=_('Upload an HTML template file.'))
+    code = models.TextField(blank=True, default='', verbose_name=_('Code'), help_text=_('Optional HTML pasted directly. Used instead of the uploaded file when filled.'))
+    attachments = models.CharField(max_length=500, blank=True, default='', verbose_name=_('Attachments'), help_text=_('Comma separated attachment codes.'))
 
     class Meta:
         verbose_name = _('Template')
@@ -362,20 +376,32 @@ class Templates(MasterFieldsMixin):
             models.Index(fields=['active']),
         ]
 
+    def save(self, *args, **kwargs):
+        pending = None
+
+        if self.pk is None and self.template:
+            pending, self.template = self.template, None
+
+        super().save(*args, **kwargs)
+
+        if pending:
+            self.template = pending
+            super().save(update_fields=['template'])
+
     def __str__(self):
         return self.name
 
 
 class POMail(MasterFieldsMixin):
     """P.O. Mail configuration — maps recipient formats (Vendor, Diamond Office, etc.) to Templates."""
-    
+
     name = models.CharField(max_length=150, verbose_name=_('Name'), help_text=_('Name of the P.O. Mail configuration.'))
     format1 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format1', verbose_name=_('Format 1'), help_text=_('Template used for Vendor.'))
     format2 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format2', verbose_name=_('Format 2'), help_text=_('Template used for Diamond Office.'))
     format3 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format3', verbose_name=_('Format 3'), help_text=_('Template used for Color Stone Office.'))
     format4 = models.OneToOneField(Templates, on_delete=models.SET_NULL, null=True, blank=True, related_name='format4', verbose_name=_('Format 4'), help_text=_('Template used for New York Office.'))
     order = models.PositiveIntegerField(default=0, verbose_name=_('Order'), help_text=_('Display order of this configuration.'))
-    
+
     class Meta:
         verbose_name = _('P.O. Mail')
         verbose_name_plural = _('P.O. Mails')

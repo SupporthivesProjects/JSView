@@ -8,6 +8,7 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework import status
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from master.permissions import MasterDataPermission
@@ -110,6 +111,7 @@ class FindingTypeDetail(RetrieveUpdateDestroyAPI):
     queryset = FindingType.objects.all()
     serializer_class = master_serializers.FindingTypeSerializer
     permission_classes = [MasterDataPermission]
+
 
 class FindingItemList(DataExportViewMixin, ListCreateAPI):
     queryset = FindingItem.objects.all()
@@ -314,9 +316,10 @@ class TemplatesList(DataExportViewMixin, ListCreateAPI):
     serializer_class = master_serializers.TemplatesSerializer
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
-    search_fields = ['name', 'subject']
+    search_fields = ['name', 'subject', 'recipients', 'attachments']
     ordering_fields = ['name', 'active']
     ordering = 'name'
 
@@ -325,10 +328,11 @@ class TemplatesDetail(RetrieveUpdateDestroyAPI):
     queryset = Templates.objects.all()
     serializer_class = master_serializers.TemplatesSerializer
     permission_classes = [MasterDataPermission]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class POMailList(DataExportViewMixin, ListCreateAPI):
-    queryset = POMail.objects.all()
+    queryset = POMail.objects.select_related('format1', 'format2', 'format3', 'format4')
     serializer_class = master_serializers.POMailSerializer
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
@@ -340,7 +344,7 @@ class POMailList(DataExportViewMixin, ListCreateAPI):
 
 
 class POMailDetail(RetrieveUpdateDestroyAPI):
-    queryset = POMail.objects.all()
+    queryset = POMail.objects.select_related('format1', 'format2', 'format3', 'format4')
     serializer_class = master_serializers.POMailSerializer
     permission_classes = [MasterDataPermission]
 
@@ -360,8 +364,8 @@ class POMailOrderList(APIView):
 class POMailOrderDetail(APIView):
     permission_classes = [MasterDataPermission]
 
-    def get(self, request, po_number):
-        order = get_order(po_number)
+    def get(self, request, pk):
+        order = get_order(pk)
 
         if order is None:
             return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -375,7 +379,7 @@ class POMailSend(APIView):
     permission_classes = [MasterDataPermission]
 
     def post(self, request):
-        order = get_order(request.data.get('po_number'))
+        order = get_order(request.data.get('order'))
 
         if order is None:
             return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -483,7 +487,7 @@ master_api_urls = [
     path('po-mail/', include([
         path('send/', POMailSend.as_view(), name='api-po-mail-send'),
         path('orders/', POMailOrderList.as_view(), name='api-po-mail-order-list'),
-        path('order/<path:po_number>/', POMailOrderDetail.as_view(), name='api-po-mail-order'),
+        path('order/<int:pk>/', POMailOrderDetail.as_view(), name='api-po-mail-order'),
         path('<int:pk>/', POMailDetail.as_view(), name='api-po-mail-detail'),
         path('', POMailList.as_view(), name='api-po-mail-list'),
     ])),
