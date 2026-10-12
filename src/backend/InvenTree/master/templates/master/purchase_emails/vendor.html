@@ -4,9 +4,9 @@
   <tr>
     <td class="pad" style="padding:28px 32px 6px 32px;">
       <div style="display:inline-block;background:#DCE8FB;color:#1B4B8A;font-size:12px;line-height:16px;padding:4px 10px;border-radius:4px;">Vendor copy</div>
-      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">New purchase order {{ po_number }}</h1>
+      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">New purchase {{ po_type|lower }} {{ po_number }}</h1>
       <p style="margin:0 0 10px 0;font-size:15px;line-height:23px;">Dear {{ supplier_contact }},</p>
-      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Please find our purchase order below. Kindly confirm the items, weights and delivery date by <strong style="color:#243447;">{{ confirm_by_date }}</strong>.{% if attachment_names %} The order PDF is attached.{% endif %}</p>
+      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Please find our purchase {{ po_type|lower }} below. Kindly confirm the items, weights and delivery date by <strong style="color:#243447;">{{ confirm_by_date }}</strong>.{% if attachment_names %} The order PDF is attached.{% endif %}</p>
       {% if custom_message %}<p style="margin:14px 0 0 0;padding:12px 14px;background:#F3F6FA;border-left:3px solid #2FB59E;font-size:14px;line-height:22px;">{{ custom_message }}</p>{% endif %}
     </td>
   </tr>
@@ -52,7 +52,7 @@
         {% for item in items %}
         <tr>
           <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ item.code }}</td>
-          <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;line-height:19px;">{{ item.description }}<br><span style="color:#6B7A8D;font-size:12px;">{{ item.metal }} {{ item.purity }} &middot; Size {{ item.size }}</span></td>
+          <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;line-height:19px;">{{ item.description }}<br><span style="color:#6B7A8D;font-size:12px;">{{ item.metal }} {{ item.purity }}{% if item.size %} &middot; Size {{ item.size }}{% endif %}</span></td>
           <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ item.net_weight }}</td>
           <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ item.quantity }}</td>
           <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ item.amount }}</td>
@@ -69,7 +69,7 @@
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr><td style="padding:6px 10px;">Total net weight</td><td align="right" style="padding:6px 10px;">{{ total_net_weight }} g</td></tr>
             <tr><td style="padding:6px 10px;">Subtotal</td><td align="right" style="padding:6px 10px;">{{ currency }} {{ subtotal }}</td></tr>
-            <tr><td style="padding:6px 10px;">GST ({{ gst_percent }}%)</td><td align="right" style="padding:6px 10px;">{{ currency }} {{ gst_amount }}</td></tr>
+            {% if gst_amount %}<tr><td style="padding:6px 10px;">GST ({{ gst_percent }}%)</td><td align="right" style="padding:6px 10px;">{{ currency }} {{ gst_amount }}</td></tr>{% endif %}
             <tr style="background:#DCE8FB;color:#1B4B8A;font-weight:bold;"><td style="padding:12px 10px;font-size:15px;">Order total</td><td align="right" style="padding:12px 10px;font-size:18px;">{{ currency }} {{ grand_total }}</td></tr>
           </table>
         </td></tr>
@@ -80,7 +80,7 @@
   <tr>
     <td class="pad" style="padding:22px 32px 0 32px;">
       <div style="border-left:3px solid #2FB59E;background:#F3F6FA;padding:12px 16px;font-size:13px;line-height:21px;color:#4A5B70;">
-        <strong style="color:#1B4B8A;">Terms</strong><br>{{ order_notes }} Items must match the agreed purity and hallmark standards. Weight variance beyond {{ weight_tolerance }} will be reported before payment.
+        <strong style="color:#1B4B8A;">Terms</strong><br>{{ order_notes }} Items must match the agreed purity and hallmark standards.{% if weight_tolerance %} Weight variance beyond {{ weight_tolerance }} will be reported before payment.{% endif %}
       </div>
     </td>
   </tr>
@@ -88,7 +88,7 @@
   <tr>
     <td class="pad btn" align="center" style="padding:26px 32px 28px 32px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td align="center" style="background:#1B4B8A;border-radius:6px;"><a href="{{ po_view_url }}" style="display:inline-block;padding:13px 32px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Confirm purchase order</a></td>
+        <td align="center" style="background:#1B4B8A;border-radius:6px;"><a href="{{ po_view_url }}" style="display:inline-block;padding:13px 32px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Confirm purchase {{ po_type|lower }}</a></td>
       </tr></table>
       <div style="margin-top:14px;font-size:13px;line-height:20px;color:#6B7A8D;">{% if attachment_names %}Attached: {{ attachment_names }}<br>{% endif %}Questions? Contact {{ buyer_name }}, <a href="mailto:{{ buyer_email }}">{{ buyer_email }}</a>, {{ buyer_phone }}</div>
     </td>
