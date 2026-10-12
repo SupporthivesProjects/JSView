@@ -1,0 +1,49 @@
+{# Common header: opens the email layout. Shared by all four purchase order emails. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Purchase Order {{ po_number }}</title>
+<style>
+  body{margin:0;padding:0;background:#F3F6FA;-webkit-text-size-adjust:100%;}
+  table{border-collapse:collapse;}
+  img{border:0;display:block;max-width:100%;height:auto;}
+  a{color:#1B4B8A;}
+  @media only screen and (max-width:640px){
+    .wrap{width:100%!important;}
+    .pad{padding-left:18px!important;padding-right:18px!important;}
+    .col{display:block!important;width:100%!important;padding:0 0 14px 0!important;border-left:0!important;}
+    .hide-m{display:none!important;}
+    .btn a{display:block!important;}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#F3F6FA;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#F3F6FA;">{{ preheader }}</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F3F6FA;">
+<tr><td align="center" style="padding:24px 12px;">
+
+<table role="presentation" class="wrap" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:640px;background:#FFFFFF;border:1px solid #DDE3EC;font-family:Roboto,Arial,Helvetica,sans-serif;color:#243447;">
+
+  <!-- ===== COMMON HEADER ===== -->
+  <tr><td style="height:5px;line-height:5px;font-size:0;background:#2FB59E;">&nbsp;</td></tr>
+  <tr>
+    <td class="pad" style="padding:22px 32px;border-bottom:1px solid #DDE3EC;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="middle" align="left">
+            <img src="{{ company_logo_url }}" alt="Jewel Source" width="150" style="width:150px;height:auto;font-size:20px;color:#1B4B8A;">
+          </td>
+          <td valign="middle" align="right" style="font-family:Roboto,Arial,Helvetica,sans-serif;">
+            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">Purchase Order</div>
+            <div style="font-size:22px;line-height:28px;color:#1B4B8A;font-weight:bold;">{{ po_number }}</div>
+            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">{{ po_date }}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <!-- ===== END HEADER ===== -->
