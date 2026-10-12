@@ -77,10 +77,10 @@ def excel_attachment(key, columns):
 
 
 ATTACHMENTS = {
-    'po_vendor_pdf': ('P.O. Vendor PDF', 'PO_{po_number}.pdf', pdf_attachment('master/purchase_pdfs/vendor.html')),
-    'po_vendor_costcard_pdf': ('P.O. Vendor Cost Card PDF', 'PO_{po_number}_CostCard.pdf', pdf_attachment('master/purchase_pdfs/vendor_costcard.html')),
-    'po_self_pdf': ('P.O. Self PDF', 'PO_{po_number}_Self.pdf', pdf_attachment('master/purchase_pdfs/self.html')),
-    'po_self_costcard_pdf': ('P.O. Self Cost Card PDF', 'PO_{po_number}_Self_CostCard.pdf', pdf_attachment('master/purchase_pdfs/self_costcard.html')),
+    'po_vendor_pdf': ('P.O. Vendor PDF', 'PO_{po_number}.pdf', pdf_attachment('master/purchase_emails/vendor.html')),
+    'po_vendor_costcard_pdf': ('P.O. Vendor Cost Card PDF', 'PO_{po_number}_CostCard.pdf', pdf_attachment('master/purchase_emails/vendor_costcard.html')),
+    'po_self_pdf': ('P.O. Self PDF', 'PO_{po_number}_Self.pdf', pdf_attachment('master/purchase_emails/self.html')),
+    'po_self_costcard_pdf': ('P.O. Self Cost Card PDF', 'PO_{po_number}_Self_CostCard.pdf', pdf_attachment('master/purchase_emails/self_costcard.html')),
     'stone_diamond_xlsx': (
         'Stone Requisition Details [Diamond] Excel',
         'Diamond_Requisition_{po_number}.xlsx',
