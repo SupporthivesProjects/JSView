@@ -8,7 +8,6 @@ from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
 from rest_framework import status
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from master.permissions import MasterDataPermission
@@ -316,7 +315,6 @@ class TemplatesList(DataExportViewMixin, ListCreateAPI):
     serializer_class = master_serializers.TemplatesSerializer
     pagination_class = MasterPagination
     permission_classes = [MasterDataPermission]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active']
     search_fields = ['name', 'subject', 'recipients', 'attachments']
@@ -328,7 +326,6 @@ class TemplatesDetail(RetrieveUpdateDestroyAPI):
     queryset = Templates.objects.all()
     serializer_class = master_serializers.TemplatesSerializer
     permission_classes = [MasterDataPermission]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class POMailList(DataExportViewMixin, ListCreateAPI):
@@ -379,7 +376,7 @@ class POMailSend(APIView):
     permission_classes = [MasterDataPermission]
 
     def post(self, request):
-        order = get_order(request.data.get('order'))
+        order = get_order(request.data.get('po_number'))
 
         if order is None:
             return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)

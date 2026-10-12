@@ -394,12 +394,15 @@ class TemplatesSerializer(
             'pk',
             'name',
             'subject',
+            'recipients',
             'template',
+            'code',
+            'attachments',
             'active',
             'created_at',
             'updated_at',
         ]
-
+        
 
 @register_importer()
 class POMailSerializer(
