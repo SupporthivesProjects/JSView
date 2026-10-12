@@ -70,9 +70,6 @@ class Company(
 
     class Meta:
         ordering = ['name']
-        constraints = [
-            UniqueConstraint(fields=['name', 'email'], name='unique_name_email_pair')
-        ]
         verbose_name = _('Company')
         verbose_name_plural = _('Companies')
 
