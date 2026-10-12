@@ -1,0 +1,26 @@
+{# Common footer: closes the email layout. Shared by all four purchase order emails. #}
+  <!-- ===== COMMON FOOTER ===== -->
+  <tr>
+    <td class="pad" align="center" style="background:#F3F6FA;border-top:1px solid #DDE3EC;padding:26px 32px;font-family:Roboto,Arial,Helvetica,sans-serif;">
+      <div style="font-size:16px;line-height:22px;color:#1B4B8A;font-weight:bold;margin-bottom:6px;">{{ company_name }}</div>
+      <div style="font-size:13px;line-height:20px;color:#4A5B70;">
+        {{ company_address_line1 }}<br>
+        {{ company_address_line2 }}<br>
+        {{ company_phone }} &nbsp;|&nbsp; <a href="mailto:{{ company_email }}" style="color:#1B4B8A;">{{ company_email }}</a> &nbsp;|&nbsp; <a href="{{ company_website }}" style="color:#1B4B8A;">{{ company_website }}</a>
+      </div>
+      <div style="height:1px;line-height:1px;font-size:0;background:#DDE3EC;margin:16px 0;">&nbsp;</div>
+      <div style="font-size:11px;line-height:17px;color:#6B7A8D;">
+        {{ company_reg_line }}<br>
+        This email and its attachments are confidential and intended only for the recipient.<br>
+        Sent from JSIView ERP.
+      </div>
+    </td>
+  </tr>
+  <tr><td style="height:5px;line-height:5px;font-size:0;background:#2FB59E;">&nbsp;</td></tr>
+  <!-- ===== END FOOTER ===== -->
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

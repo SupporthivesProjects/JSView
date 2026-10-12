@@ -6,7 +6,10 @@ from data_exporter.mixins import DataExportViewMixin
 
 from InvenTree.filters import SEARCH_ORDER_FILTER
 from InvenTree.mixins import ListCreateAPI, RetrieveUpdateDestroyAPI
+from rest_framework import status
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from master.permissions import MasterDataPermission
 
 from . import serializers as master_serializers
@@ -29,6 +32,7 @@ from .models import (
     Templates,
     Terms,
 )
+from .po_mail import active_mail, get_order, mail_options, send_selected
 
 
 class MasterPagination(LimitOffsetPagination):
@@ -341,6 +345,43 @@ class POMailDetail(RetrieveUpdateDestroyAPI):
     permission_classes = [MasterDataPermission]
 
 
+class POMailOrderDetail(APIView):
+    permission_classes = [MasterDataPermission]
+
+    def get(self, request, po_number):
+        order = get_order(po_number)
+
+        if order is None:
+            return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        mail = active_mail(request.query_params.get('mail'))
+
+        return Response(mail_options(order, mail))
+
+
+class POMailSend(APIView):
+    permission_classes = [MasterDataPermission]
+
+    def post(self, request):
+        order = get_order(request.data.get('po_number'))
+
+        if order is None:
+            return Response({'detail': 'Purchase order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        selections = request.data.get('formats')
+
+        if not isinstance(selections, list) or not selections:
+            return Response({'detail': 'Select at least one mail type.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        mail = active_mail(request.data.get('mail'))
+        result = send_selected(order, mail, selections)
+
+        return Response(
+            result,
+            status=status.HTTP_200_OK if result['sent'] else status.HTTP_400_BAD_REQUEST,
+        )
+
+
 master_api_urls = [
     path('metal-type/', include([
         path('<int:pk>/', MetalTypeDetail.as_view(), name='api-metal-type-detail'),
@@ -423,6 +464,8 @@ master_api_urls = [
     ])),
 
     path('po-mail/', include([
+        path('send/', POMailSend.as_view(), name='api-po-mail-send'),
+        path('order/<path:po_number>/', POMailOrderDetail.as_view(), name='api-po-mail-order'),
         path('<int:pk>/', POMailDetail.as_view(), name='api-po-mail-detail'),
         path('', POMailList.as_view(), name='api-po-mail-list'),
     ])),
