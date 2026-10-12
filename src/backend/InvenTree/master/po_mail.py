@@ -404,7 +404,7 @@ def subject_context(order):
         'po_date': fmt_date(order.podate),
         'supplier_name': vendors[0].name if vendors else '',
         'customer_name': order.customerid.name if order.customerid else '',
-        'company_name': get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name'],
+        'company_name': COMPANY_PROFILE['name'],
     }
 
 
@@ -475,8 +475,8 @@ def build_context(order, vendor=None):
     vendors = order_vendors(order, lines)
     supplier = selected[0] if selected else (vendors[0] if vendors else None)
     creator = order.prepby
-    base_url = (get_global_setting('INVENTREE_BASE_URL') or '').rstrip('/')
-    company_name = get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name']
+    base_url = ('').rstrip('/')
+    company_name = COMPANY_PROFILE['name']
     delivery_date = fmt_date(order.ddate)
     stones_needed_by = fmt_date(order.esdstone) or delivery_date
     ship_date = fmt_date(order.vcsdate) or delivery_date
