@@ -1,6 +1,7 @@
 import mimetypes
 import re
 from decimal import Decimal
+from email.mime.image import MIMEImage
 from functools import lru_cache
 from io import BytesIO
 
@@ -13,10 +14,14 @@ from django.template import Context, Template
 from django.template.loader import get_template
 from common.settings import get_global_setting
 from .models import POMail
+import os
+
+DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
+LOGO_CID = 'company_logo'
 
 COMPANY_PROFILE = {
     'name': 'Jewel Source Inc.',
-    'logo_url': '',
+    'logo_url': DEFAULT_LOGO_PATH,
     'address_line1': '45 West 45th Street, 9th Floor',
     'address_line2': 'New York, NY 10036, USA',
     'phone': '1-212-3910312',
@@ -86,6 +91,21 @@ ATTACHMENTS = {
         excel_attachment('stones', [('Stone', 'name'), ('Shape', 'shape'), ('Size', 'size'), ('Colour', 'colour'), ('Quality', 'quality'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
     ),
 }
+
+
+def logo_image():
+    path = COMPANY_PROFILE['logo_url']
+
+    if not path or not os.path.isfile(path):
+        return None
+
+    with open(path, 'rb') as handle:
+        image = MIMEImage(handle.read())
+
+    image.add_header('Content-ID', f'<{LOGO_CID}>')
+    image.add_header('Content-Disposition', 'inline', filename=os.path.basename(path))
+
+    return image
 
 
 @lru_cache(maxsize=1)
@@ -587,7 +607,9 @@ def deliver(key, template, entered, context, subject_text):
 
     try:
         context = dict(context, attachment_names=attachment_label(template))
-        html = render_body(template, key, context)
+        logo = logo_image()
+        body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}') if logo else context
+        html = render_body(template, key, body_context)
         subject = ' '.join((subject_text or '').split()) or render_subject(template, context)
         message = EmailMultiAlternatives(
             subject,
@@ -597,6 +619,10 @@ def deliver(key, template, entered, context, subject_text):
             recipients,
         )
         message.attach_alternative(html, 'text/html')
+
+        if logo:
+            message.mixed_subtype = 'related'
+            message.attach(logo)
 
         for code in split_emails(template.attachments if template else ''):
             if code not in ATTACHMENTS:

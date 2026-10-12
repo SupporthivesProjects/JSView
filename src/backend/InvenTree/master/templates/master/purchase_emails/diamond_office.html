@@ -1,22 +1,20 @@
-{# Purchase order email: Diamond Office #}
 {% include "master/purchase_emails/_header.html" %}
-  <!-- ===== BODY: DIAMOND OFFICE ===== -->
   <tr>
     <td class="pad" style="padding:28px 32px 6px 32px;">
       <div style="display:inline-block;background:#DCE8FB;color:#1B4B8A;font-size:12px;line-height:16px;padding:4px 10px;border-radius:4px;">Diamond Office</div>
       <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">Diamond requirement for PO {{ po_number }}</h1>
-      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">PO {{ po_number }} for <strong style="color:#243447;">{{ supplier_name }}</strong> has been placed. The diamond requirement is summarised below. {% if attachment_names %}The full stone requisition is in the attached Excel file.{% endif %} Please check stock and confirm allocation.</p>
-      {% if custom_message %}<p style="margin:14px 0 0 0;padding:12px 14px;background:#F3F6FA;border-left:3px solid #2FB59E;font-size:14px;line-height:22px;">{{ custom_message }}</p>{% endif %}
+      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">PO {{ po_number }} for <strong style="color:#243447;">{{ supplier_name }}</strong> has been placed. The diamond requirement is summarised below.{% if attachment_names %} The full stone requisition is in the attached Excel file.{% endif %} Please check stock and confirm allocation.</p>
+      {% if custom_message %}<p style="margin:14px 0 0 0;padding:12px 14px;background:#F3F6FA;border-left:3px solid #2FB59E;font-size:14px;line-height:22px;">{{ custom_message|linebreaksbr }}</p>{% endif %}
     </td>
   </tr>
 
   <tr>
     <td class="pad" style="padding:20px 32px 0 32px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #DDE3EC;border-radius:6px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;border:1px solid #DDE3EC;border-top:3px solid #2FB59E;">
         <tr>
-          <td class="col" width="34%" valign="top" style="padding:14px 16px;"><div style="font-size:12px;color:#6B7A8D;">Vendor</div><div style="font-size:15px;font-weight:bold;">{{ supplier_name }}</div></td>
-          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">Stones needed by</div><div style="font-size:15px;font-weight:bold;">{{ stones_needed_by }}</div></td>
-          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">Total weight</div><div style="font-size:15px;font-weight:bold;">{{ total_diamond_ct }} ct</div></td>
+          <td class="col" width="34%" valign="top" style="padding:14px 16px;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Vendor</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ supplier_name }}</div></td>
+          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Stones needed by</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ stones_needed_by }}</div></td>
+          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Total weight</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ total_diamond_ct }} ct</div></td>
         </tr>
       </table>
     </td>
@@ -24,25 +22,32 @@
 
   <tr>
     <td class="pad" style="padding:26px 32px 0 32px;">
-      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;padding-bottom:8px;">Diamond requirement</div>
+      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;">Diamond requirement</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
-        <tr style="background:#DCE8FB;color:#1B4B8A;font-weight:bold;">
-          <td style="padding:10px;">Shape</td><td style="padding:10px;">Size (mm)</td><td style="padding:10px;">Color / Clarity</td>
-          <td align="right" style="padding:10px;">Pcs</td><td align="right" style="padding:10px;">Weight (ct)</td>
+        <tr style="color:#1B4B8A;font-weight:bold;">
+          <td style="padding:10px;background:#DCE8FB;">Shape</td>
+          <td style="padding:10px;background:#DCE8FB;">Size (mm)</td>
+          <td style="padding:10px;background:#DCE8FB;">Color / Clarity</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Pcs</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Weight (ct)</td>
         </tr>
         {% for d in diamonds %}
-        <tr>
+        <tr bgcolor="{% if forloop.counter|divisibleby:2 %}#F8FAFC{% else %}#FFFFFF{% endif %}">
           <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ d.shape }}</td>
           <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.size }}</td>
-          <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.color }} / {{ d.clarity }}</td>
+          <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.color }}{% if d.color and d.clarity %} / {% endif %}{{ d.clarity }}</td>
           <td align="right" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.pcs }}</td>
           <td align="right" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ d.weight }}</td>
         </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" align="center" style="padding:16px 10px;border-bottom:1px solid #E6EBF2;color:#6B7A8D;">No diamond lines on this order.</td>
+        </tr>
         {% endfor %}
-        <tr style="background:#F3F6FA;font-weight:bold;color:#1B4B8A;">
-          <td colspan="3" style="padding:12px 10px;">Total</td>
-          <td align="right" style="padding:12px 10px;">{{ total_diamond_pcs }}</td>
-          <td align="right" style="padding:12px 10px;">{{ total_diamond_ct }}</td>
+        <tr style="font-weight:bold;color:#1B4B8A;">
+          <td colspan="3" style="padding:12px 10px;background:#DCE8FB;">Total</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_diamond_pcs }}</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_diamond_ct }}</td>
         </tr>
       </table>
     </td>
@@ -50,11 +55,12 @@
 
   <tr>
     <td class="pad btn" align="center" style="padding:26px 32px 28px 32px;">
+      {% if po_view_url %}
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
         <td align="center" style="background:#1B4B8A;border-radius:6px;"><a href="{{ po_view_url }}" style="display:inline-block;padding:13px 32px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Open purchase order</a></td>
       </tr></table>
+      {% endif %}
       {% if attachment_names %}<div style="margin-top:14px;font-size:13px;line-height:20px;color:#6B7A8D;">Attached: {{ attachment_names }}</div>{% endif %}
     </td>
   </tr>
-  <!-- ===== END BODY ===== -->
 {% include "master/purchase_emails/_footer.html" %}

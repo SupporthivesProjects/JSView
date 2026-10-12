@@ -1,23 +1,21 @@
-{# Purchase order email: Vendor #}
 {% include "master/purchase_emails/_header.html" %}
-  <!-- ===== BODY: VENDOR ===== -->
   <tr>
     <td class="pad" style="padding:28px 32px 6px 32px;">
       <div style="display:inline-block;background:#DCE8FB;color:#1B4B8A;font-size:12px;line-height:16px;padding:4px 10px;border-radius:4px;">Vendor copy</div>
-      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">New purchase {{ po_type|lower }} {{ po_number }}</h1>
+      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">Purchase {{ po_type|lower }} {{ po_number }}</h1>
       <p style="margin:0 0 10px 0;font-size:15px;line-height:23px;">Dear {{ supplier_contact }},</p>
-      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Please find our purchase {{ po_type|lower }} below. Kindly confirm the items, weights and delivery date by <strong style="color:#243447;">{{ confirm_by_date }}</strong>.{% if attachment_names %} The order PDF is attached.{% endif %}</p>
-      {% if custom_message %}<p style="margin:14px 0 0 0;padding:12px 14px;background:#F3F6FA;border-left:3px solid #2FB59E;font-size:14px;line-height:22px;">{{ custom_message }}</p>{% endif %}
+      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Please find our purchase {{ po_type|lower }} below. Kindly confirm the items, weights and delivery date by <strong style="color:#243447;">{{ confirm_by_date }}</strong>.{% if attachment_names %} Attachments are included with this email.{% endif %}</p>
+      {% if custom_message %}<p style="margin:14px 0 0 0;padding:12px 14px;background:#F3F6FA;border-left:3px solid #2FB59E;font-size:14px;line-height:22px;">{{ custom_message|linebreaksbr }}</p>{% endif %}
     </td>
   </tr>
 
   <tr>
     <td class="pad" style="padding:20px 32px 0 32px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #DDE3EC;border-radius:6px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;border:1px solid #DDE3EC;border-top:3px solid #2FB59E;">
         <tr>
-          <td class="col" width="33%" valign="top" style="padding:14px 16px;"><div style="font-size:12px;color:#6B7A8D;">Order date</div><div style="font-size:15px;font-weight:bold;">{{ po_date }}</div></td>
-          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">Delivery by</div><div style="font-size:15px;font-weight:bold;">{{ delivery_date }}</div></td>
-          <td class="col" width="34%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:12px;color:#6B7A8D;">Payment terms</div><div style="font-size:15px;font-weight:bold;">{{ payment_terms }}</div></td>
+          <td class="col" width="33%" valign="top" style="padding:14px 16px;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Order date</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ po_date }}</div></td>
+          <td class="col" width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Delivery by</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ delivery_date }}</div></td>
+          <td class="col" width="34%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Payment terms</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ payment_terms }}</div></td>
         </tr>
       </table>
     </td>
@@ -25,32 +23,28 @@
 
   <tr>
     <td class="pad" style="padding:20px 32px 0 32px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td class="col" width="50%" valign="top" style="padding-right:12px;font-size:14px;line-height:21px;">
-            <div style="font-size:15px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:5px;margin-bottom:8px;">Supplier</div>
-            <strong>{{ supplier_name }}</strong><br>{{ supplier_address }}<br>GSTIN: {{ supplier_gstin }}
-          </td>
-          <td class="col" width="50%" valign="top" style="padding-left:12px;font-size:14px;line-height:21px;">
-            <div style="font-size:15px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:5px;margin-bottom:8px;">Deliver to</div>
-            <strong>{{ company_name }}</strong><br>{{ delivery_address }}<br>GSTIN: {{ company_gstin }}
-          </td>
-        </tr>
-      </table>
+      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;">Supplier</div>
+      <div style="background:#F3F6FA;border-left:3px solid #1B4B8A;padding:14px 16px;font-size:14px;line-height:22px;">
+        <strong style="font-size:16px;color:#243447;">{{ supplier_name }}</strong>
+        {% if supplier_address %}<br>{{ supplier_address }}{% endif %}
+        {% if supplier_gstin %}<br><span style="color:#6B7A8D;">GSTIN:</span> {{ supplier_gstin }}{% endif %}
+      </div>
     </td>
   </tr>
 
   <tr>
     <td class="pad" style="padding:26px 32px 0 32px;">
-      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;padding-bottom:8px;">Order items</div>
+      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;">Order items</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
-        <tr style="background:#DCE8FB;color:#1B4B8A;font-weight:bold;">
-          <td style="padding:10px;">Design code</td><td style="padding:10px;">Description</td>
-          <td align="right" style="padding:10px;">Net wt (g)</td><td align="right" style="padding:10px;">Qty</td>
-          <td align="right" style="padding:10px;">Amount ({{ currency }})</td>
+        <tr style="color:#1B4B8A;font-weight:bold;">
+          <td style="padding:10px;background:#DCE8FB;">Design code</td>
+          <td style="padding:10px;background:#DCE8FB;">Description</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Net wt (g)</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Qty</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Amount{% if currency %} ({{ currency }}){% endif %}</td>
         </tr>
         {% for item in items %}
-        <tr>
+        <tr bgcolor="{% if forloop.counter|divisibleby:2 %}#F8FAFC{% else %}#FFFFFF{% endif %}">
           <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ item.code }}</td>
           <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;line-height:19px;">{{ item.description }}<br><span style="color:#6B7A8D;font-size:12px;">{{ item.metal }} {{ item.purity }}{% if item.size %} &middot; Size {{ item.size }}{% endif %}</span></td>
           <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ item.net_weight }}</td>
@@ -63,14 +57,14 @@
   </tr>
 
   <tr>
-    <td class="pad" style="padding:6px 32px 0 32px;">
+    <td class="pad" style="padding:8px 32px 0 32px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
         <tr><td class="hide-m" width="45%">&nbsp;</td><td>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr><td style="padding:6px 10px;">Total net weight</td><td align="right" style="padding:6px 10px;">{{ total_net_weight }} g</td></tr>
-            <tr><td style="padding:6px 10px;">Subtotal</td><td align="right" style="padding:6px 10px;">{{ currency }} {{ subtotal }}</td></tr>
-            {% if gst_amount %}<tr><td style="padding:6px 10px;">GST ({{ gst_percent }}%)</td><td align="right" style="padding:6px 10px;">{{ currency }} {{ gst_amount }}</td></tr>{% endif %}
-            <tr style="background:#DCE8FB;color:#1B4B8A;font-weight:bold;"><td style="padding:12px 10px;font-size:15px;">Order total</td><td align="right" style="padding:12px 10px;font-size:18px;">{{ currency }} {{ grand_total }}</td></tr>
+            <tr><td style="padding:6px 10px;color:#4A5B70;">Total net weight</td><td align="right" style="padding:6px 10px;">{{ total_net_weight }} g</td></tr>
+            <tr><td style="padding:6px 10px;color:#4A5B70;">Subtotal</td><td align="right" style="padding:6px 10px;">{% if currency %}{{ currency }} {% endif %}{{ subtotal }}</td></tr>
+            {% if gst_amount %}<tr><td style="padding:6px 10px;color:#4A5B70;">GST ({{ gst_percent }}%)</td><td align="right" style="padding:6px 10px;">{% if currency %}{{ currency }} {% endif %}{{ gst_amount }}</td></tr>{% endif %}
+            <tr style="color:#1B4B8A;font-weight:bold;"><td style="padding:12px 10px;font-size:15px;background:#DCE8FB;">Order total</td><td align="right" style="padding:12px 10px;font-size:18px;background:#DCE8FB;">{% if currency %}{{ currency }} {% endif %}{{ grand_total }}</td></tr>
           </table>
         </td></tr>
       </table>
@@ -80,18 +74,19 @@
   <tr>
     <td class="pad" style="padding:22px 32px 0 32px;">
       <div style="border-left:3px solid #2FB59E;background:#F3F6FA;padding:12px 16px;font-size:13px;line-height:21px;color:#4A5B70;">
-        <strong style="color:#1B4B8A;">Terms</strong><br>{{ order_notes }} Items must match the agreed purity and hallmark standards.{% if weight_tolerance %} Weight variance beyond {{ weight_tolerance }} will be reported before payment.{% endif %}
+        <strong style="color:#1B4B8A;">Terms</strong><br>{% if order_notes %}{{ order_notes|linebreaksbr }}<br>{% endif %}Items must match the agreed purity and hallmark standards.{% if weight_tolerance %} Weight variance beyond {{ weight_tolerance }} will be reported before payment.{% endif %}
       </div>
     </td>
   </tr>
 
   <tr>
     <td class="pad btn" align="center" style="padding:26px 32px 28px 32px;">
+      {% if po_view_url %}
       <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
         <td align="center" style="background:#1B4B8A;border-radius:6px;"><a href="{{ po_view_url }}" style="display:inline-block;padding:13px 32px;font-size:15px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Confirm purchase {{ po_type|lower }}</a></td>
       </tr></table>
-      <div style="margin-top:14px;font-size:13px;line-height:20px;color:#6B7A8D;">{% if attachment_names %}Attached: {{ attachment_names }}<br>{% endif %}Questions? Contact {{ buyer_name }}, <a href="mailto:{{ buyer_email }}">{{ buyer_email }}</a>, {{ buyer_phone }}</div>
+      {% endif %}
+      <div style="margin-top:14px;font-size:13px;line-height:20px;color:#6B7A8D;">{% if attachment_names %}Attached: {{ attachment_names }}<br>{% endif %}{% if buyer_name or buyer_email %}Questions? Contact {{ buyer_name }}{% if buyer_email %}, <a href="mailto:{{ buyer_email }}" style="color:#1B4B8A;">{{ buyer_email }}</a>{% endif %}{% if buyer_phone %}, {{ buyer_phone }}{% endif %}{% endif %}</div>
     </td>
   </tr>
-  <!-- ===== END BODY ===== -->
 {% include "master/purchase_emails/_footer.html" %}

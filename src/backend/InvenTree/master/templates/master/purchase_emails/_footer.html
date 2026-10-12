@@ -1,24 +1,28 @@
-{# Common footer: closes the email layout. Shared by all four purchase order emails. #}
-  <!-- ===== COMMON FOOTER ===== -->
   <tr>
-    <td class="pad" align="center" style="background:#F3F6FA;border-top:1px solid #DDE3EC;padding:26px 32px;font-family:Roboto,Arial,Helvetica,sans-serif;">
-      <div style="font-size:16px;line-height:22px;color:#1B4B8A;font-weight:bold;margin-bottom:6px;">{{ company_name }}</div>
-      <div style="font-size:13px;line-height:20px;color:#4A5B70;">
-        {{ company_address_line1 }}<br>
-        {{ company_address_line2 }}<br>
-        {{ company_phone }} &nbsp;|&nbsp; <a href="mailto:{{ company_email }}" style="color:#1B4B8A;">{{ company_email }}</a> &nbsp;|&nbsp; <a href="{{ company_website }}" style="color:#1B4B8A;">{{ company_website }}</a>
-      </div>
-      <div style="height:1px;line-height:1px;font-size:0;background:#DDE3EC;margin:16px 0;">&nbsp;</div>
-      <div style="font-size:11px;line-height:17px;color:#6B7A8D;">
-        {{ company_reg_line }}<br>
-        This email and its attachments are confidential and intended only for the recipient.<br>
-        Sent from JSIView ERP.
-      </div>
+    <td class="pad" style="background:#F3F6FA;border-top:1px solid #DDE3EC;padding:26px 32px 22px 32px;font-family:Roboto,Arial,Helvetica,sans-serif;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td class="col" width="45%" valign="top" style="padding-right:16px;">
+            {% if company_name %}<div style="font-size:17px;line-height:23px;color:#1B4B8A;font-weight:bold;">{{ company_name }}</div>{% endif %}
+            <div style="width:36px;height:3px;line-height:3px;font-size:0;background:#2FB59E;margin:8px 0 10px 0;">&nbsp;</div>
+            <div style="font-size:12px;line-height:18px;color:#6B7A8D;">Sent from JSIView ERP</div>
+          </td>
+          <td class="col txt-l" width="55%" valign="top" align="right" style="padding-left:16px;border-left:1px solid #DDE3EC;text-align:right;font-size:13px;line-height:20px;color:#4A5B70;">
+            {% if company_address_line1 %}{{ company_address_line1 }}<br>{% endif %}
+            {% if company_address_line2 %}{{ company_address_line2 }}<br>{% endif %}
+            {% if company_phone %}{{ company_phone }}<br>{% endif %}
+            {% if company_email %}<a href="mailto:{{ company_email }}" style="color:#1B4B8A;">{{ company_email }}</a><br>{% endif %}
+            {% if company_website %}<a href="{% if company_website|slice:':4' == 'http' %}{{ company_website }}{% else %}https://{{ company_website }}{% endif %}" style="color:#1B4B8A;">{{ company_website }}</a>{% endif %}
+            {% if company_gstin %}<br>GSTIN: {{ company_gstin }}{% endif %}
+            {% if company_reg_line %}<br>{{ company_reg_line }}{% endif %}
+          </td>
+        </tr>
+      </table>
+      <div style="height:1px;line-height:1px;font-size:0;background:#DDE3EC;margin:18px 0 14px 0;">&nbsp;</div>
+      <div style="font-size:11px;line-height:17px;color:#6B7A8D;text-align:center;">This email and its attachments are confidential and intended only for the recipient.</div>
     </td>
   </tr>
   <tr><td style="height:5px;line-height:5px;font-size:0;background:#2FB59E;">&nbsp;</td></tr>
-  <!-- ===== END FOOTER ===== -->
-
 </table>
 </td></tr>
 </table>
