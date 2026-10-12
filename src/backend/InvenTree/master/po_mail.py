@@ -1,9 +1,6 @@
-import mimetypes
 import re
 from decimal import ROUND_HALF_UP, Decimal
-from email.mime.image import MIMEImage
 from functools import lru_cache
-from io import BytesIO
 
 from django.apps import apps
 from django.conf import settings
@@ -12,17 +9,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.template import Context, Template
 from django.template.loader import get_template
+from django.templatetags.static import static
 from common.settings import get_global_setting
 from .models import POMail
-import os
 
-DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
-LOGO_CID = 'company_logo'
+LOGO_STATIC_PATH = 'logos/logo_for_excel_sheet.png'
 CENT = Decimal('0.01')
 
 COMPANY_PROFILE = {
     'name': 'Jewel Source Inc.',
-    'logo_url': DEFAULT_LOGO_PATH,
     'address_line1': '45 West 45th Street, 9th Floor',
     'address_line2': 'New York, NY 10036, USA',
     'phone': '1-212-3910312',
@@ -48,65 +43,21 @@ DEFAULT_TEMPLATES = {
 STONE_KEYS = ('stone', 'shape', 'mm_size', 'colour', 'quality')
 
 
-def pdf_attachment(template_name):
-    def build(context):
-        from weasyprint import HTML
+def logo_url(base_url):
+    try:
+        path = static(LOGO_STATIC_PATH)
+    except Exception:
+        path = f"{settings.STATIC_URL or '/static/'}{LOGO_STATIC_PATH}"
 
-        return HTML(string=get_template(template_name).render(context)).write_pdf()
+    if path.startswith(('http://', 'https://')):
+        return path
 
-    return build
+    base = (base_url or getattr(settings, 'SITE_URL', '') or '').rstrip('/')
 
+    if not base:
+        return ''
 
-def excel_attachment(key, columns):
-    def build(context):
-        from openpyxl import Workbook
-
-        book = Workbook()
-        sheet = book.active
-        sheet.append([title for title, _field in columns])
-
-        for row in context[key]:
-            sheet.append([row[field] for _title, field in columns])
-
-        buffer = BytesIO()
-        book.save(buffer)
-
-        return buffer.getvalue()
-
-    return build
-
-
-ATTACHMENTS = {
-    'po_vendor_pdf': ('P.O. Vendor PDF', 'PO_{po_number}.pdf', pdf_attachment('master/purchase_emails/vendor.html')),
-    'po_vendor_costcard_pdf': ('P.O. Vendor Cost Card PDF', 'PO_{po_number}_CostCard.pdf', pdf_attachment('master/purchase_emails/vendor_costcard.html')),
-    'po_self_pdf': ('P.O. Self PDF', 'PO_{po_number}_Self.pdf', pdf_attachment('master/purchase_emails/self.html')),
-    'po_self_costcard_pdf': ('P.O. Self Cost Card PDF', 'PO_{po_number}_Self_CostCard.pdf', pdf_attachment('master/purchase_emails/self_costcard.html')),
-    'stone_diamond_xlsx': (
-        'Stone Requisition Details [Diamond] Excel',
-        'Diamond_Requisition_{po_number}.xlsx',
-        excel_attachment('diamonds', [('Shape', 'shape'), ('Size', 'size'), ('Color', 'color'), ('Clarity', 'clarity'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
-    ),
-    'stone_color_xlsx': (
-        'Stone Requisition Details [Color Stone] Excel',
-        'ColorStone_Requisition_{po_number}.xlsx',
-        excel_attachment('stones', [('Stone', 'name'), ('Shape', 'shape'), ('Size', 'size'), ('Colour', 'colour'), ('Quality', 'quality'), ('Pcs', 'pcs'), ('Weight', 'weight')]),
-    ),
-}
-
-
-def logo_image():
-    path = COMPANY_PROFILE['logo_url']
-
-    if not path or not os.path.isfile(path):
-        return None
-
-    with open(path, 'rb') as handle:
-        image = MIMEImage(handle.read())
-
-    image.add_header('Content-ID', f'<{LOGO_CID}>')
-    image.add_header('Content-Disposition', 'inline', filename=os.path.basename(path))
-
-    return image
+    return f"{base}{path if path.startswith('/') else '/' + path}"
 
 
 @lru_cache(maxsize=1)
@@ -193,6 +144,20 @@ def format_template(mail, field):
 
 def split_emails(value):
     return [item.strip() for item in re.split(r'[;,]', value or '') if item.strip()]
+
+
+def unique_emails(value):
+    seen = set()
+    result = []
+
+    for item in split_emails(value):
+        marker = item.lower()
+
+        if marker not in seen:
+            seen.add(marker)
+            result.append(item)
+
+    return result
 
 
 def label(value):
@@ -439,12 +404,6 @@ def subject_context(order):
     }
 
 
-def attachment_label(template):
-    codes = split_emails(template.attachments) if template else []
-
-    return ', '.join(ATTACHMENTS[code][0] for code in codes if code in ATTACHMENTS)
-
-
 def default_email(template, key, vendor):
     if template is not None and template.recipients:
         return template.recipients
@@ -472,7 +431,7 @@ def mail_options(order, mail):
             'template_name': template.name if template else None,
             'subject': render_subject(template, context) if template else '',
             'email': default_email(template, key, vendor),
-            'attachments': attachment_label(template),
+            'attachments': '',
         })
 
     return {
@@ -493,13 +452,24 @@ def mail_options(order, mail):
 def build_context(order, vendor=None):
     lines = order_lines(order)
 
-    if vendor is not None:
-        lines = [line for line in lines if line_vendor(order, line) == vendor]
+    if isinstance(vendor, (list, tuple, set)):
+        selected = list(vendor)
+    elif vendor is not None:
+        selected = [vendor]
+    else:
+        selected = []
+
+    if selected:
+        selected_ids = {item.pk for item in selected}
+        lines = [
+            line for line in lines
+            if line_vendor(order, line) is not None and line_vendor(order, line).pk in selected_ids
+        ]
 
     pairs = line_cards(order, lines)
     items = order_items(order, pairs)
     vendors = order_vendors(order, lines)
-    supplier = vendor or (vendors[0] if vendors else None)
+    supplier = selected[0] if selected else (vendors[0] if vendors else None)
     creator = order.prepby
     base_url = (get_global_setting('INVENTREE_BASE_URL') or '').rstrip('/')
     company_name = get_global_setting('INVENTREE_COMPANY_NAME') or COMPANY_PROFILE['name']
@@ -596,7 +566,7 @@ def build_context(order, vendor=None):
         'total_other': money(sum((row['other'] for row in costs), Decimal(0))),
         'ny_total': money(sum((row['total'] for row in costs), Decimal(0))),
         'company_name': company_name,
-        'company_logo_url': COMPANY_PROFILE['logo_url'],
+        'company_logo_url': logo_url(base_url),
         'company_address_line1': COMPANY_PROFILE['address_line1'],
         'company_address_line2': COMPANY_PROFILE['address_line2'],
         'company_phone': COMPANY_PROFILE['phone'],
@@ -627,7 +597,7 @@ def render_subject(template, context):
 
 
 def deliver(key, template, entered, context, subject_text):
-    recipients = split_emails(entered)
+    recipients = unique_emails(entered)
 
     if not recipients:
         return False, {'key': key, 'email': entered, 'error': 'No recipient email.'}
@@ -639,10 +609,7 @@ def deliver(key, template, entered, context, subject_text):
         return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
 
     try:
-        context = dict(context, attachment_names=attachment_label(template))
-        logo = logo_image()
-        body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}') if logo else context
-        html = render_body(template, key, body_context)
+        html = render_body(template, key, context)
         subject = ' '.join((subject_text or '').split()) or render_subject(template, context)
         message = EmailMultiAlternatives(
             subject,
@@ -652,19 +619,6 @@ def deliver(key, template, entered, context, subject_text):
             recipients,
         )
         message.attach_alternative(html, 'text/html')
-
-        if logo:
-            message.mixed_subtype = 'related'
-            message.attach(logo)
-
-        for code in split_emails(template.attachments if template else ''):
-            if code not in ATTACHMENTS:
-                continue
-
-            _label, filename, builder = ATTACHMENTS[code]
-            name = filename.format(**context)
-            message.attach(name, builder(context), mimetypes.guess_type(name)[0] or 'application/octet-stream')
-
         message.send()
     except Exception as exc:
         return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}
@@ -682,6 +636,7 @@ def send_selected(order, mail, selections):
     vendors = order_vendors(order, order_lines(order))
     sent = []
     failed = []
+    handled = set()
 
     for selection in selections:
         if not isinstance(selection, dict):
@@ -696,6 +651,11 @@ def send_selected(order, mail, selections):
             failed.append({'key': key, 'email': entered, 'error': 'Unknown mail type.'})
             continue
 
+        if key in handled:
+            continue
+
+        handled.add(key)
+
         template = format_template(mail, field)
 
         if template is None:
@@ -703,14 +663,20 @@ def send_selected(order, mail, selections):
             continue
 
         if key == 'vendor' and len(vendors) > 1:
-            targets = [(company_email(item), item) for item in vendors]
+            grouped = {}
+
+            for item in vendors:
+                address = company_email(item)
+                grouped.setdefault(address.lower(), (address, []))[1].append(item)
+
+            targets = [(address, group) for address, group in grouped.values()]
         elif key == 'vendor' and vendors:
-            targets = [(entered, vendors[0])]
+            targets = [(entered, [vendors[0]])]
         else:
             targets = [(entered, None)]
 
-        for recipient, vendor in targets:
-            context = dict(build_context(order, vendor), custom_message=selection.get('message') or '')
+        for recipient, vendor_group in targets:
+            context = dict(build_context(order, vendor_group), custom_message=selection.get('message') or '')
             ok, record = deliver(key, template, recipient, context, selection.get('subject'))
             (sent if ok else failed).append(record)
 

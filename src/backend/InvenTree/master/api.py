@@ -1,5 +1,9 @@
 """Provides a JSON API for the 'master' app."""
 
+import hashlib
+import json
+
+from django.core.cache import cache
 from django.urls import include, path
 
 from data_exporter.mixins import DataExportViewMixin
@@ -33,6 +37,8 @@ from .models import (
     Terms,
 )
 from .po_mail import active_mail, get_order, mail_options, order_blocked, order_choices, send_selected
+
+PO_MAIL_LOCK_SECONDS = 15
 
 
 class MasterPagination(LimitOffsetPagination):
@@ -391,8 +397,31 @@ class POMailSend(APIView):
         if not isinstance(selections, list) or not selections:
             return Response({'detail': 'Select at least one mail type.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        fingerprint = hashlib.md5(
+            json.dumps(
+                [request.user.pk, request.data.get('po_number'), request.data.get('mail'), selections],
+                sort_keys=True,
+                default=str,
+            ).encode()
+        ).hexdigest()
+        lock_key = f'po-mail-send:{fingerprint}'
+
+        if not cache.add(lock_key, 1, PO_MAIL_LOCK_SECONDS):
+            return Response(
+                {'detail': 'This mail request was already submitted. Please wait a few seconds.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
         mail = active_mail(request.data.get('mail'))
-        result = send_selected(order, mail, selections)
+
+        try:
+            result = send_selected(order, mail, selections)
+        except Exception:
+            cache.delete(lock_key)
+            raise
+
+        if not result['sent']:
+            cache.delete(lock_key)
 
         return Response(
             result,
