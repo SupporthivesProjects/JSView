@@ -618,6 +618,13 @@ export default function CostCardTable() {
         ...columnFilter("our_style_no", t`Our Style Number`),
       },
       {
+        accessor: "reference_style_no",
+        title: t`Reference Style Number`,
+        sortable: true,
+        switchable: false,
+        ...columnFilter("reference_style_no", t`Our Reference Number`),
+      },
+      {
         accessor: "vendor_style_no",
         title: t`Vendor Style Number`,
         sortable: true,

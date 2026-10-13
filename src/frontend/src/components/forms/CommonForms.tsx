@@ -2089,6 +2089,7 @@ function costCardGeneralFieldSet(
   return {
     cost_card_no: { read_only: true },
     our_style_no: {},
+    reference_style_no: {},
     vendor_style_no: {},
     vendor: {
       api_url: apiUrl(ApiEndpoints.master_vendor_customer),
