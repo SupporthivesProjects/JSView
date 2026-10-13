@@ -68,6 +68,7 @@ class CostCardList(DataExportViewMixin, ListCreateAPI):
         'metal_purity',
         'finding_type',
         'finding_item',
+        'reference_style_no',
         'active',
     ]
     search_fields = [
@@ -252,7 +253,7 @@ class CostCardPicturePresentation(DataExportViewMixin, generics.ListAPIView):
 
     @staticmethod
     def _mm_size_label(value):
-        return '' if value is None else str(value.mm_size or value.name)
+        return '' if value is None else str(value.mm_size)
 
     def _stone_key(self, line):
         special = {'pointer': self._number_label, 'mm_size': self._mm_size_label}

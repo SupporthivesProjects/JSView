@@ -70,7 +70,7 @@ def name_of(value):
 
 
 def size_of(value):
-    return '' if value is None else str(value.mm_size or value.name)
+    return '' if value is None else str(value.mm_size)
 
 
 def put(ws, ref, value, bold=False, border=True, fmt=None, size=11):

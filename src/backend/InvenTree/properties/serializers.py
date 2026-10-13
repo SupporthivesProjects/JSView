@@ -108,7 +108,6 @@ class DiamondSizeSerializer(
         model = DiamondSize
         fields = [
             'pk',
-            'name',
             'mm_size',
             'sieve_size',
             'description',
@@ -218,7 +217,6 @@ class ColorStoneSizeSerializer(
         model = ColorStoneSize
         fields = [
             'pk',
-            'name',
             'mm_size',
             'sieve_size',
             'description',
