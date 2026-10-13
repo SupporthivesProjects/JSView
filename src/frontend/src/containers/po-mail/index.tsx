@@ -317,11 +317,7 @@ export default function POMailIndex() {
                   label={t`Attachment Format`}
                   value={row.attachments}
                   disabled={!row.checked}
-                  onChange={(event) =>
-                    updateRow(row.key, {
-                      attachments: event.currentTarget.value,
-                    })
-                  }
+                  readOnly
                 />
                 <Textarea
                   label={t`Message`}
