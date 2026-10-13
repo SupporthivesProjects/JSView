@@ -114,6 +114,13 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
         link: "reports/",
         icon: "chart_bar",
       },
+      {
+        id: "po-mail",
+        title: t`P.O. Mail`,
+        hidden: !user.hasViewAnyRole(MenuRoles["po-mail"]),
+        link: "po-mail/",
+        icon: "email",
+      },
       // {
       //   id: "parts",
       //   title: t`Parts`,
