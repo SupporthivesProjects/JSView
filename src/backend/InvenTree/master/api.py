@@ -41,6 +41,26 @@ from .po_mail import active_mail, get_order, mail_options, order_blocked, order_
 PO_MAIL_LOCK_SECONDS = 15
 
 
+def fill_template_attachments(data):
+    """Fill empty 'attachments' of each mail format from its Template's attachments field."""
+    formats = data.get('formats') if isinstance(data, dict) else None
+
+    if not formats:
+        return data
+
+    template_ids = [f.get('template') for f in formats if f.get('template')]
+
+    saved = dict(
+        Templates.objects.filter(pk__in=template_ids).values_list('pk', 'attachments')
+    )
+
+    for fmt in formats:
+        if not fmt.get('attachments'):
+            fmt['attachments'] = saved.get(fmt.get('template')) or ''
+
+    return data
+
+
 class MasterPagination(LimitOffsetPagination):
     default_limit = 10
     max_limit = 100
@@ -377,7 +397,7 @@ class POMailOrderDetail(APIView):
 
         mail = active_mail(request.query_params.get('mail'))
 
-        return Response(mail_options(order, mail))
+        return Response(fill_template_attachments(mail_options(order, mail)))
 
 
 class POMailSend(APIView):

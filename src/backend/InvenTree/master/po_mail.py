@@ -435,7 +435,7 @@ def mail_options(order, mail):
             'template_name': template.name if template else None,
             'subject': render_subject(template, context) if template else '',
             'email': default_email(template, key, vendor),
-            'attachments': '',
+            'attachments': (template.attachments or '') if template else '',
         })
 
     return {
