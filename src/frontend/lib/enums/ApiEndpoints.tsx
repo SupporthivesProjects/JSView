@@ -146,6 +146,9 @@ export enum ApiEndpoints {
   jewellery_category = "master/jewelry-category/",
   jewellery_sub_category = "master/jewelry-sub-category/",
   master_stamp = "master/stamp/",
+  po_mail_orders = "master/po-mail/orders/",
+  po_mail_order = "master/po-mail/order/",
+  po_mail_send = "master/po-mail/send/",
   stone_place = "costcard/stone-place/",
 
   // Cost Card API endpoints
