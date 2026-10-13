@@ -217,6 +217,20 @@ def company_email(company):
     return (getattr(company, 'email', '') or '').strip()
 
 
+def contact_email_list(company):
+    if company is None:
+        return []
+
+    emails = [company_email(company)]
+    emails.extend((contact.email or '').strip() for contact in company.contacts.all())
+
+    return [email for email in emails if email]
+
+
+def company_all_emails(company):
+    return ', '.join(unique_emails(', '.join(contact_email_list(company))))
+
+
 def company_address(company):
     if company is None:
         return ''
@@ -240,6 +254,16 @@ def company_summary(company):
         'code': company.code,
         'name': company.name,
         'email': company_email(company),
+        'emails': company_all_emails(company),
+        'contacts': [
+            {
+                'name': contact.name,
+                'email': contact.email,
+                'phone': contact.phone,
+                'role': contact.role,
+            }
+            for contact in company.contacts.all()
+        ],
         'contact': company.contact,
         'phone': company.phone,
         'tax_id': company.tax_id,
@@ -284,7 +308,12 @@ def order_vendors(order, lines):
 
 
 def vendor_emails(vendors):
-    return ', '.join(dict.fromkeys(email for email in map(company_email, vendors) if email))
+    emails = []
+
+    for vendor in vendors:
+        emails.extend(contact_email_list(vendor))
+
+    return ', '.join(unique_emails(', '.join(emails)))
 
 
 def size_text(line):
@@ -410,11 +439,11 @@ def subject_context(order):
 
 
 def default_email(template, key, vendor):
-    if template is not None and template.recipients:
-        return template.recipients
-
     if key == 'vendor':
         return vendor
+
+    if template is not None and template.recipients:
+        return template.recipients
 
     return ''
 
@@ -723,7 +752,7 @@ def send_selected(order, mail, selections):
             grouped = {}
 
             for item in vendors:
-                address = company_email(item)
+                address = company_all_emails(item)
                 grouped.setdefault(address.lower(), (address, []))[1].append(item)
 
             targets = [(address, group) for address, group in grouped.values()]
