@@ -3,10 +3,13 @@ import os
 import re
 from decimal import ROUND_HALF_UP, Decimal
 from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 from functools import lru_cache
+from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
@@ -18,7 +21,8 @@ from .models import POMail
 
 logger = logging.getLogger('inventree')
 
-DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT, 'logos', 'logo_for_excel_sheet.png')
+LOGO_STATIC_NAME = 'logos/logo_for_excel_sheet.png'
+DEFAULT_LOGO_PATH = os.path.join(settings.STATIC_ROOT or '', 'logos', 'logo_for_excel_sheet.png')
 LOGO_CID = 'company_logo'
 CENT = Decimal('0.01')
 
@@ -50,16 +54,79 @@ DEFAULT_TEMPLATES = {
 STONE_KEYS = ('stone', 'shape', 'mm_size', 'colour', 'quality')
 
 
-def logo_image():
+class LogoEmailMessage(EmailMultiAlternatives):
+    """Email whose HTML alternative and inline logo are wrapped in multipart/related.
+
+    Resulting structure (attachments stay outside, so clients resolve cid: correctly):
+        multipart/mixed
+          multipart/alternative
+            text/plain
+            multipart/related
+              text/html
+              image/png  (Content-ID: <company_logo>)
+          attachments...
+
+    Only the HTML *alternative* is wrapped; HTML files attached via attach() are not.
+    """
+
+    inline_logo = None
+    _in_alternatives = False
+
+    def _create_alternatives(self, msg):
+        self._in_alternatives = True
+
+        try:
+            return super()._create_alternatives(msg)
+        finally:
+            self._in_alternatives = False
+
+    def _create_mime_attachment(self, content, mimetype):
+        part = super()._create_mime_attachment(content, mimetype)
+
+        if self.inline_logo is not None and self._in_alternatives and mimetype == 'text/html':
+            related = MIMEMultipart('related')
+            related.attach(part)
+            related.attach(self.inline_logo)
+            return related
+
+        return part
+
+
+def logo_file():
     path = COMPANY_PROFILE['logo_url']
 
-    if not path or not os.path.isfile(path):
+    if path and os.path.isfile(path):
+        return path
+
+    found = finders.find(LOGO_STATIC_NAME)
+
+    if isinstance(found, (list, tuple)):
+        found = found[0] if found else None
+
+    if found and os.path.isfile(found):
+        return found
+
+    return None
+
+
+def logo_image():
+    path = logo_file()
+
+    if not path:
+        logger.warning('PO mail logo not found (tried %s and static finders)', COMPANY_PROFILE['logo_url'])
         return None
 
-    with open(path, 'rb') as handle:
-        image = MIMEImage(handle.read())
+    subtype = os.path.splitext(path)[1].lstrip('.').lower().replace('jpg', 'jpeg') or None
+
+    try:
+        with open(path, 'rb') as handle:
+            image = MIMEImage(handle.read(), _subtype=subtype)
+    except Exception:
+        logger.exception('PO mail logo could not be loaded from %s', path)
+        return None
 
     image.add_header('Content-ID', f'<{LOGO_CID}>')
+    image.add_header('X-Attachment-Id', LOGO_CID)
     image.add_header('Content-Disposition', 'inline', filename=os.path.basename(path))
 
     return image
@@ -147,8 +214,12 @@ def format_template(mail, field):
     return None
 
 
-def split_emails(value):
+def split_list(value):
     return [item.strip() for item in re.split(r'[;,]', value or '') if item.strip()]
+
+
+def split_emails(value):
+    return split_list(value)
 
 
 def unique_emails(value):
@@ -163,6 +234,16 @@ def unique_emails(value):
             result.append(item)
 
     return result
+
+
+def plain_text(html):
+    """Readable text fallback derived from the HTML body."""
+    from django.utils.html import strip_tags
+
+    html = re.sub(r'(?is)<(head|style).*?</\1>', '', html or '')
+    text = strip_tags(html).replace('&nbsp;', ' ')
+
+    return '\n'.join(line.strip() for line in text.splitlines() if line.strip())
 
 
 def display_name(value):
@@ -317,8 +398,8 @@ def vendor_emails(vendors):
 
 
 def size_text(line):
-    sizes = split_emails(line.size)
-    pieces = split_emails(line.spcs)
+    sizes = split_list(line.size)
+    pieces = split_list(line.spcs)
 
     if sizes and len(sizes) == len(pieces):
         return ', '.join(f'{size} ({count})' for size, count in zip(sizes, pieces))
@@ -425,8 +506,9 @@ def cost_rows(pairs):
     return rows
 
 
-def subject_context(order):
-    vendors = order_vendors(order, order_lines(order))
+def subject_context(order, vendors=None):
+    if vendors is None:
+        vendors = order_vendors(order, order_lines(order))
 
     return {
         'po_number': order.pono,
@@ -452,7 +534,7 @@ def mail_options(order, mail):
     vendors = order_vendors(order, order_lines(order))
     vendor = vendor_emails(vendors)
     customer = company_email(order.customerid)
-    context = subject_context(order)
+    context = subject_context(order, vendors)
     formats = []
 
     for key, field, label_text in FORMATS:
@@ -495,17 +577,22 @@ def build_context(order, vendor=None):
 
     if selected:
         selected_ids = {item.pk for item in selected}
-        lines = [
-            line for line in lines
-            if line_vendor(order, line) is not None and line_vendor(order, line).pk in selected_ids
-        ]
+        filtered = []
+
+        for line in lines:
+            line_owner = line_vendor(order, line)
+
+            if line_owner is not None and line_owner.pk in selected_ids:
+                filtered.append(line)
+
+        lines = filtered
 
     pairs = line_cards(order, lines)
     items = order_items(order, pairs)
     vendors = order_vendors(order, lines)
     supplier = selected[0] if selected else (vendors[0] if vendors else None)
     creator = order.prepby
-    base_url = ('').rstrip('/')
+    base_url = (get_global_setting('INVENTREE_BASE_URL', '') or '').rstrip('/')
     company_name = COMPANY_PROFILE['name']
     delivery_date = fmt_date(order.ddate)
     stones_needed_by = fmt_date(order.esdstone) or delivery_date
@@ -513,6 +600,12 @@ def build_context(order, vendor=None):
     company_address_text = ', '.join(
         part for part in (COMPANY_PROFILE['address_line1'], COMPANY_PROFILE['address_line2']) if part
     )
+
+    # Resolve the logo that actually exists on disk (STATIC_ROOT copy or static finders).
+    # company_logo_url      -> filesystem path (the email replaces it with cid:)
+    # company_logo_file_url -> proper file:// URI for PDF rendering (WeasyPrint etc.)
+    logo_path = logo_file() or ''
+    logo_file_url = Path(logo_path).resolve().as_uri() if logo_path else ''
 
     vendor_total = sum((item['amount_value'] for item in items), Decimal(0))
     total_weight = sum((item['weight_value'] for item in items), Decimal(0))
@@ -600,7 +693,8 @@ def build_context(order, vendor=None):
         'total_other': format_money(sum((row['other'] for row in costs), Decimal(0))),
         'ny_total': format_money(sum((row['total'] for row in costs), Decimal(0))),
         'company_name': company_name,
-        'company_logo_url': COMPANY_PROFILE['logo_url'],
+        'company_logo_url': logo_path,
+        'company_logo_file_url': logo_file_url,
         'company_address_line1': COMPANY_PROFILE['address_line1'],
         'company_address_line2': COMPANY_PROFILE['address_line2'],
         'company_phone': COMPANY_PROFILE['phone'],
@@ -643,24 +737,29 @@ def deliver_mail(key, template, entered, context, subject_text):
         return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
 
     attachment_errors = []
+    subject = ''
 
     try:
         logo = logo_image()
-        body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}') if logo else context
+        # Email body: cid: reference when the logo is embedded, empty (no broken icon) when not.
+        # Attachments (PDF etc.) keep the original `context`, which carries the real file path/URI.
+        body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}' if logo else '')
         html = render_body(template, key, body_context)
         subject = ' '.join((subject_text or '').split()) or render_subject(template, context)
-        message = EmailMultiAlternatives(
+        message = LogoEmailMessage(
             subject,
-            f"Purchase {context['po_type']} {context['po_number']} from {context['company_name']}. "
-            'Please view this email in an HTML-capable client.',
+            plain_text(html) or f"Purchase {context['po_type']} {context['po_number']} from {context['company_name']}.",
             settings.DEFAULT_FROM_EMAIL,
             recipients,
         )
         message.attach_alternative(html, 'text/html')
+        message.inline_logo = logo
 
         # Attachment problems must never block the email itself.
         try:
-            files, attachment_errors = build_attachments(split_emails(template.attachments), context)
+            files, attachment_errors = build_attachments(
+                split_emails(template.attachments if template else ''), context
+            )
         except Exception as exc:
             logger.exception('PO mail %s attachment build crashed', key)
             files, attachment_errors = [], [str(exc)]
@@ -678,10 +777,6 @@ def deliver_mail(key, template, entered, context, subject_text):
                 key,
                 '; '.join(attachment_errors),
             )
-
-        if logo:
-            message.mixed_subtype = 'related'
-            message.attach(logo)
 
         accepted = message.send(fail_silently=False)
 
@@ -755,7 +850,14 @@ def send_selected(order, mail, selections):
                 address = company_all_emails(item)
                 grouped.setdefault(address.lower(), (address, []))[1].append(item)
 
-            targets = [(address, group) for address, group in grouped.values()]
+            # Keep any address the user typed that is not already one of the vendor defaults.
+            known = {email.lower() for email in unique_emails(defaults.get('vendor', ''))}
+            extra = [email for email in unique_emails(entered) if email.lower() not in known]
+
+            targets = [
+                (', '.join(unique_emails(', '.join([address] + extra))), group)
+                for address, group in grouped.values()
+            ]
         elif key == 'vendor' and vendors:
             targets = [(entered, [vendors[0]])]
         else:
