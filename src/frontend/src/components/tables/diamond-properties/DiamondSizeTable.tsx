@@ -33,12 +33,12 @@ export default function DiamondSizeTable() {
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "name",
+        accessor: "mm_size",
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "mm_size",
+        accessor: "sieve_size",
         sortable: true,
         switchable: false,
       },

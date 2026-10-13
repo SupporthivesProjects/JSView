@@ -1915,7 +1915,6 @@ const STONE_SIEVE_SIZE_FIELD = {
 
 export function colorStoneSizeFields(): ApiFormFieldSet {
   return {
-    name: {},
     mm_size: { ...STONE_MM_SIZE_FIELD },
     sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     // description: {},
@@ -2871,7 +2870,6 @@ export function diamondColorFields(): ApiFormFieldSet {
 
 export function diamondSizeFields(): ApiFormFieldSet {
   return {
-    name: {},
     mm_size: { ...STONE_MM_SIZE_FIELD },
     sieve_size: { ...STONE_SIEVE_SIZE_FIELD },
     // description: {},

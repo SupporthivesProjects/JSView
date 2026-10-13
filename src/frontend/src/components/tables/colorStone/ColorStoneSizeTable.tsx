@@ -37,13 +37,13 @@ export default function ColorStoneSizeTable() {
   const columns: TableColumn[] = useMemo(() => {
     return [
       {
-        accessor: "name",
+        accessor: "mm_size",
+        title: t`Size in mm`,
         sortable: true,
         switchable: false,
       },
       {
-        accessor: "mm_size",
-        title: t`Size in mm`,
+        accessor: "sieve_size",
         sortable: true,
         switchable: false,
       },
