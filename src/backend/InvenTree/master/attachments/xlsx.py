@@ -1,6 +1,13 @@
 from io import BytesIO
+
 from openpyxl import Workbook
+from openpyxl.styles import Border, Font, Side
+
 from .base import BaseAttachment, register
+
+THIN = Side(style='thin')
+CELL_BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+HEADER_FONT = Font(bold=True)
 
 
 class XlsxAttachment(BaseAttachment):
@@ -16,9 +23,20 @@ class XlsxAttachment(BaseAttachment):
         wb = Workbook()
         ws = wb.active
         ws.title = self.sheet_title
+
         ws.append(list(self.headers))
+
+        for cell in ws[1]:
+            cell.font = HEADER_FONT
+
         for row in self.rows(ctx):
             ws.append(row)
+
+        # Border only the data cells (everything below the header row).
+        for data_row in ws.iter_rows(min_row=2, max_row=ws.max_row, max_col=len(self.headers)):
+            for cell in data_row:
+                cell.border = CELL_BORDER
+
         buf = BytesIO()
         wb.save(buf)
         return buf.getvalue()

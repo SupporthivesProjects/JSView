@@ -10,8 +10,12 @@ class PdfAttachment(BaseAttachment):
     template_name = ''
 
     def render(self, ctx):
-        html = get_template(self.template_name).render(ctx)
-        return HTML(string=html, base_url=str(settings.STATIC_ROOT)).write_pdf()
+        try:
+            html = get_template(self.template_name).render(ctx)
+        except Exception as exc:
+            raise RuntimeError(f'template {self.template_name} failed: {exc}') from exc
+
+        return HTML(string=html, base_url=str(settings.STATIC_ROOT or '')).write_pdf()
 
 
 @register
