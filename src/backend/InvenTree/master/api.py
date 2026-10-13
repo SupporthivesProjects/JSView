@@ -353,6 +353,7 @@ class POMailDetail(RetrieveUpdateDestroyAPI):
 
 
 class POMailOrderList(APIView):
+    queryset = POMail.objects.all()
     permission_classes = [MasterDataPermission]
 
     def get(self, request):
@@ -365,6 +366,7 @@ class POMailOrderList(APIView):
 
 
 class POMailOrderDetail(APIView):
+    queryset = POMail.objects.all()
     permission_classes = [MasterDataPermission]
 
     def get(self, request, pk):
@@ -379,6 +381,7 @@ class POMailOrderDetail(APIView):
 
 
 class POMailSend(APIView):
+    queryset = POMail.objects.all()
     permission_classes = [MasterDataPermission]
 
     def post(self, request):
