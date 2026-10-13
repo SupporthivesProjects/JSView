@@ -12,6 +12,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.template import Context, Template
 from django.template.loader import get_template
+from master.attachments import build_attachments
 from common.settings import get_global_setting
 from .models import POMail
 
@@ -612,6 +613,8 @@ def deliver_mail(key, template, entered, context, subject_text):
     except ValidationError:
         return False, {'key': key, 'email': entered, 'error': 'Invalid email address.'}
 
+    attachment_errors = []
+
     try:
         logo = logo_image()
         body_context = dict(context, company_logo_url=f'cid:{LOGO_CID}') if logo else context
@@ -625,6 +628,27 @@ def deliver_mail(key, template, entered, context, subject_text):
             recipients,
         )
         message.attach_alternative(html, 'text/html')
+
+        # Attachment problems must never block the email itself.
+        try:
+            files, attachment_errors = build_attachments(split_emails(template.attachments), context)
+        except Exception as exc:
+            logger.exception('PO mail %s attachment build crashed', key)
+            files, attachment_errors = [], [str(exc)]
+
+        for f in files:
+            try:
+                message.attach(f.filename, f.content, f.mimetype)
+            except Exception as exc:
+                logger.exception('PO mail %s could not attach %s', key, getattr(f, 'filename', ''))
+                attachment_errors.append(f'{getattr(f, "filename", "file")}: {exc}')
+
+        if attachment_errors:
+            logger.warning(
+                'PO mail %s is being sent without some attachments: %s',
+                key,
+                '; '.join(attachment_errors),
+            )
 
         if logo:
             message.mixed_subtype = 'related'
@@ -651,12 +675,17 @@ def deliver_mail(key, template, entered, context, subject_text):
         logger.exception('PO mail %s failed (to: %s)', key, recipients)
         return False, {'key': key, 'email': ', '.join(recipients), 'error': str(exc)}
 
-    return True, {
+    record = {
         'key': key,
         'email': ', '.join(recipients),
         'subject': subject,
         'vendor': context['supplier_name'] if key == 'vendor' else None,
     }
+
+    if attachment_errors:
+        record['attachment_errors'] = attachment_errors
+
+    return True, record
 
 
 def send_selected(order, mail, selections):

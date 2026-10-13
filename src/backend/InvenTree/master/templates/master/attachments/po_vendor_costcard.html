@@ -1,0 +1,28 @@
+{% include "master/attachments/_header.html" %}
+  <tr>
+    <td style="padding:28px 32px 6px 32px;">
+      <div style="display:inline-block;background:#DCE8FB;color:#1B4B8A;font-size:12px;line-height:16px;padding:4px 10px;border-radius:4px;">Vendor cost card</div>
+      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">Cost card for PO {{ po_number }}</h1>
+      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Specification and stone requirement for purchase {{ po_type|lower }} <strong style="color:#243447;">{{ po_number }}</strong>.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:20px 32px 0 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;border:1px solid #DDE3EC;border-top:3px solid #2FB59E;">
+        <tr>
+          <td width="34%" valign="top" style="padding:14px 16px;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Supplier</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ supplier_name }}</div></td>
+          <td width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Stones needed by</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ stones_needed_by }}</div></td>
+          <td width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Delivery by</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ delivery_date }}</div></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+{% include "master/attachments/_items.html" with show_amount=False items_title="Item specification" %}
+{% include "master/attachments/_stones.html" %}
+
+  <tr>
+    <td style="padding:6px 32px 6px 32px;font-size:1px;line-height:1px;">&nbsp;</td>
+  </tr>
+{% include "master/attachments/_footer.html" %}

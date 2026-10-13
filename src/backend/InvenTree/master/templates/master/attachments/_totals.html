@@ -1,0 +1,14 @@
+  <tr>
+    <td style="padding:8px 32px 0 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+        <tr><td width="45%">&nbsp;</td><td>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td style="padding:6px 10px;color:#4A5B70;">Total net weight</td><td align="right" style="padding:6px 10px;">{{ total_net_weight }} g</td></tr>
+            <tr><td style="padding:6px 10px;color:#4A5B70;">Subtotal</td><td align="right" style="padding:6px 10px;">{% if currency %}{{ currency }} {% endif %}{{ subtotal }}</td></tr>
+            {% if gst_amount %}<tr><td style="padding:6px 10px;color:#4A5B70;">GST ({{ gst_percent }}%)</td><td align="right" style="padding:6px 10px;">{% if currency %}{{ currency }} {% endif %}{{ gst_amount }}</td></tr>{% endif %}
+            <tr style="color:#1B4B8A;font-weight:bold;"><td style="padding:12px 10px;font-size:15px;background:#DCE8FB;">Order total</td><td align="right" style="padding:12px 10px;font-size:18px;background:#DCE8FB;">{% if currency %}{{ currency }} {% endif %}{{ grand_total }}</td></tr>
+          </table>
+        </td></tr>
+      </table>
+    </td>
+  </tr>

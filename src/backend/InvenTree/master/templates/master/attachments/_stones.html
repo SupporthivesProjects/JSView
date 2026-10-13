@@ -1,0 +1,73 @@
+  {% if diamonds %}
+  <tr>
+    <td style="padding:26px 32px 0 32px;">
+      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;page-break-after:avoid;break-after:avoid;">Diamond requirement</div>
+      <table class="data" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
+        <thead>
+        <tr style="color:#1B4B8A;font-weight:bold;">
+          <td style="padding:10px;background:#DCE8FB;">Shape</td>
+          <td style="padding:10px;background:#DCE8FB;">Size (mm)</td>
+          <td style="padding:10px;background:#DCE8FB;">Color / Clarity</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Pcs</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Weight (ct)</td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in diamonds %}
+        <tr bgcolor="{% if forloop.counter|divisibleby:2 %}#F8FAFC{% else %}#FFFFFF{% endif %}">
+          <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ d.shape }}</td>
+          <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.size }}</td>
+          <td style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.color }}{% if d.color and d.clarity %} / {% endif %}{{ d.clarity }}</td>
+          <td align="right" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ d.pcs }}</td>
+          <td align="right" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ d.weight }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr style="font-weight:bold;color:#1B4B8A;">
+          <td colspan="3" style="padding:12px 10px;background:#DCE8FB;">Total</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_diamond_pcs }}</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_diamond_ct }}</td>
+        </tr>
+        </tfoot>
+      </table>
+    </td>
+  </tr>
+  {% endif %}
+
+  {% if stones %}
+  <tr>
+    <td style="padding:26px 32px 0 32px;">
+      <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;page-break-after:avoid;break-after:avoid;">Color stone requirement</div>
+      <table class="data" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
+        <thead>
+        <tr style="color:#1B4B8A;font-weight:bold;">
+          <td style="padding:10px;background:#DCE8FB;">Stone</td>
+          <td style="padding:10px;background:#DCE8FB;">Shape / Size (mm)</td>
+          <td style="padding:10px;background:#DCE8FB;">Colour / Quality</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Pcs</td>
+          <td align="right" style="padding:10px;background:#DCE8FB;">Weight (ct)</td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for s in stones %}
+        <tr bgcolor="{% if forloop.counter|divisibleby:2 %}#F8FAFC{% else %}#FFFFFF{% endif %}">
+          <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ s.name }}</td>
+          <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ s.shape }}{% if s.size %}<br><span style="color:#6B7A8D;font-size:12px;">{{ s.size }}</span>{% endif %}</td>
+          <td valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ s.colour }}{% if s.quality %}<br><span style="color:#6B7A8D;font-size:12px;">{{ s.quality }}</span>{% endif %}</td>
+          <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;">{{ s.pcs }}</td>
+          <td align="right" valign="top" style="padding:11px 10px;border-bottom:1px solid #E6EBF2;font-weight:bold;">{{ s.weight }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr style="font-weight:bold;color:#1B4B8A;">
+          <td colspan="3" style="padding:12px 10px;background:#DCE8FB;">Total</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_color_pcs }}</td>
+          <td align="right" style="padding:12px 10px;background:#DCE8FB;">{{ total_color_ct }}</td>
+        </tr>
+        </tfoot>
+      </table>
+    </td>
+  </tr>
+  {% endif %}

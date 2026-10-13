@@ -1,0 +1,64 @@
+{% include "master/attachments/_header.html" %}
+  <tr>
+    <td style="padding:28px 32px 6px 32px;">
+      <div style="display:inline-block;background:#DCE8FB;color:#1B4B8A;font-size:12px;line-height:16px;padding:4px 10px;border-radius:4px;">Internal copy</div>
+      <h1 style="margin:14px 0 12px 0;font-size:24px;line-height:30px;font-weight:bold;color:#1B4B8A;">Purchase {{ po_type|lower }} {{ po_number }}</h1>
+      <p style="margin:0;font-size:15px;line-height:23px;color:#4A5B70;">Internal record of PO {{ po_number }} placed with <strong style="color:#243447;">{{ supplier_name }}</strong>.</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:20px 32px 0 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;border:1px solid #DDE3EC;border-top:3px solid #2FB59E;">
+        <tr>
+          <td width="33%" valign="top" style="padding:14px 16px;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Order date</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ po_date }}</div></td>
+          <td width="33%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Delivery by</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ delivery_date }}</div></td>
+          <td width="34%" valign="top" style="padding:14px 16px;border-left:1px solid #DDE3EC;"><div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#6B7A8D;">Payment terms</div><div style="font-size:15px;font-weight:bold;padding-top:2px;">{{ payment_terms }}</div></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:20px 32px 0 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed;">
+        <tr>
+          <td width="50%" valign="top" style="padding:0 8px 0 0;">
+            <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;page-break-after:avoid;break-after:avoid;">Supplier</div>
+            <div style="background:#F3F6FA;border-left:3px solid #1B4B8A;padding:14px 16px;font-size:14px;line-height:22px;">
+              <strong style="font-size:16px;color:#243447;">{{ supplier_name }}</strong>
+              {% if supplier_address %}<br>{{ supplier_address }}{% endif %}
+              {% if supplier_gstin %}<br><span style="color:#6B7A8D;">GSTIN:</span> {{ supplier_gstin }}{% endif %}
+            </div>
+          </td>
+          <td width="50%" valign="top" style="padding:0 0 0 8px;">
+            <div style="font-size:16px;font-weight:bold;color:#1B4B8A;border-bottom:2px solid #2FB59E;padding-bottom:6px;margin-bottom:10px;page-break-after:avoid;break-after:avoid;">Customer</div>
+            <div style="background:#F3F6FA;border-left:3px solid #1B4B8A;padding:14px 16px;font-size:14px;line-height:22px;">
+              <strong style="font-size:16px;color:#243447;">{{ customer_name }}</strong>
+              {% if customer_po_no %}<br><span style="color:#6B7A8D;">Customer PO:</span> {{ customer_po_no }}{% endif %}
+              {% if buyer_name %}<br><span style="color:#6B7A8D;">Prepared by:</span> {{ buyer_name }}{% endif %}
+              {% if buyer_email %}<br>{{ buyer_email }}{% endif %}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+{% include "master/attachments/_items.html" with show_amount=True items_title="Order items" %}
+{% include "master/attachments/_totals.html" %}
+
+  {% if order_notes %}
+  <tr>
+    <td style="padding:22px 32px 0 32px;">
+      <div style="border-left:3px solid #2FB59E;background:#F3F6FA;padding:12px 16px;font-size:13px;line-height:21px;color:#4A5B70;">
+        <strong style="color:#1B4B8A;">Notes</strong><br>{{ order_notes|linebreaksbr }}
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+
+  <tr>
+    <td style="padding:6px 32px 6px 32px;font-size:1px;line-height:1px;">&nbsp;</td>
+  </tr>
+{% include "master/attachments/_footer.html" %}

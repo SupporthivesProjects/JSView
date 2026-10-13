@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Purchase {{ po_type }} {{ po_number }}</title>
+<style>
+  @page{size:A4;margin:10mm 8mm 14mm 8mm;@bottom-right{content:"Page " counter(page) " of " counter(pages);font-family:Arial,Helvetica,sans-serif;font-size:9px;color:#6B7A8D;}}
+  body{margin:0;padding:0;background:#FFFFFF;font-family:Roboto,Arial,Helvetica,sans-serif;color:#243447;}
+  table{border-collapse:collapse;width:100%;}
+  td[align=right]{text-align:right;}
+  td[align=center]{text-align:center;}
+  td[align=left]{text-align:left;}
+  img{border:0;}
+  a{color:#1B4B8A;}
+  table.data tr{page-break-inside:avoid;}
+  table.data thead{display:table-header-group;}
+</style>
+</head>
+<body>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #DDE3EC;font-family:Roboto,Arial,Helvetica,sans-serif;color:#243447;">
+
+  <tr><td style="height:5px;line-height:5px;font-size:0;background:#2FB59E;">&nbsp;</td></tr>
+  <tr>
+    <td style="padding:22px 32px;border-bottom:1px solid #DDE3EC;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="middle" align="left">
+            {% if company_logo_url %}<img src="file://{{ company_logo_url }}" alt="Jewel Source" width="150" style="width:150px;height:auto;font-size:20px;color:#1B4B8A;">{% else %}<div style="font-size:20px;font-weight:bold;color:#1B4B8A;">{{ company_name }}</div>{% endif %}
+          </td>
+          <td valign="middle" align="right" style="font-family:Roboto,Arial,Helvetica,sans-serif;">
+            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">Purchase {{ po_type }}</div>
+            <div style="font-size:22px;line-height:28px;color:#1B4B8A;font-weight:bold;">{{ po_number }}</div>
+            <div style="font-size:12px;line-height:16px;color:#6B7A8D;">{{ po_date }}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
