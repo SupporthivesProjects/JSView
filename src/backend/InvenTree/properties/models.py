@@ -94,22 +94,20 @@ class DiamondColor(PropertiesFieldsMixin):
 
 class DiamondSize(PropertiesFieldsMixin):
     """Diamond size (in mm) and optional sieve size."""
-
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Size'), help_text=_('Name of the diamond size.'))
-    mm_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Diamond size in millimeters.'))
-    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this diamond size.'))
+    mm_size = models.CharField(max_length=50, null=False, blank=False, verbose_name=_('Size (mm)'), help_text=_('Diamond size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=False, blank=False, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this diamond size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the diamond size.'))
 
     class Meta:
         verbose_name = _('Diamond Size')
         verbose_name_plural = _('Diamond Sizes')
-        ordering = ['name']
+        ordering = ['mm_size']
         indexes = [
             models.Index(fields=['active']),
         ]
 
     def __str__(self):
-        return self.name
+        return self.mm_size
 
 
 class DiamondQuality(PropertiesFieldsMixin):
@@ -204,22 +202,20 @@ class ColorStoneColor(PropertiesFieldsMixin):
 
 class ColorStoneSize(PropertiesFieldsMixin):
     """Color stone size (in mm) and optional sieve size."""
-
-    name = models.CharField(max_length=100, unique=True, verbose_name=_('Size'), help_text=_('Name of the color stone size.'))
-    mm_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Size (mm)'), help_text=_('Color stone size in millimeters.'))
-    sieve_size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this color stone size.'))
+    mm_size = models.CharField(max_length=50, null=False, blank=False, verbose_name=_('Size (mm)'), help_text=_('Color stone size in millimeters.'))
+    sieve_size = models.CharField(max_length=50, null=False, blank=False, verbose_name=_('Sieve Size'), help_text=_('Sieve size corresponding to this color stone size.'))
     description = models.CharField(max_length=250, null=True, blank=True, verbose_name=_('Description'), help_text=_('Optional description of the color stone size.'))
 
     class Meta:
         verbose_name = _('Color Stone Size')
         verbose_name_plural = _('Color Stone Sizes')
-        ordering = ['name']
+        ordering = ['mm_size']
         indexes = [
             models.Index(fields=['active']),
         ]
 
     def __str__(self):
-        return self.name
+        return self.mm_size
 
 
 class ColorStoneQuality(PropertiesFieldsMixin):

@@ -134,9 +134,9 @@ class DiamondSizeList(DataExportViewMixin, ListCreateAPI):
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active', 'sieve_size']
-    search_fields = ['name', 'sieve_size', 'description']
-    ordering_fields = ['name', 'mm_size', 'sieve_size', 'created_at']
-    ordering = 'name'
+    search_fields = ['mm_size', 'sieve_size', 'description']
+    ordering_fields = ['mm_size', 'sieve_size', 'created_at']
+    ordering = 'mm_size'
 
 
 class DiamondSizeDetail(RetrieveUpdateDestroyAPI):
@@ -266,9 +266,9 @@ class ColorStoneSizeList(DataExportViewMixin, ListCreateAPI):
     permission_classes = [PropertiesDataPermission]
     filter_backends = SEARCH_ORDER_FILTER
     filterset_fields = ['active', 'sieve_size']
-    search_fields = ['name', 'sieve_size', 'description']
-    ordering_fields = ['name', 'mm_size', 'sieve_size', 'created_at']
-    ordering = 'name'
+    search_fields = ['mm_size', 'sieve_size', 'description']
+    ordering_fields = ['mm_size', 'sieve_size', 'created_at']
+    ordering = 'mm_size'
 
 
 class ColorStoneSizeDetail(RetrieveUpdateDestroyAPI):
